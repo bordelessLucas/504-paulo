@@ -12,6 +12,7 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, useColorScheme } from 'react-native';
 
 import { ThemedView } from '@/components/themed-view';
+import { ToastProvider } from '@/components/ui/toast';
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
 
 SplashScreen.preventAutoHideAsync();
@@ -64,9 +65,11 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

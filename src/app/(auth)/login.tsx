@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { type Href, Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -30,7 +30,7 @@ export default function LoginScreen() {
       return;
     }
 
-    router.replace('/(main)/home');
+    router.replace('/(main)' as Href);
   }
 
   return (

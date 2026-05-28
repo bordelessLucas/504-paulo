@@ -1,9 +1,14 @@
-import { Stack } from 'expo-router';
+import { Redirect } from 'expo-router';
+
+import { AppNavigator } from '@/navigation/AppNavigator';
+import { useAuth } from '@/features/auth/auth-context';
 
 export default function MainLayout() {
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="home" />
-    </Stack>
-  );
+  const { user, isLoading } = useAuth();
+
+  if (!isLoading && !user) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  return <AppNavigator />;
 }

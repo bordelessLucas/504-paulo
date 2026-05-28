@@ -1,16 +1,18 @@
-import { Link, router } from 'expo-router';
+import { type Href, Link, router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AuthLayout } from '@/components/auth/auth-layout';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 import { Input } from '@/components/ui/input';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
 
 export default function RegisterScreen() {
   const { register, isSubmitting } = useAuth();
+  const { showToast } = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,17 +29,25 @@ export default function RegisterScreen() {
       confirmPassword,
     });
 
-    if (result) {
-      if (result.field && result.field !== 'general') {
-        setErrors({ [result.field]: result.message });
+    if (result.status === 'error') {
+      const { error } = result;
+
+      if (error.field && error.field !== 'general') {
+        setErrors({ [error.field]: error.message });
         return;
       }
 
-      setErrors({ general: result.message });
+      showToast(error.message, 'error');
       return;
     }
 
-    router.replace('/(main)/home');
+    if (result.status === 'email_confirmation') {
+      showToast('Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
+      router.replace('/(auth)/login' as Href);
+      return;
+    }
+
+    router.replace('/(main)' as Href);
   }
 
   return (
@@ -96,12 +106,6 @@ export default function RegisterScreen() {
         value={confirmPassword}
       />
 
-      {errors.general ? (
-        <ThemedText themeColor="danger" style={styles.generalError}>
-          {errors.general}
-        </ThemedText>
-      ) : null}
-
       <Button label="Criar conta" isLoading={isSubmitting} onPress={() => void handleSubmit()} />
     </AuthLayout>
   );
@@ -112,9 +116,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.one,
-  },
-  generalError: {
-    fontSize: 14,
-    lineHeight: 20,
   },
 });

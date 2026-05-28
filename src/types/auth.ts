@@ -1,8 +1,13 @@
+import type { UserRole } from '@/types/supabase';
+
 export type AuthUser = {
   id: string;
   name: string;
   email: string;
   createdAt: string;
+  role?: UserRole;
+  departamento?: string | null;
+  funcao?: string | null;
 };
 
 export type LoginCredentials = {
@@ -21,3 +26,8 @@ export type AuthError = {
   field?: keyof RegisterCredentials | keyof LoginCredentials | 'general';
   message: string;
 };
+
+export type RegisterResult =
+  | { status: 'authenticated' }
+  | { status: 'email_confirmation' }
+  | { status: 'error'; error: AuthError };
