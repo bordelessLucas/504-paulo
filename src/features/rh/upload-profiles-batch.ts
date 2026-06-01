@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/supabase';
 import { parseProfilesCsv, toProfileInsert, type CsvProfileRow } from '@/features/rh/parse-profiles-csv';
-import type { ProfileInsert } from '@/types/supabase';
+import type { Database } from '@/types/supabase';
+
+type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 
 const BATCH_SIZE = 50;
 

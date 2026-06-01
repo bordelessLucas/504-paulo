@@ -9,9 +9,10 @@ import { useTheme } from '@/hooks/use-theme';
 type ColaboradorRowProps = {
   colaborador: ColaboradorResumo;
   onPress: () => void;
+  detail?: string;
 };
 
-export function ColaboradorRow({ colaborador, onPress }: ColaboradorRowProps) {
+export function ColaboradorRow({ colaborador, onPress, detail }: ColaboradorRowProps) {
   const theme = useTheme();
 
   return (
@@ -26,7 +27,8 @@ export function ColaboradorRow({ colaborador, onPress }: ColaboradorRowProps) {
       <View style={styles.info}>
         <ThemedText style={styles.name}>{colaborador.nome}</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.meta}>
-          {[colaborador.departamento, colaborador.funcao].filter(Boolean).join(' · ') ||
+          {detail ||
+            [colaborador.departamento, colaborador.funcao].filter(Boolean).join(' · ') ||
             'Sem departamento'}
         </ThemedText>
       </View>

@@ -1,9 +1,11 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
+  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
@@ -16,10 +18,13 @@ import { Button } from '@/components/ui/button';
 import { Fonts, Spacing } from '@/constants/theme';
 import {
   COLABORADORES_PAGE_SIZE,
+  fetchColaboradoresAvaliacaoExecutive,
   fetchColaboradoresPage,
   type ColaboradorResumo,
+  type ColaboradoresAvaliacaoExecutive,
 } from '@/features/avaliacao/api';
 import { useAuth } from '@/features/auth/auth-context';
+import { useUserRole } from '@/hooks/use-user-role';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -27,38 +32,211 @@ type NavigationProp = NativeStackNavigationProp<
   'ListaColaboradores'
 >;
 
-export function ListaColaboradoresScreen() {
-  const navigation = useNavigation<NavigationProp>();
-  const { user } = useAuth();
+function formatMetaColaborador(colaborador: ColaboradorResumo) {
+  return (
+    [colaborador.departamento, colaborador.funcao].filter(Boolean).join(' · ') ||
+    'Sem departamento'
+  );
+}
+
+function formatDataBr(isoDate: string) {
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+function ColaboradorSection({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <ThemedText type="subtitle">{title}</ThemedText>
+        <ThemedText themeColor="textSecondary" style={styles.sectionCount}>
+          {count}
+        </ThemedText>
+      </View>
+      {children}
+    </View>
+  );
+}
+
+function ListaColaboradoresExecutiveView({
+  navigation,
+  avaliadorId,
+}: {
+  navigation: NavigationProp;
+  avaliadorId: string;
+}) {
+  const [data, setData] = useState<ColaboradoresAvaliacaoExecutive | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadData = useCallback(
+    async (options?: { refreshing?: boolean }) => {
+      if (options?.refreshing) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+
+      setError(null);
+
+      try {
+        const result = await fetchColaboradoresAvaliacaoExecutive(avaliadorId);
+        setData(result);
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error ? loadError.message : 'Erro ao carregar colaboradores.',
+        );
+      } finally {
+        if (options?.refreshing) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
+      }
+    },
+    [avaliadorId],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadData();
+    }, [loadData]),
+  );
+
+  const navigateToAvaliacao = useCallback(
+    (colaborador: ColaboradorResumo) => {
+      navigation.navigate('FormularioAvaliacao', {
+        avaliadoId: colaborador.id,
+        avaliadoNome: colaborador.nome,
+      });
+    },
+    [navigation],
+  );
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <ThemedText themeColor="danger">{error}</ThemedText>
+        <Button label="Tentar novamente" variant="secondary" onPress={() => void loadData()} />
+      </View>
+    );
+  }
+
+  const pendentes = data?.pendentes ?? [];
+  const concluidas = data?.concluidas ?? [];
+  const total = pendentes.length + concluidas.length;
+
+  return (
+    <ScrollView
+      contentContainerStyle={styles.executiveContent}
+      refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadData({ refreshing: true })} />
+      }
+      showsVerticalScrollIndicator={false}>
+      <ThemedText themeColor="textSecondary" style={styles.subtitle}>
+        Visão geral da quinzena atual ({total} colaboradores).
+      </ThemedText>
+
+      <ColaboradorSection count={pendentes.length} title="Avaliações pendentes">
+        {pendentes.length === 0 ? (
+          <ThemedText themeColor="textSecondary" style={styles.emptySection}>
+            Nenhuma avaliação pendente neste ciclo.
+          </ThemedText>
+        ) : (
+          pendentes.map((colaborador) => (
+            <ColaboradorRow
+              key={colaborador.id}
+              colaborador={colaborador}
+              detail={formatMetaColaborador(colaborador)}
+              onPress={() => navigateToAvaliacao(colaborador)}
+            />
+          ))
+        )}
+      </ColaboradorSection>
+
+      <ColaboradorSection count={concluidas.length} title="Avaliações concluídas">
+        {concluidas.length === 0 ? (
+          <ThemedText themeColor="textSecondary" style={styles.emptySection}>
+            Nenhuma avaliação concluída neste ciclo.
+          </ThemedText>
+        ) : (
+          concluidas.map((colaborador) => (
+            <ColaboradorRow
+              key={colaborador.id}
+              colaborador={colaborador}
+              detail={
+                colaborador.ultimaAvaliacaoData
+                  ? `Avaliado em ${formatDataBr(colaborador.ultimaAvaliacaoData)} · ${formatMetaColaborador(colaborador)}`
+                  : formatMetaColaborador(colaborador)
+              }
+              onPress={() => navigateToAvaliacao(colaborador)}
+            />
+          ))
+        )}
+      </ColaboradorSection>
+    </ScrollView>
+  );
+}
+
+function ListaColaboradoresGerenteView({
+  navigation,
+  avaliadorId,
+}: {
+  navigation: NavigationProp;
+  avaliadorId: string;
+}) {
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [items, setItems] = useState<ColaboradorResumo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / COLABORADORES_PAGE_SIZE));
 
   const loadPage = useCallback(
-    async (targetPage: number) => {
-      if (!user) {
-        return;
+    async (targetPage: number, options?: { refreshing?: boolean }) => {
+      if (options?.refreshing) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
       }
 
-      setIsLoading(true);
       setError(null);
 
       try {
-        const result = await fetchColaboradoresPage(user.id, targetPage);
+        const result = await fetchColaboradoresPage(avaliadorId, targetPage);
         setItems(result.items);
         setTotal(result.total);
         setPage(result.page);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Erro ao carregar colaboradores.');
       } finally {
-        setIsLoading(false);
+        if (options?.refreshing) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
       }
     },
-    [user],
+    [avaliadorId],
   );
 
   useEffect(() => {
@@ -66,68 +244,108 @@ export function ListaColaboradoresScreen() {
   }, [loadPage]);
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-        <View style={styles.header}>
-          <ThemedText type="heading">Colaboradores a avaliar</ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-            Selecione um colaborador para iniciar a avaliação ({total} no total).
-          </ThemedText>
-        </View>
+    <>
+      <View style={styles.header}>
+        <ThemedText type="heading">Colaboradores a avaliar</ThemedText>
+        <ThemedText themeColor="textSecondary" style={styles.subtitle}>
+          Selecione um colaborador para iniciar a avaliação ({total} no total).
+        </ThemedText>
+      </View>
 
-        {isLoading ? (
+      {isLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : error ? (
+        <View style={styles.centered}>
+          <ThemedText themeColor="danger">{error}</ThemedText>
+          <Button label="Tentar novamente" variant="secondary" onPress={() => void loadPage(page)} />
+        </View>
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.listContent}
+          data={items}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={() => void loadPage(page, { refreshing: true })}
+            />
+          }
+          ListEmptyComponent={
+            <ThemedText themeColor="textSecondary" style={styles.empty}>
+              Nenhum colaborador encontrado para avaliação.
+            </ThemedText>
+          }
+          renderItem={({ item }) => (
+            <ColaboradorRow
+              colaborador={item}
+              onPress={() =>
+                navigation.navigate('FormularioAvaliacao', {
+                  avaliadoId: item.id,
+                  avaliadoNome: item.nome,
+                })
+              }
+            />
+          )}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      {!isLoading && !error && total > 0 ? (
+        <View style={styles.pagination}>
+          <Button
+            label="Anterior"
+            variant="secondary"
+            disabled={page === 0}
+            onPress={() => void loadPage(page - 1)}
+          />
+          <ThemedText style={styles.pageLabel}>
+            Página {page + 1} de {totalPages}
+          </ThemedText>
+          <Button
+            label="Próxima"
+            variant="secondary"
+            disabled={page + 1 >= totalPages}
+            onPress={() => void loadPage(page + 1)}
+          />
+        </View>
+      ) : null}
+    </>
+  );
+}
+
+export function ListaColaboradoresScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const { user } = useAuth();
+  const { role, isLoading: isRoleLoading } = useUserRole();
+  const isExecutiveView = role === 'ceo' || role === 'admin';
+
+  if (!user || isRoleLoading) {
+    return (
+      <ThemedView style={styles.container}>
+        <SafeAreaView style={styles.safeArea} edges={['bottom']}>
           <View style={styles.centered}>
             <ActivityIndicator size="large" />
           </View>
-        ) : error ? (
-          <View style={styles.centered}>
-            <ThemedText themeColor="danger">{error}</ThemedText>
-            <Button label="Tentar novamente" variant="secondary" onPress={() => void loadPage(page)} />
-          </View>
-        ) : (
-          <FlatList
-            contentContainerStyle={styles.listContent}
-            data={items}
-            keyExtractor={(item) => item.id}
-            ListEmptyComponent={
-              <ThemedText themeColor="textSecondary" style={styles.empty}>
-                Nenhum colaborador encontrado para avaliação.
-              </ThemedText>
-            }
-            renderItem={({ item }) => (
-              <ColaboradorRow
-                colaborador={item}
-                onPress={() =>
-                  navigation.navigate('FormularioAvaliacao', {
-                    avaliadoId: item.id,
-                    avaliadoNome: item.nome,
-                  })
-                }
-              />
-            )}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
 
-        {!isLoading && !error && total > 0 ? (
-          <View style={styles.pagination}>
-            <Button
-              label="Anterior"
-              variant="secondary"
-              disabled={page === 0}
-              onPress={() => void loadPage(page - 1)}
-            />
-            <ThemedText style={styles.pageLabel}>
-              Página {page + 1} de {totalPages}
-            </ThemedText>
-            <Button
-              label="Próxima"
-              variant="secondary"
-              disabled={page + 1 >= totalPages}
-              onPress={() => void loadPage(page + 1)}
-            />
-          </View>
-        ) : null}
+  return (
+    <ThemedView style={styles.container}>
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+        {isExecutiveView ? (
+          <>
+            <View style={styles.header}>
+              <ThemedText type="heading">Painel de avaliação</ThemedText>
+            </View>
+            <ListaColaboradoresExecutiveView avaliadorId={user.id} navigation={navigation} />
+          </>
+        ) : (
+          <ListaColaboradoresGerenteView avaliadorId={user.id} navigation={navigation} />
+        )}
       </SafeAreaView>
     </ThemedView>
   );
@@ -150,9 +368,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  executiveContent: {
+    gap: Spacing.four,
+    paddingBottom: Spacing.four,
+  },
+  section: {
+    gap: Spacing.two,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  sectionCount: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 13,
+    lineHeight: 18,
+  },
   listContent: {
     gap: Spacing.two,
     paddingBottom: Spacing.three,
+  },
+  emptySection: {
+    fontSize: 14,
+    lineHeight: 20,
+    paddingVertical: Spacing.two,
   },
   centered: {
     flex: 1,

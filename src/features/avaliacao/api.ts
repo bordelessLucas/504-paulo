@@ -12,11 +12,21 @@ export const COLABORADORES_PAGE_SIZE = 10;
 
 export type ColaboradorResumo = Pick<Profile, 'id' | 'nome' | 'departamento' | 'funcao'>;
 
+export type ColaboradorComStatus = ColaboradorResumo & {
+  ultimaAvaliacaoData?: string;
+};
+
 export type ColaboradoresPage = {
   items: ColaboradorResumo[];
   total: number;
   page: number;
   pageSize: number;
+};
+
+export type ColaboradoresAvaliacaoExecutive = {
+  pendentes: ColaboradorResumo[];
+  concluidas: ColaboradorComStatus[];
+  cicloInicio: string;
 };
 
 export type RespostaFormulario = {
@@ -30,6 +40,13 @@ export type MelhoriaFormulario = {
   melhorou: boolean;
 };
 
+export function getQuinzenaStartDate(referenceDate = new Date()): string {
+  const day = referenceDate.getDate();
+  const start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), day <= 15 ? 1 : 16);
+
+  return start.toISOString().slice(0, 10);
+}
+
 export async function fetchColaboradoresPage(
   avaliadorId: string,
   page: number,
@@ -41,6 +58,7 @@ export async function fetchColaboradoresPage(
     .from('profiles')
     .select('id, nome, departamento, funcao', { count: 'exact' })
     .eq('role', 'colaborador')
+    .eq('status', 'ativo')
     .neq('id', avaliadorId)
     .order('nome', { ascending: true })
     .range(from, to);
@@ -55,6 +73,68 @@ export async function fetchColaboradoresPage(
     page,
     pageSize: COLABORADORES_PAGE_SIZE,
   };
+}
+
+export async function fetchColaboradoresAvaliacaoExecutive(
+  avaliadorId: string,
+): Promise<ColaboradoresAvaliacaoExecutive> {
+  const cicloInicio = getQuinzenaStartDate();
+
+  const { data: colaboradores, error: colaboradoresError } = await supabase
+    .from('profiles')
+    .select('id, nome, departamento, funcao')
+    .eq('role', 'colaborador')
+    .eq('status', 'ativo')
+    .neq('id', avaliadorId)
+    .order('nome', { ascending: true });
+
+  if (colaboradoresError) {
+    throw new Error(colaboradoresError.message);
+  }
+
+  const lista = colaboradores ?? [];
+
+  if (lista.length === 0) {
+    return { pendentes: [], concluidas: [], cicloInicio };
+  }
+
+  const colaboradorIds = lista.map((colaborador) => colaborador.id);
+
+  const { data: avaliacoes, error: avaliacoesError } = await supabase
+    .from('avaliacoes')
+    .select('avaliado_id, data')
+    .in('avaliado_id', colaboradorIds)
+    .gte('data', cicloInicio);
+
+  if (avaliacoesError) {
+    throw new Error(avaliacoesError.message);
+  }
+
+  const ultimaAvaliacaoPorColaborador = new Map<string, string>();
+
+  for (const avaliacao of avaliacoes ?? []) {
+    const atual = ultimaAvaliacaoPorColaborador.get(avaliacao.avaliado_id);
+
+    if (!atual || avaliacao.data > atual) {
+      ultimaAvaliacaoPorColaborador.set(avaliacao.avaliado_id, avaliacao.data);
+    }
+  }
+
+  const pendentes: ColaboradorResumo[] = [];
+  const concluidas: ColaboradorComStatus[] = [];
+
+  for (const colaborador of lista) {
+    const ultimaAvaliacaoData = ultimaAvaliacaoPorColaborador.get(colaborador.id);
+
+    if (ultimaAvaliacaoData) {
+      concluidas.push({ ...colaborador, ultimaAvaliacaoData });
+      continue;
+    }
+
+    pendentes.push(colaborador);
+  }
+
+  return { pendentes, concluidas, cicloInicio };
 }
 
 export async function fetchPerguntasPorAvaliador(

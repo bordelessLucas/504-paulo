@@ -1,8 +1,9 @@
 import Papa from 'papaparse';
 
-import { Constants } from '@/types/supabase';
-import type { ProfileInsert } from '@/types/supabase';
-import type { ProfileStatus, UserRole } from '@/types/supabase';
+import type { Database, UserRole } from '@/types/supabase';
+
+type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
+type ProfileStatus = string;
 
 export type CsvProfileRow = {
   rowNumber: number;
@@ -21,8 +22,15 @@ export type ParseProfilesResult = {
   errors: string[];
 };
 
-const USER_ROLES = new Set<string>(Constants.public.Enums.user_role);
-const PROFILE_STATUSES = new Set<string>(Constants.public.Enums.profile_status);
+const USER_ROLES = new Set<string>([
+  'colaborador',
+  'supervisor',
+  'gestor',
+  'gerente',
+  'rh',
+  'ceo',
+  'admin',
+]);
 
 const HEADER_ALIASES: Record<string, keyof Omit<CsvProfileRow, 'rowNumber'>> = {
   id: 'id',
@@ -88,11 +96,6 @@ function mapRawRow(
     }
 
     if (field === 'status') {
-      if (!PROFILE_STATUSES.has(trimmed)) {
-        return {
-          error: `Linha ${rowNumber}: status "${trimmed}" inválido.`,
-        };
-      }
       mapped.status = trimmed as ProfileStatus;
       continue;
     }

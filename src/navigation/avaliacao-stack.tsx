@@ -36,7 +36,7 @@ export function AvaliacaoStackNavigator() {
         name="ListaColaboradores"
         component={ListaColaboradoresScreen}
         options={{
-          title: 'Colaboradores',
+          title: 'Painel de avaliação',
           headerLeft: () => <DrawerToggleButton tintColor={theme.text} />,
         }}
       />

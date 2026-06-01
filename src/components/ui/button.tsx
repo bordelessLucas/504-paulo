@@ -4,12 +4,12 @@ import {
   StyleSheet,
   Text,
   type PressableProps,
-} from 'react-native';
+} from "react-native";
 
-import { Fonts, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Fonts, Radius, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+type ButtonVariant = "primary" | "secondary" | "ghost";
 
 type ButtonProps = PressableProps & {
   label: string;
@@ -19,7 +19,7 @@ type ButtonProps = PressableProps & {
 
 export function Button({
   label,
-  variant = 'primary',
+  variant = "primary",
   isLoading = false,
   disabled,
   style,
@@ -29,11 +29,11 @@ export function Button({
   const isDisabled = disabled || isLoading;
 
   const getContainerStyle = () => {
-    if (variant === 'primary') {
-      return { backgroundColor: theme.text };
+    if (variant === "primary") {
+      return { backgroundColor: theme.accent };
     }
 
-    if (variant === 'secondary') {
+    if (variant === "secondary") {
       return {
         backgroundColor: theme.backgroundElement,
         borderColor: theme.border,
@@ -41,11 +41,11 @@ export function Button({
       };
     }
 
-    return { backgroundColor: 'transparent' };
+    return { backgroundColor: "transparent" };
   };
 
   const getLabelColor = () => {
-    if (variant === 'primary') {
+    if (variant === "primary") {
       return theme.background;
     }
 
@@ -61,9 +61,10 @@ export function Button({
         getContainerStyle(),
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
-        typeof style === 'function' ? style({ pressed, hovered }) : style,
+        typeof style === "function" ? style({ pressed, hovered }) : style,
       ]}
-      {...rest}>
+      {...rest}
+    >
       {isLoading ? (
         <ActivityIndicator color={getLabelColor()} />
       ) : (
@@ -77,8 +78,8 @@ const styles = StyleSheet.create({
   base: {
     minHeight: 44,
     borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
   },
