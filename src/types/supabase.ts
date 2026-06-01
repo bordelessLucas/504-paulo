@@ -267,12 +267,13 @@ export type StatusSolicitacaoSalarial =
   Database["public"]["Enums"]["status_solicitacao_salarial"];
 
 // Convenience aliases used across the app
-export type Profile = Database['public']['Tables']['profiles']['Row'];
-export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
-export type PerguntaAvaliacao = Database['public']['Tables']['perguntas']['Row'];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
+export type PerguntaAvaliacao =
+  Database["public"]["Tables"]["perguntas"]["Row"];
 export type PerfilAlvo = string;
 export type PontoMelhoria = any;
 
 export function isGestaoRole(role?: UserRole | null): boolean {
-  return role === 'gestor' || role === 'gerente';
+  return role === "gestor" || role === "gerente";
 }

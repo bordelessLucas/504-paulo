@@ -1,8 +1,8 @@
-import Papa from 'papaparse';
+import Papa from "papaparse";
 
-import type { Database, UserRole } from '@/types/supabase';
+import type { Database, UserRole } from "@/types/supabase";
 
-type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
+type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 type ProfileStatus = string;
 
 export type CsvProfileRow = {
@@ -23,39 +23,39 @@ export type ParseProfilesResult = {
 };
 
 const USER_ROLES = new Set<string>([
-  'colaborador',
-  'supervisor',
-  'gestor',
-  'gerente',
-  'rh',
-  'ceo',
-  'admin',
+  "colaborador",
+  "supervisor",
+  "gestor",
+  "gerente",
+  "rh",
+  "ceo",
+  "admin",
 ]);
 
-const HEADER_ALIASES: Record<string, keyof Omit<CsvProfileRow, 'rowNumber'>> = {
-  id: 'id',
-  email: 'email',
-  e_mail: 'email',
-  'e-mail': 'email',
-  nome: 'nome',
-  name: 'nome',
-  funcao: 'funcao',
-  departamento: 'departamento',
-  data_admissao: 'data_admissao',
-  dataadmissao: 'data_admissao',
-  'data admissao': 'data_admissao',
-  status: 'status',
-  role: 'role',
-  perfil: 'role',
-  papel: 'role',
+const HEADER_ALIASES: Record<string, keyof Omit<CsvProfileRow, "rowNumber">> = {
+  id: "id",
+  email: "email",
+  e_mail: "email",
+  "e-mail": "email",
+  nome: "nome",
+  name: "nome",
+  funcao: "funcao",
+  departamento: "departamento",
+  data_admissao: "data_admissao",
+  dataadmissao: "data_admissao",
+  "data admissao": "data_admissao",
+  status: "status",
+  role: "role",
+  perfil: "role",
+  papel: "role",
 };
 
 function normalizeHeader(header: string): string {
   return header
     .trim()
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
 function parseDate(value: string | undefined): string | undefined {
@@ -72,7 +72,7 @@ function parseDate(value: string | undefined): string | undefined {
   const brMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (brMatch) {
     const [, day, month, year] = brMatch;
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
   }
 
   return undefined;
@@ -95,12 +95,12 @@ function mapRawRow(
       continue;
     }
 
-    if (field === 'status') {
+    if (field === "status") {
       mapped.status = trimmed as ProfileStatus;
       continue;
     }
 
-    if (field === 'role') {
+    if (field === "role") {
       if (!USER_ROLES.has(trimmed)) {
         return {
           error: `Linha ${rowNumber}: role "${trimmed}" inválido.`,
@@ -110,7 +110,7 @@ function mapRawRow(
       continue;
     }
 
-    if (field === 'data_admissao') {
+    if (field === "data_admissao") {
       const parsedDate = parseDate(trimmed);
       if (!parsedDate) {
         return {
@@ -181,20 +181,23 @@ export function parseProfilesCsv(csvContent: string): ParseProfilesResult {
   });
 
   if (rows.length === 0 && errors.length === 0) {
-    errors.push('A planilha não contém linhas válidas para importar.');
+    errors.push("A planilha não contém linhas válidas para importar.");
   }
 
   return { rows, errors };
 }
 
-export function toProfileInsert(row: CsvProfileRow, resolvedId: string): ProfileInsert {
+export function toProfileInsert(
+  row: CsvProfileRow,
+  resolvedId: string,
+): ProfileInsert {
   return {
     id: resolvedId,
     nome: row.nome,
     funcao: row.funcao ?? null,
     departamento: row.departamento ?? null,
     data_admissao: row.data_admissao ?? null,
-    status: row.status ?? 'ativo',
-    role: row.role ?? 'colaborador',
+    status: row.status ?? "ativo",
+    role: row.role ?? "colaborador",
   };
 }
