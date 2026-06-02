@@ -24,7 +24,8 @@ import {
   type ColaboradoresAvaliacaoExecutive,
 } from '@/features/avaliacao/api';
 import { useAuth } from '@/features/auth/auth-context';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useAuthRole } from '@/hooks/use-auth-role';
+import { isAdminDashboardRole } from '@/types/supabase';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -318,8 +319,8 @@ function ListaColaboradoresGerenteView({
 export function ListaColaboradoresScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
-  const { role, isLoading: isRoleLoading } = useUserRole();
-  const isExecutiveView = role === 'ceo' || role === 'admin';
+  const { role, isLoading: isRoleLoading } = useAuthRole();
+  const isExecutiveView = isAdminDashboardRole(role);
 
   if (!user || isRoleLoading) {
     return (

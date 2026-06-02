@@ -1,8 +1,6 @@
-import { resolvePerfilAlvo } from '@/features/avaliacao/perfil-alvo';
 import { supabase } from '@/lib/supabase';
 import type {
   PerguntaAvaliacao,
-  PerfilAlvo,
   PontoMelhoria,
   Profile,
   TipoAvaliacao,
@@ -32,7 +30,8 @@ export type ColaboradoresAvaliacaoExecutive = {
 export type RespostaFormulario = {
   perguntaId: string;
   nota: number;
-  comentario?: string;
+  justificativa?: string;
+  evidencia?: string;
 };
 
 export type MelhoriaFormulario = {
@@ -102,9 +101,9 @@ export async function fetchColaboradoresAvaliacaoExecutive(
 
   const { data: avaliacoes, error: avaliacoesError } = await supabase
     .from('avaliacoes')
-    .select('avaliado_id, data')
+    .select('avaliado_id, data_criacao')
     .in('avaliado_id', colaboradorIds)
-    .gte('data', cicloInicio);
+    .gte('data_criacao', `${cicloInicio}T00:00:00.000Z`);
 
   if (avaliacoesError) {
     throw new Error(avaliacoesError.message);
@@ -113,10 +112,11 @@ export async function fetchColaboradoresAvaliacaoExecutive(
   const ultimaAvaliacaoPorColaborador = new Map<string, string>();
 
   for (const avaliacao of avaliacoes ?? []) {
+    const dataReferencia = avaliacao.data_criacao.slice(0, 10);
     const atual = ultimaAvaliacaoPorColaborador.get(avaliacao.avaliado_id);
 
-    if (!atual || avaliacao.data > atual) {
-      ultimaAvaliacaoPorColaborador.set(avaliacao.avaliado_id, avaliacao.data);
+    if (!atual || dataReferencia > atual) {
+      ultimaAvaliacaoPorColaborador.set(avaliacao.avaliado_id, dataReferencia);
     }
   }
 
@@ -137,39 +137,89 @@ export async function fetchColaboradoresAvaliacaoExecutive(
   return { pendentes, concluidas, cicloInicio };
 }
 
-export async function fetchPerguntasPorAvaliador(
-  departamento?: string | null,
-  funcao?: string | null,
-): Promise<{ perguntas: PerguntaAvaliacao[]; perfilAlvo: PerfilAlvo }> {
-  const perfilAlvo = resolvePerfilAlvo(departamento, funcao);
+export async function fetchPerguntasPorDepartamento(departamento?: string | null): Promise<{
+  perguntas: PerguntaAvaliacao[];
+  departamentoLabel: string;
+}> {
+  const departamentoLabel = departamento?.trim() || 'Sem departamento';
+
+  if (!departamento?.trim()) {
+    return { perguntas: [], departamentoLabel };
+  }
 
   const { data, error } = await supabase
-    .from('perguntas_avaliacao')
+    .from('perguntas')
     .select('*')
-    .eq('perfil_alvo', perfilAlvo)
+    .ilike('secao_departamento', departamento.trim())
     .order('peso', { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return { perguntas: data ?? [], perfilAlvo };
+  return {
+    perguntas: data ?? [],
+    departamentoLabel,
+  };
 }
 
-export async function fetchPontosMelhoriaPendentes(avaliadoId: string): Promise<PontoMelhoria[]> {
-  const { data, error } = await supabase
-    .from('pontos_melhoria')
-    .select('*')
+/** @deprecated Use fetchPerguntasPorDepartamento */
+export async function fetchPerguntasPorAvaliador(departamento?: string | null) {
+  const result = await fetchPerguntasPorDepartamento(departamento);
+  return {
+    perguntas: result.perguntas,
+    perfilAlvo: result.departamentoLabel,
+  };
+}
+
+type RespostaComPergunta = {
+  id: string;
+  pergunta_id: string | null;
+  nota: number | null;
+  justificativa: string | null;
+  perguntas: { descricao: string } | null;
+};
+
+export async function fetchPontosMelhoriaAnteriores(avaliadoId: string): Promise<PontoMelhoria[]> {
+  const { data: ultimaAvaliacao, error: avaliacaoError } = await supabase
+    .from('avaliacoes')
+    .select('id')
     .eq('avaliado_id', avaliadoId)
-    .eq('resolvido', false)
-    .order('data_criacao', { ascending: false });
+    .order('data_criacao', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (avaliacaoError) {
+    throw new Error(avaliacaoError.message);
+  }
+
+  if (!ultimaAvaliacao) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('respostas')
+    .select('id, pergunta_id, nota, justificativa, perguntas(descricao)')
+    .eq('avaliacao_id', ultimaAvaliacao.id)
+    .in('nota', [2, 3]);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return ((data ?? []) as RespostaComPergunta[]).map((resposta) => ({
+    id: resposta.id,
+    respostaAnteriorId: resposta.id,
+    perguntaId: resposta.pergunta_id,
+    descricao:
+      resposta.perguntas?.descricao ??
+      resposta.justificativa ??
+      'Ponto de melhoria identificado na avaliação anterior',
+  }));
 }
+
+/** @deprecated Use fetchPontosMelhoriaAnteriores */
+export const fetchPontosMelhoriaPendentes = fetchPontosMelhoriaAnteriores;
 
 export async function submitAvaliacao(params: {
   avaliadorId: string;
@@ -184,7 +234,6 @@ export async function submitAvaliacao(params: {
       avaliador_id: params.avaliadorId,
       avaliado_id: params.avaliadoId,
       tipo: params.tipo ?? 'quinzenal',
-      data: new Date().toISOString().slice(0, 10),
     })
     .select('id')
     .single();
@@ -194,12 +243,13 @@ export async function submitAvaliacao(params: {
   }
 
   if (params.respostas.length > 0) {
-    const { error: respostasError } = await supabase.from('respostas_avaliacao').insert(
+    const { error: respostasError } = await supabase.from('respostas').insert(
       params.respostas.map((resposta) => ({
         avaliacao_id: avaliacao.id,
         pergunta_id: resposta.perguntaId,
         nota: resposta.nota,
-        comentario: resposta.comentario?.trim() || null,
+        justificativa: resposta.justificativa?.trim() || null,
+        evidencia: resposta.evidencia?.trim() || null,
       })),
     );
 
@@ -208,13 +258,13 @@ export async function submitAvaliacao(params: {
     }
   }
 
-  const pontosResolvidos = params.melhorias.filter((item) => item.melhorou);
+  const melhoriasMarcadas = params.melhorias.filter((item) => item.melhorou);
 
-  for (const ponto of pontosResolvidos) {
+  for (const melhoria of melhoriasMarcadas) {
     const { error } = await supabase
-      .from('pontos_melhoria')
-      .update({ resolvido: true })
-      .eq('id', ponto.pontoId);
+      .from('respostas')
+      .update({ evidencia: '[Melhorou na avaliação seguinte]' })
+      .eq('id', melhoria.pontoId);
 
     if (error) {
       throw new Error(error.message);

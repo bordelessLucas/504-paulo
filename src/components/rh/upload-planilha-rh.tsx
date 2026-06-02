@@ -9,6 +9,7 @@ import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { uploadProfilesFromCsv } from '@/features/rh/upload-profiles-batch';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useTheme } from '@/hooks/use-theme';
+import { isAdminDashboardRole } from '@/types/supabase';
 
 type UploadStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -23,7 +24,7 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
-  const canUpload = role === 'admin' || role === 'ceo';
+  const canUpload = isAdminDashboardRole(role);
   const isBusy = status === 'loading';
 
   const handlePickAndUpload = useCallback(async () => {
@@ -86,7 +87,7 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
           { backgroundColor: theme.backgroundElement, borderColor: theme.border },
         ]}>
         <ThemedText themeColor="textSecondary" style={styles.hint}>
-          Apenas administradores e CEO podem importar planilhas de RH.
+          Apenas RH, CEO e administradores podem importar planilhas de RH.
         </ThemedText>
       </View>
     );

@@ -1,24 +1,20 @@
-import { useAuth } from '@/features/auth/auth-context';
-import { isGestaoRole, type UserRole } from '@/types/supabase';
+import { useAuthRole } from '@/hooks/use-auth-role';
+import { isGestaoRole } from '@/types/supabase';
 
-type UseUserRoleResult = {
-  role: UserRole | null;
-  isLoading: boolean;
+type UseUserRoleResult = ReturnType<typeof useAuthRole> & {
   error: string | null;
-  isAuthenticated: boolean;
   isGestao: boolean;
-  refetch: () => Promise<void>;
 };
 
+/** @deprecated Prefira useAuthRole */
 export function useUserRole(): UseUserRoleResult {
-  const { user, isLoading, refetchProfile } = useAuth();
+  const authRole = useAuthRole();
 
   return {
-    role: user?.role ?? null,
-    isLoading,
+    ...authRole,
     error: null,
-    isAuthenticated: user != null,
-    isGestao: isGestaoRole(user?.role),
-    refetch: refetchProfile,
+    isGestao: isGestaoRole(authRole.role),
   };
 }
+
+export { useAuthRole } from '@/hooks/use-auth-role';

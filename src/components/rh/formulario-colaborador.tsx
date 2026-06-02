@@ -9,6 +9,7 @@ import { createColaborador } from '@/features/rh/create-colaborador';
 import type { CreateColaboradorInput } from '@/features/rh/validation';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useTheme } from '@/hooks/use-theme';
+import { isAdminDashboardRole } from '@/types/supabase';
 
 type FormularioColaboradorProps = {
   onCreated?: () => void;
@@ -31,7 +32,7 @@ export function FormularioColaborador({ onCreated }: FormularioColaboradorProps)
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const canCreate = role === 'admin' || role === 'ceo';
+  const canCreate = isAdminDashboardRole(role);
 
   const updateField = useCallback(
     <K extends keyof CreateColaboradorInput>(field: K, value: CreateColaboradorInput[K]) => {
@@ -81,7 +82,7 @@ export function FormularioColaborador({ onCreated }: FormularioColaboradorProps)
           { backgroundColor: theme.backgroundElement, borderColor: theme.border },
         ]}>
         <ThemedText themeColor="textSecondary" style={styles.hint}>
-          Apenas administradores e CEO podem cadastrar colaboradores.
+          Apenas RH, CEO e administradores podem cadastrar colaboradores.
         </ThemedText>
       </View>
     );

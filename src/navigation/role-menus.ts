@@ -1,80 +1,149 @@
-import type { DrawerMenuItem, MainDrawerParamList } from '@/navigation/types';
-import type { UserRole } from '@/types/supabase';
+import type { MainTabParamList, TabIconName } from '@/navigation/types';
+import {
+  isAdminDashboardRole,
+  isGerencialDashboardRole,
+  isGerenteRole,
+  isSupervisorGestorRole,
+  type UserRole,
+} from '@/types/supabase';
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   colaborador: 'Colaborador',
   supervisor: 'Supervisor',
   gestor: 'Gestor',
   gerente: 'Gerente',
+  rh: 'RH',
   ceo: 'CEO',
   admin: 'Administrador',
 };
 
-const ALL_MENU_ITEMS: DrawerMenuItem[] = [
-  {
-    name: 'ColaboradorDashboard',
+export type TabMenuItem = {
+  name: keyof MainTabParamList;
+  label: string;
+  icon: TabIconName;
+};
+
+const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
+  DashboardColaborador: {
+    name: 'DashboardColaborador',
     label: 'Dashboard',
     icon: 'home-outline',
-    roles: ['colaborador'],
   },
-  {
+  MinhasAvaliacoes: {
     name: 'MinhasAvaliacoes',
-    label: 'Minhas avaliações',
+    label: 'Avaliações',
     icon: 'document-text-outline',
-    roles: ['colaborador'],
   },
-  {
+  PainelAvaliacao: {
     name: 'PainelAvaliacao',
-    label: 'Painel de avaliação',
+    label: 'Avaliação',
     icon: 'clipboard-outline',
-    roles: ['supervisor', 'gestor', 'gerente', 'ceo', 'admin'],
   },
-  {
+  MinhaEquipe: {
     name: 'MinhaEquipe',
-    label: 'Minha equipe',
+    label: 'Equipe',
     icon: 'people-outline',
-    roles: ['supervisor', 'gestor', 'gerente'],
   },
-  {
-    name: 'PainelAdmin',
-    label: 'Painel administrativo',
+  Estrategico: {
+    name: 'Estrategico',
+    label: 'Estratégico',
+    icon: 'analytics-outline',
+  },
+  AdminDashboard: {
+    name: 'AdminDashboard',
+    label: 'Admin',
     icon: 'grid-outline',
-    roles: ['ceo', 'admin'],
   },
-  {
+  DashboardsGerenciais: {
+    name: 'DashboardsGerenciais',
+    label: 'Gerencial',
+    icon: 'stats-chart-outline',
+  },
+  Aprovacoes: {
     name: 'Aprovacoes',
     label: 'Aprovações',
     icon: 'checkmark-circle-outline',
-    roles: ['ceo', 'admin'],
   },
-  {
+  Perfil: {
     name: 'Perfil',
     label: 'Perfil',
     icon: 'person-outline',
-    roles: ['colaborador', 'supervisor', 'gestor', 'gerente', 'ceo', 'admin'],
   },
-];
+};
 
-export function getMenuItemsForRole(role: UserRole): DrawerMenuItem[] {
-  return ALL_MENU_ITEMS.filter((item) => item.roles.includes(role));
-}
-
-export function getInitialRouteForRole(role: UserRole): keyof MainDrawerParamList {
+export function getPrimaryTabForRole(role: UserRole): keyof MainTabParamList {
   if (role === 'colaborador') {
-    return 'ColaboradorDashboard';
+    return 'DashboardColaborador';
   }
 
-  if (role === 'supervisor' || role === 'gestor' || role === 'gerente') {
+  if (isSupervisorGestorRole(role)) {
     return 'PainelAvaliacao';
   }
 
-  return 'PainelAdmin';
+  if (isGerenteRole(role)) {
+    return 'Estrategico';
+  }
+
+  if (role === 'ceo') {
+    return 'DashboardsGerenciais';
+  }
+
+  if (isAdminDashboardRole(role)) {
+    return 'AdminDashboard';
+  }
+
+  return 'DashboardColaborador';
 }
 
-export function canAccessRoute(role: UserRole, routeName: keyof MainDrawerParamList): boolean {
-  return getMenuItemsForRole(role).some((item) => item.name === routeName);
+export function getTabsForRole(role: UserRole): TabMenuItem[] {
+  if (role === 'colaborador') {
+    return [
+      TAB_DEFINITIONS.DashboardColaborador,
+      TAB_DEFINITIONS.MinhasAvaliacoes,
+      TAB_DEFINITIONS.Perfil,
+    ];
+  }
+
+  if (isSupervisorGestorRole(role)) {
+    return [TAB_DEFINITIONS.PainelAvaliacao, TAB_DEFINITIONS.MinhaEquipe, TAB_DEFINITIONS.Perfil];
+  }
+
+  if (isGerenteRole(role)) {
+    return [TAB_DEFINITIONS.Estrategico, TAB_DEFINITIONS.MinhaEquipe, TAB_DEFINITIONS.Perfil];
+  }
+
+  if (isGerencialDashboardRole(role)) {
+    return [
+      TAB_DEFINITIONS.DashboardsGerenciais,
+      TAB_DEFINITIONS.AdminDashboard,
+      TAB_DEFINITIONS.Aprovacoes,
+      TAB_DEFINITIONS.Perfil,
+    ];
+  }
+
+  if (isAdminDashboardRole(role)) {
+    return [TAB_DEFINITIONS.AdminDashboard, TAB_DEFINITIONS.Aprovacoes, TAB_DEFINITIONS.Perfil];
+  }
+
+  return [TAB_DEFINITIONS.DashboardColaborador, TAB_DEFINITIONS.Perfil];
 }
 
-export function getDrawerItemStyle(role: UserRole, routeName: keyof MainDrawerParamList) {
-  return canAccessRoute(role, routeName) ? undefined : { display: 'none' as const };
+/** @deprecated Drawer removido — use getTabsForRole */
+export function getMenuItemsForRole(role: UserRole) {
+  return getTabsForRole(role);
+}
+
+/** @deprecated Drawer removido — use getPrimaryTabForRole */
+export function getInitialRouteForRole(role: UserRole) {
+  return getPrimaryTabForRole(role);
+}
+
+/** @deprecated Drawer removido */
+export function canAccessRoute(role: UserRole, routeName: keyof MainTabParamList) {
+  return getTabsForRole(role).some((item) => item.name === routeName);
+}
+
+/** @deprecated Drawer removido */
+export function getDrawerItemStyle() {
+  return undefined;
 }

@@ -1,23 +1,19 @@
 import type { ComponentProps } from 'react';
 import type Ionicons from '@expo/vector-icons/Ionicons';
 
-import type { UserRole } from '@/types/supabase';
-
-export type MainDrawerParamList = {
-  ColaboradorDashboard: undefined;
+export type MainTabParamList = {
+  DashboardColaborador: undefined;
   MinhasAvaliacoes: undefined;
   PainelAvaliacao: undefined;
   MinhaEquipe: undefined;
-  PainelAdmin: undefined;
+  Estrategico: undefined;
+  AdminDashboard: undefined;
+  DashboardsGerenciais: undefined;
   Aprovacoes: undefined;
   Perfil: undefined;
 };
 
-export type DrawerIconName = ComponentProps<typeof Ionicons>['name'];
+export type TabIconName = ComponentProps<typeof Ionicons>['name'];
 
-export type DrawerMenuItem = {
-  name: keyof MainDrawerParamList;
-  label: string;
-  icon: DrawerIconName;
-  roles: UserRole[];
-};
+/** @deprecated Use MainTabParamList */
+export type MainDrawerParamList = MainTabParamList;

@@ -6,6 +6,23 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type UserRoleEnum =
+  | "colaborador"
+  | "supervisor"
+  | "gestor"
+  | "gerente"
+  | "rh"
+  | "ceo"
+  | "admin";
+
+export type TipoAvaliacaoEnum = "quinzenal" | "semestral";
+
+export type StatusSolicitacaoSalarialEnum =
+  | "pendente_rh"
+  | "pendente_ceo"
+  | "aprovado"
+  | "recusado";
+
 export type Database = {
   public: {
     Tables: {
@@ -20,7 +37,7 @@ export type Database = {
           data_admissao: string | null;
           departamento: string | null;
           status: string | null;
-          role: Database["public"]["Enums"]["user_role"];
+          role: UserRoleEnum;
           created_at: string;
           updated_at: string;
         };
@@ -34,7 +51,7 @@ export type Database = {
           data_admissao?: string | null;
           departamento?: string | null;
           status?: string | null;
-          role?: Database["public"]["Enums"]["user_role"];
+          role?: UserRoleEnum;
           created_at?: string;
           updated_at?: string;
         };
@@ -48,7 +65,7 @@ export type Database = {
           data_admissao?: string | null;
           departamento?: string | null;
           status?: string | null;
-          role?: Database["public"]["Enums"]["user_role"];
+          role?: UserRoleEnum;
           created_at?: string;
           updated_at?: string;
         };
@@ -95,21 +112,21 @@ export type Database = {
           id: string;
           avaliador_id: string | null;
           avaliado_id: string;
-          tipo: Database["public"]["Enums"]["tipo_avaliacao"];
+          tipo: TipoAvaliacaoEnum;
           data_criacao: string;
         };
         Insert: {
           id?: string;
           avaliador_id?: string | null;
           avaliado_id: string;
-          tipo: Database["public"]["Enums"]["tipo_avaliacao"];
+          tipo: TipoAvaliacaoEnum;
           data_criacao?: string;
         };
         Update: {
           id?: string;
           avaliador_id?: string | null;
           avaliado_id?: string;
-          tipo?: Database["public"]["Enums"]["tipo_avaliacao"];
+          tipo?: TipoAvaliacaoEnum;
           data_criacao?: string;
         };
         Relationships: [
@@ -178,7 +195,7 @@ export type Database = {
           colaborador_id: string;
           gerente_id: string | null;
           justificativa: string;
-          status: Database["public"]["Enums"]["status_solicitacao_salarial"];
+          status: StatusSolicitacaoSalarialEnum;
           created_at: string;
           updated_at: string;
         };
@@ -187,7 +204,7 @@ export type Database = {
           colaborador_id: string;
           gerente_id?: string | null;
           justificativa: string;
-          status?: Database["public"]["Enums"]["status_solicitacao_salarial"];
+          status?: StatusSolicitacaoSalarialEnum;
           created_at?: string;
           updated_at?: string;
         };
@@ -196,7 +213,7 @@ export type Database = {
           colaborador_id?: string;
           gerente_id?: string | null;
           justificativa?: string;
-          status?: Database["public"]["Enums"]["status_solicitacao_salarial"];
+          status?: StatusSolicitacaoSalarialEnum;
           created_at?: string;
           updated_at?: string;
         };
@@ -221,9 +238,10 @@ export type Database = {
         Row: {
           id: string;
           avaliado_id: string;
-          tipo: Database["public"]["Enums"]["tipo_avaliacao"];
+          tipo: TipoAvaliacaoEnum;
           data_criacao: string;
         };
+        Relationships: [];
       };
       respostas_masked: {
         Row: {
@@ -235,36 +253,33 @@ export type Database = {
           evidencia: string | null;
           created_at: string;
         };
+        Relationships: [];
       };
     };
     Functions: {
-      [_ in never]: never;
+      get_user_id_by_email: {
+        Args: {
+          p_email: string;
+        };
+        Returns: string | null;
+      };
     };
     Enums: {
-      user_role:
-        | "colaborador"
-        | "supervisor"
-        | "gestor"
-        | "gerente"
-        | "rh"
-        | "ceo"
-        | "admin";
-      tipo_avaliacao: "quinzenal" | "semestral";
-      status_solicitacao_salarial:
-        | "pendente_rh"
-        | "pendente_ceo"
-        | "aprovado"
-        | "recusado";
+      user_role: UserRoleEnum;
+      tipo_avaliacao: TipoAvaliacaoEnum;
+      status_solicitacao_salarial: StatusSolicitacaoSalarialEnum;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
     };
   };
 };
 
 export type JsonValue = Json;
 
-export type UserRole = Database["public"]["Enums"]["user_role"];
-export type TipoAvaliacao = Database["public"]["Enums"]["tipo_avaliacao"];
-export type StatusSolicitacaoSalarial =
-  Database["public"]["Enums"]["status_solicitacao_salarial"];
+export type UserRole = UserRoleEnum;
+export type TipoAvaliacao = TipoAvaliacaoEnum;
+export type StatusSolicitacaoSalarial = StatusSolicitacaoSalarialEnum;
 
 // Convenience aliases used across the app
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -272,8 +287,29 @@ export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 export type PerguntaAvaliacao =
   Database["public"]["Tables"]["perguntas"]["Row"];
 export type PerfilAlvo = string;
-export type PontoMelhoria = any;
+export type PontoMelhoria = {
+  id: string;
+  respostaAnteriorId: string;
+  perguntaId: string | null;
+  descricao: string;
+};
 
 export function isGestaoRole(role?: UserRole | null): boolean {
   return role === "gestor" || role === "gerente";
+}
+
+export function isSupervisorGestorRole(role?: UserRole | null): boolean {
+  return role === "supervisor" || role === "gestor";
+}
+
+export function isGerenteRole(role?: UserRole | null): boolean {
+  return role === "gerente";
+}
+
+export function isAdminDashboardRole(role?: UserRole | null): boolean {
+  return role === "rh" || role === "ceo" || role === "admin";
+}
+
+export function isGerencialDashboardRole(role?: UserRole | null): boolean {
+  return role === "ceo" || role === "admin";
 }

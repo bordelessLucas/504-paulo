@@ -1,5 +1,5 @@
 import { useRoute, type RouteProp } from '@react-navigation/native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -15,12 +15,18 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
-import { PERFIL_ALVO_LABELS } from '@/features/avaliacao/perfil-alvo';
 import {
-  fetchPerguntasPorAvaliador,
-  fetchPontosMelhoriaPendentes,
+  fetchPerguntasPorDepartamento,
+  fetchPontosMelhoriaAnteriores,
   submitAvaliacao,
 } from '@/features/avaliacao/api';
+import {
+  getRespostaValidationMessage,
+  isRespostaCompleta,
+  requiresEvidencia,
+  requiresJustificativa,
+  type RespostaFormState,
+} from '@/features/avaliacao/validation';
 import { useAuth } from '@/features/auth/auth-context';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 import type { PerguntaAvaliacao, PontoMelhoria } from '@/types/supabase';
@@ -28,8 +34,12 @@ import { useTheme } from '@/hooks/use-theme';
 
 type FormularioRoute = RouteProp<AvaliacaoStackParamList, 'FormularioAvaliacao'>;
 
-type RespostasState = Record<string, { nota: number | null; comentario: string }>;
+type RespostasState = Record<string, RespostaFormState>;
 type MelhoriasState = Record<string, boolean>;
+
+function createEmptyResposta(): RespostaFormState {
+  return { nota: null, justificativa: '', evidencia: '' };
+}
 
 export function FormularioAvaliacaoScreen() {
   const theme = useTheme();
@@ -39,7 +49,7 @@ export function FormularioAvaliacaoScreen() {
 
   const [perguntas, setPerguntas] = useState<PerguntaAvaliacao[]>([]);
   const [pontosMelhoria, setPontosMelhoria] = useState<PontoMelhoria[]>([]);
-  const [perfilAlvoLabel, setPerfilAlvoLabel] = useState('');
+  const [departamentoLabel, setDepartamentoLabel] = useState('');
   const [respostas, setRespostas] = useState<RespostasState>({});
   const [melhorias, setMelhorias] = useState<MelhoriasState>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -47,23 +57,31 @@ export function FormularioAvaliacaoScreen() {
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  const canSubmit = useMemo(() => {
+    if (perguntas.length === 0) {
+      return false;
+    }
+
+    return perguntas.every((pergunta) => isRespostaCompleta(respostas[pergunta.id] ?? createEmptyResposta()));
+  }, [perguntas, respostas]);
+
   const loadForm = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
       const [perguntasResult, pontos] = await Promise.all([
-        fetchPerguntasPorAvaliador(user?.departamento, user?.funcao),
-        fetchPontosMelhoriaPendentes(avaliadoId),
+        fetchPerguntasPorDepartamento(user?.departamento),
+        fetchPontosMelhoriaAnteriores(avaliadoId),
       ]);
 
       setPerguntas(perguntasResult.perguntas);
-      setPerfilAlvoLabel(PERFIL_ALVO_LABELS[perguntasResult.perfilAlvo]);
+      setDepartamentoLabel(perguntasResult.departamentoLabel);
       setPontosMelhoria(pontos);
 
       const initialRespostas: RespostasState = {};
       perguntasResult.perguntas.forEach((pergunta) => {
-        initialRespostas[pergunta.id] = { nota: null, comentario: '' };
+        initialRespostas[pergunta.id] = createEmptyResposta();
       });
       setRespostas(initialRespostas);
 
@@ -77,22 +95,37 @@ export function FormularioAvaliacaoScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [avaliadoId, user?.departamento, user?.funcao]);
+  }, [avaliadoId, user?.departamento]);
 
   useEffect(() => {
     void loadForm();
   }, [loadForm]);
 
+  function updateResposta(perguntaId: string, patch: Partial<RespostaFormState>) {
+    setRespostas((current) => ({
+      ...current,
+      [perguntaId]: {
+        ...(current[perguntaId] ?? createEmptyResposta()),
+        ...patch,
+      },
+    }));
+    setFeedback(null);
+  }
+
   async function handleSubmit() {
-    if (!user) {
+    if (!user || !canSubmit) {
       return;
     }
 
-    const perguntasSemNota = perguntas.filter((pergunta) => !respostas[pergunta.id]?.nota);
+    for (const pergunta of perguntas) {
+      const validationMessage = getRespostaValidationMessage(
+        respostas[pergunta.id] ?? createEmptyResposta(),
+      );
 
-    if (perguntasSemNota.length > 0) {
-      setFeedback('Responda todas as perguntas com uma nota de 1 a 5.');
-      return;
+      if (validationMessage) {
+        setFeedback(validationMessage);
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -102,11 +135,16 @@ export function FormularioAvaliacaoScreen() {
       await submitAvaliacao({
         avaliadorId: user.id,
         avaliadoId,
-        respostas: perguntas.map((pergunta) => ({
-          perguntaId: pergunta.id,
-          nota: respostas[pergunta.id].nota as number,
-          comentario: respostas[pergunta.id].comentario,
-        })),
+        respostas: perguntas.map((pergunta) => {
+          const resposta = respostas[pergunta.id];
+
+          return {
+            perguntaId: pergunta.id,
+            nota: resposta.nota as number,
+            justificativa: resposta.justificativa,
+            evidencia: resposta.evidencia,
+          };
+        }),
         melhorias: pontosMelhoria.map((ponto) => ({
           pontoId: ponto.id,
           melhorou: melhorias[ponto.id] ?? false,
@@ -150,15 +188,15 @@ export function FormularioAvaliacaoScreen() {
           <View style={styles.header}>
             <ThemedText type="heading">{avaliadoNome}</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-              Perguntas do perfil {perfilAlvoLabel} · escala de 1 a 5
+              Perguntas do departamento {departamentoLabel} · notas permitidas: 0, 1, 2, 3 e 5
             </ThemedText>
           </View>
 
           {pontosMelhoria.length > 0 ? (
-            <View style={[styles.section, { backgroundColor: theme.backgroundElement }]}>
-              <ThemedText type="subtitle">Pontos de melhoria em aberto</ThemedText>
+            <View style={[styles.section, styles.card, { backgroundColor: theme.backgroundElement }]}>
+              <ThemedText type="subtitle">Pontos da avaliação anterior</ThemedText>
               <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-                Marque se o colaborador evoluiu em cada aspecto listado.
+                Itens com nota 2 ou 3 na última avaliação do colaborador.
               </ThemedText>
 
               {pontosMelhoria.map((ponto) => (
@@ -184,54 +222,87 @@ export function FormularioAvaliacaoScreen() {
 
             {perguntas.length === 0 ? (
               <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-                Nenhuma pergunta cadastrada para o seu perfil ({perfilAlvoLabel}).
+                Nenhuma pergunta cadastrada para o departamento {departamentoLabel}.
               </ThemedText>
             ) : (
-              perguntas.map((pergunta, index) => (
-                <View
-                  key={pergunta.id}
-                  style={[styles.perguntaCard, { backgroundColor: theme.backgroundElement }]}>
-                  <ThemedText style={styles.perguntaIndex}>Pergunta {index + 1}</ThemedText>
-                  <ThemedText style={styles.perguntaTexto}>{pergunta.texto_pergunta}</ThemedText>
+              perguntas.map((pergunta, index) => {
+                const resposta = respostas[pergunta.id] ?? createEmptyResposta();
+                const validationMessage = getRespostaValidationMessage(resposta);
+                const showValidation =
+                  resposta.nota !== null &&
+                  validationMessage !== null &&
+                  !isRespostaCompleta(resposta);
 
-                  <ScorePicker
-                    value={respostas[pergunta.id]?.nota ?? null}
-                    onChange={(nota) =>
-                      setRespostas((current) => ({
-                        ...current,
-                        [pergunta.id]: {
-                          ...current[pergunta.id],
+                return (
+                  <View
+                    key={pergunta.id}
+                    style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+                    <ThemedText style={styles.perguntaIndex}>Pergunta {index + 1}</ThemedText>
+                    <ThemedText style={styles.perguntaTexto}>{pergunta.descricao}</ThemedText>
+
+                    <ScorePicker
+                      value={resposta.nota}
+                      onChange={(nota) =>
+                        updateResposta(pergunta.id, {
                           nota,
-                        },
-                      }))
-                    }
-                  />
+                          justificativa: requiresJustificativa(nota) ? resposta.justificativa : '',
+                          evidencia: requiresEvidencia(nota) ? resposta.evidencia : '',
+                        })
+                      }
+                    />
 
-                  <TextInput
-                    multiline
-                    placeholder="Comentário opcional"
-                    placeholderTextColor={theme.placeholder}
-                    style={[
-                      styles.comentarioInput,
-                      {
-                        color: theme.text,
-                        backgroundColor: theme.background,
-                        borderColor: theme.border,
-                      },
-                    ]}
-                    value={respostas[pergunta.id]?.comentario ?? ''}
-                    onChangeText={(comentario) =>
-                      setRespostas((current) => ({
-                        ...current,
-                        [pergunta.id]: {
-                          ...current[pergunta.id],
-                          comentario,
-                        },
-                      }))
-                    }
-                  />
-                </View>
-              ))
+                    {requiresJustificativa(resposta.nota) ? (
+                      <View style={styles.fieldGroup}>
+                        <ThemedText style={styles.fieldLabel}>Justificativa *</ThemedText>
+                        <TextInput
+                          multiline
+                          placeholder="Descreva o motivo da nota 2 ou 3"
+                          placeholderTextColor={theme.placeholder}
+                          style={[
+                            styles.textInput,
+                            {
+                              color: theme.text,
+                              backgroundColor: theme.background,
+                              borderColor: showValidation ? theme.danger : theme.border,
+                            },
+                          ]}
+                          value={resposta.justificativa}
+                          onChangeText={(justificativa) =>
+                            updateResposta(pergunta.id, { justificativa })
+                          }
+                        />
+                      </View>
+                    ) : null}
+
+                    {requiresEvidencia(resposta.nota) ? (
+                      <View style={styles.fieldGroup}>
+                        <ThemedText style={styles.fieldLabel}>Evidência *</ThemedText>
+                        <TextInput
+                          multiline
+                          placeholder="Descreva ou referencie a evidência da nota 5"
+                          placeholderTextColor={theme.placeholder}
+                          style={[
+                            styles.textInput,
+                            {
+                              color: theme.text,
+                              backgroundColor: theme.background,
+                              borderColor: showValidation ? theme.danger : theme.border,
+                            },
+                          ]}
+                          value={resposta.evidencia}
+                          onChangeText={(evidencia) => updateResposta(pergunta.id, { evidencia })}
+                        />
+                      </View>
+                    ) : null}
+
+                    {showValidation ? (
+                      <ThemedText themeColor="danger" style={styles.fieldError}>
+                        {validationMessage}
+                      </ThemedText>
+                    ) : null}
+                  </View>
+                );
+              })
             )}
           </View>
 
@@ -246,7 +317,7 @@ export function FormularioAvaliacaoScreen() {
           <Button
             label="Salvar avaliação"
             isLoading={isSubmitting}
-            disabled={perguntas.length === 0}
+            disabled={!canSubmit}
             onPress={() => void handleSubmit()}
           />
         </ScrollView>
@@ -289,6 +360,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  card: {
+    borderRadius: Radius.sm,
+    padding: Spacing.three,
+    gap: Spacing.three,
+  },
   melhoriaItem: {
     gap: Spacing.two,
     paddingBottom: Spacing.two,
@@ -297,11 +373,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 14,
     lineHeight: 20,
-  },
-  perguntaCard: {
-    borderRadius: Radius.lg,
-    padding: Spacing.three,
-    gap: Spacing.three,
   },
   perguntaIndex: {
     fontFamily: Fonts.sansMedium,
@@ -314,16 +385,29 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  comentarioInput: {
+  fieldGroup: {
+    gap: Spacing.one,
+  },
+  fieldLabel: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.85,
+  },
+  textInput: {
     minHeight: 72,
     borderWidth: 1,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontFamily: Fonts.sans,
     fontSize: 14,
     lineHeight: 20,
     textAlignVertical: 'top',
+  },
+  fieldError: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   feedback: {
     fontSize: 14,

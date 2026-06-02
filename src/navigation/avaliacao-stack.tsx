@@ -1,4 +1,3 @@
-import { DrawerToggleButton } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Fonts } from '@/constants/theme';
@@ -37,7 +36,6 @@ export function AvaliacaoStackNavigator() {
         component={ListaColaboradoresScreen}
         options={{
           title: 'Painel de avaliação',
-          headerLeft: () => <DrawerToggleButton tintColor={theme.text} />,
         }}
       />
       <Stack.Screen

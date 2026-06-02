@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { ALLOWED_SCORES } from '@/features/avaliacao/validation';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -9,14 +10,12 @@ type ScorePickerProps = {
   onChange: (score: number) => void;
 };
 
-const SCORES = [1, 2, 3, 4, 5] as const;
-
 export function ScorePicker({ value, onChange }: ScorePickerProps) {
   const theme = useTheme();
 
   return (
     <View style={styles.row}>
-      {SCORES.map((score) => {
+      {ALLOWED_SCORES.map((score) => {
         const isSelected = value === score;
 
         return (
@@ -50,12 +49,14 @@ export function ScorePicker({ value, onChange }: ScorePickerProps) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.two,
   },
   block: {
-    flex: 1,
+    minWidth: 44,
+    flexGrow: 1,
     minHeight: 44,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
