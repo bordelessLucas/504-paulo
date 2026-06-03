@@ -1,5 +1,7 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+import type { UserRole } from '@/types/supabase';
+
 export type CreateColaboradorInput = {
   email: string;
   nome: string;
@@ -7,7 +9,12 @@ export type CreateColaboradorInput = {
   departamento?: string;
   data_admissao?: string;
   senha_temporaria?: string;
+  role?: UserRole;
+  status?: string;
 };
+
+/** Senha padrão ao importar colaboradores via CSV (contas novas). */
+export const CSV_IMPORT_DEFAULT_PASSWORD = '12345678';
 
 export type ColaboradorFieldError = {
   field: keyof CreateColaboradorInput | 'general';

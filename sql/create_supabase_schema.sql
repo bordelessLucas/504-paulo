@@ -53,7 +53,7 @@ create table if not exists public.avaliacoes (
   avaliador_id uuid references public.profiles(id) on delete set null,
   avaliado_id uuid references public.profiles(id) on delete cascade,
   tipo public.tipo_avaliacao not null,
-  data_criacao timestamptz default now()
+  created_at timestamptz default now()
 );
 
 -- Respostas table
@@ -61,7 +61,7 @@ create table if not exists public.respostas (
   id uuid primary key default gen_random_uuid(),
   avaliacao_id uuid not null references public.avaliacoes(id) on delete cascade,
   pergunta_id uuid references public.perguntas(id) on delete set null,
-  nota smallint check (nota in (0,1,2,3,5)),
+  nota smallint check (nota in (0,1,2,3)),
   justificativa text,
   evidencia text,
   created_at timestamptz default now()
@@ -95,34 +95,29 @@ create policy perguntas_select_by_role_and_dept on public.perguntas
   for select using (
     auth.uid() is not null and (
       (select p.role from public.profiles p where p.id = auth.uid()) not in ('gestor','supervisor')
-      or (select p.role from public.profiles p where p.id = auth.uid()) in ('ceo','rh')
+      or (select p.role from public.profiles p where p.id = auth.uid()) in ('ceo','rh','admin','gerente')
       or (select p.departamento from public.profiles p where p.id = auth.uid()) = secao_departamento
+      or secao_departamento = 'UNIVERSAL'
     )
   );
 
 -- AVALIACOES/RESPOSTAS: create masked views for avaliado so avaliador_id is not exposed
 -- Revoke direct SELECT on tables from authenticated and grant only on views.
 
+DROP VIEW IF EXISTS public.avaliacoes_masked;
+
 DO $do$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'avaliacoes' AND column_name = 'data_criacao'
-  ) THEN
-    EXECUTE $$
-      CREATE OR REPLACE VIEW public.avaliacoes_masked AS
-      SELECT id, avaliado_id, tipo, data_criacao FROM public.avaliacoes;
-    $$;
-  ELSIF EXISTS (
-    SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'avaliacoes' AND column_name = 'created_at'
   ) THEN
     EXECUTE $$
-      CREATE OR REPLACE VIEW public.avaliacoes_masked AS
-      SELECT id, avaliado_id, tipo, created_at AS data_criacao FROM public.avaliacoes;
+      CREATE VIEW public.avaliacoes_masked AS
+      SELECT id, avaliado_id, tipo, created_at FROM public.avaliacoes;
     $$;
   ELSE
-    RAISE NOTICE 'Skipping creation of view public.avaliacoes_masked: no recognized timestamp column on public.avaliacoes';
+    RAISE NOTICE 'Skipping creation of view public.avaliacoes_masked: column created_at not found on public.avaliacoes';
   END IF;
 END $do$;
 
@@ -148,11 +143,13 @@ BEGIN
   END IF;
 END$$;
 
--- Revoke direct table selects from authenticated role to force use of views
-revoke select on public.avaliacoes from authenticated;
-revoke select on public.respostas from authenticated;
+-- Views mascaradas (colaborador) + tabelas base (gestores, CEO, RH, dashboard gerencial)
+grant select on public.avaliacoes to authenticated;
+grant select on public.respostas to authenticated;
+grant insert on public.avaliacoes to authenticated;
+grant insert on public.respostas to authenticated;
+grant update on public.respostas to authenticated;
 
--- Grant select on views to authenticated role
 grant select on public.avaliacoes_masked to authenticated;
 grant select on public.respostas_masked to authenticated;
 
@@ -160,7 +157,7 @@ grant select on public.respostas_masked to authenticated;
 -- CEO/RH/Admin: full access
 create policy avaliacoes_select_ceo_admin on public.avaliacoes
   for select using (
-    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('ceo','rh'))
+    exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('ceo','rh','admin'))
   );
 
 -- Avaliado can read their own avaliacoes
@@ -184,13 +181,50 @@ create policy avaliacoes_select_authenticated_others on public.avaliacoes
     and not exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'gestor')
   );
 
+-- INSERT: supervisor, gestor e gerente registram avaliações
+create policy avaliacoes_insert_avaliador on public.avaliacoes
+  for insert with check (
+    avaliador_id = auth.uid()
+    and exists (
+      select 1 from public.profiles p
+      where p.id = auth.uid() and p.role in ('supervisor','gestor','gerente')
+    )
+  );
+
+create policy respostas_insert_avaliador on public.respostas
+  for insert with check (
+    exists (
+      select 1 from public.avaliacoes a
+      where a.id = avaliacao_id and a.avaliador_id = auth.uid()
+    )
+  );
+
+create policy respostas_update_avaliador on public.respostas
+  for update using (
+    exists (
+      select 1 from public.profiles p
+      where p.id = auth.uid() and p.role in ('supervisor','gestor','gerente')
+    )
+    and exists (
+      select 1 from public.avaliacoes a
+      join public.profiles colab on colab.id = a.avaliado_id
+      where a.id = respostas.avaliacao_id and colab.role = 'colaborador'
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.profiles p
+      where p.id = auth.uid() and p.role in ('supervisor','gestor','gerente')
+    )
+  );
+
 -- RESPOSTAS: allow avaliado to read responses tied to their avaliacoes; CEO/RH can read all; apply similar gestor restriction
 create policy respostas_select_avaliado on public.respostas
   for select using (
     exists (
       select 1 from public.avaliacoes a where a.id = public.respostas.avaliacao_id and a.avaliado_id = auth.uid()
     )
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('ceo','rh'))
+    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.role in ('ceo','rh','admin'))
     or (
       exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'gestor')
       and not (

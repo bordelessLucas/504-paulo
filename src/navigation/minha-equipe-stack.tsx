@@ -2,26 +2,20 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Fonts } from '@/constants/theme';
 import { FormularioAvaliacaoScreen } from '@/screens/avaliacao/formulario-avaliacao-screen';
-import { HistoricoAvaliacoesScreen } from '@/screens/avaliacao/historico-avaliacoes-screen';
-import { ListaColaboradoresScreen } from '@/screens/avaliacao/lista-colaboradores-screen';
+import { MinhaEquipeScreen } from '@/screens/avaliacao/minha-equipe-screen';
 import { useTheme } from '@/hooks/use-theme';
 
-export type AvaliacaoStackParamList = {
-  ListaColaboradores: undefined;
+export type MinhaEquipeStackParamList = {
+  MinhaEquipeLista: undefined;
   FormularioAvaliacao: {
     avaliadoId: string;
     avaliadoNome: string;
   };
-  HistoricoAvaliacoes: {
-    avaliadoId: string;
-    avaliadoNome: string;
-    revealAvaliador: boolean;
-  };
 };
 
-const Stack = createNativeStackNavigator<AvaliacaoStackParamList>();
+const Stack = createNativeStackNavigator<MinhaEquipeStackParamList>();
 
-export function AvaliacaoStackNavigator() {
+export function MinhaEquipeStackNavigator() {
   const theme = useTheme();
 
   return (
@@ -38,25 +32,15 @@ export function AvaliacaoStackNavigator() {
         contentStyle: { backgroundColor: theme.background },
       }}>
       <Stack.Screen
-        name="ListaColaboradores"
-        component={ListaColaboradoresScreen}
-        options={{
-          title: 'Painel de avaliação',
-        }}
+        name="MinhaEquipeLista"
+        component={MinhaEquipeScreen}
+        options={{ title: 'Minha equipe' }}
       />
       <Stack.Screen
         name="FormularioAvaliacao"
         component={FormularioAvaliacaoScreen}
         options={{
           title: 'Avaliação',
-          headerBackTitle: 'Voltar',
-        }}
-      />
-      <Stack.Screen
-        name="HistoricoAvaliacoes"
-        component={HistoricoAvaliacoesScreen}
-        options={{
-          title: 'Histórico',
           headerBackTitle: 'Voltar',
         }}
       />

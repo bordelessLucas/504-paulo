@@ -24,7 +24,7 @@ function buildFichaHtml(ficha: ColaboradorFichaData) {
       ? avaliacoes
           .map(
             (avaliacao) =>
-              `<li>${escapeHtml(avaliacao.tipo)} — ${new Date(avaliacao.data_criacao).toLocaleDateString('pt-BR')}</li>`,
+              `<li>${escapeHtml(avaliacao.tipo)} — ${new Date(avaliacao.created_at).toLocaleDateString('pt-BR')}</li>`,
           )
           .join('')
       : '<li>Nenhuma avaliação registrada.</li>';

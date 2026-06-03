@@ -113,11 +113,12 @@ function ListaColaboradoresExecutiveView({
     }, [loadData]),
   );
 
-  const navigateToAvaliacao = useCallback(
+  const navigateToHistorico = useCallback(
     (colaborador: ColaboradorResumo) => {
-      navigation.navigate('FormularioAvaliacao', {
+      navigation.navigate('HistoricoAvaliacoes', {
         avaliadoId: colaborador.id,
         avaliadoNome: colaborador.nome,
+        revealAvaliador: true,
       });
     },
     [navigation],
@@ -152,7 +153,8 @@ function ListaColaboradoresExecutiveView({
       }
       showsVerticalScrollIndicator={false}>
       <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-        Visão geral da quinzena atual ({total} colaboradores).
+        Visão da quinzena atual — toque em um colaborador para ver o histórico de avaliações (
+        {total} colaboradores).
       </ThemedText>
 
       <ColaboradorSection count={pendentes.length} title="Avaliações pendentes">
@@ -166,7 +168,7 @@ function ListaColaboradoresExecutiveView({
               key={colaborador.id}
               colaborador={colaborador}
               detail={formatMetaColaborador(colaborador)}
-              onPress={() => navigateToAvaliacao(colaborador)}
+              onPress={() => navigateToHistorico(colaborador)}
             />
           ))
         )}
@@ -187,7 +189,7 @@ function ListaColaboradoresExecutiveView({
                   ? `Avaliado em ${formatDataBr(colaborador.ultimaAvaliacaoData)} · ${formatMetaColaborador(colaborador)}`
                   : formatMetaColaborador(colaborador)
               }
-              onPress={() => navigateToAvaliacao(colaborador)}
+              onPress={() => navigateToHistorico(colaborador)}
             />
           ))
         )}

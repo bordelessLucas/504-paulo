@@ -20,23 +20,30 @@ export async function createColaborador(
     return validationError;
   }
 
-  const payload = normalizeCreateColaboradorInput(input);
+  const normalized = normalizeCreateColaboradorInput(input);
 
   const { data, error } = await supabase.functions.invoke('create-colaborador', {
-    body: payload,
+    body: {
+      ...normalized,
+      role: input.role ?? 'colaborador',
+      status: input.status?.trim() || 'ativo',
+    },
   });
 
-  if (error) {
-    return {
-      field: 'general',
-      message: error.message || 'Não foi possível cadastrar o colaborador.',
-    };
-  }
+  const responseError =
+    typeof data?.error === 'string'
+      ? data.error
+      : data?.error && typeof data.error === 'object' && 'message' in data.error
+        ? String((data.error as { message: unknown }).message)
+        : null;
 
-  if (data?.error) {
+  if (error || responseError) {
     return {
       field: 'general',
-      message: typeof data.error === 'string' ? data.error : 'Não foi possível cadastrar o colaborador.',
+      message:
+        responseError ||
+        error?.message ||
+        'Não foi possível cadastrar o colaborador.',
     };
   }
 

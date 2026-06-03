@@ -1,0 +1,11 @@
+email,nome,funcao,departamento,data_admissao,status,role
+colaborador1@teste.com,Ana Silva,Operadora de Rope Access,Operações Bordo,2023-06-15,ativo,colaborador
+colaborador2@teste.com,Bruno Costa,Técnico de Manutenção,Manutenção,2024-01-10,ativo,colaborador
+colaborador3@teste.com,Carla Mendes,Analista QHSE,QHSE,2022-11-20,ativo,colaborador
+colaborador4@teste.com,Diego Alves,Assistente Comercial,Comercial,2024-08-01,ativo,colaborador
+colaborador5@teste.com,Elena Rocha,Desenvolvedora Júnior,TI,2023-03-05,ativo,colaborador
+colaborador6@teste.com,Felipe Nunes,Auxiliar Logística,Logística,2021-09-12,ativo,colaborador
+colaborador7@teste.com,Gabriela Dias,Engenheira de Projetos,Projetos,2020-05-18,ativo,colaborador
+colaborador8@teste.com,Henrique Souza,Operador Terra,Operações Terra,2023-10-22,ativo,colaborador
+colaborador9@teste.com,Isabela Ferreira,Analista Financeiro,Financeiro,2024-11-01,ativo,colaborador
+colaborador10@teste.com,João Pedro Lima,Estagiário Jurídico,Jurídico,2025-12-01,ativo,colaborador

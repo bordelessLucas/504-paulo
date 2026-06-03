@@ -10,7 +10,7 @@ import { AdminDashboardScreen } from '@/screens/admin/admin-dashboard-screen';
 import { DashboardsGerenciaisScreen } from '@/screens/admin/dashboards-gerenciais-screen';
 import { AprovacoesScreen } from '@/screens/admin/aprovacoes-screen';
 import { PainelAvaliacaoScreen } from '@/screens/avaliacao/painel-screen';
-import { MinhaEquipeScreen } from '@/screens/avaliacao/minha-equipe-screen';
+import { MinhaEquipeTabScreen } from '@/screens/avaliacao/minha-equipe-tab-screen';
 import { DashboardColaboradorScreen } from '@/screens/colaborador/dashboard-screen';
 import { MinhasAvaliacoesScreen } from '@/screens/colaborador/minhas-avaliacoes-screen';
 import { EstrategicoScreen } from '@/screens/gerente/estrategico-screen';
@@ -23,7 +23,7 @@ const TAB_SCREENS: Record<keyof MainTabParamList, ComponentType> = {
   DashboardColaborador: DashboardColaboradorScreen,
   MinhasAvaliacoes: MinhasAvaliacoesScreen,
   PainelAvaliacao: PainelAvaliacaoScreen,
-  MinhaEquipe: MinhaEquipeScreen,
+  MinhaEquipe: MinhaEquipeTabScreen,
   Estrategico: EstrategicoScreen,
   AdminDashboard: AdminDashboardScreen,
   DashboardsGerenciais: DashboardsGerenciaisScreen,

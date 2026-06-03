@@ -11,25 +11,25 @@ export const SEMAFORO_ITENS: SemaforoItem[] = [
   {
     status: 'verde',
     label: 'Verde',
-    description: 'Média ≥ 4,0',
+    description: 'Média ≥ 2,5 (escala 0–3)',
     color: '#2ECC71',
   },
   {
     status: 'amarelo',
     label: 'Amarelo',
-    description: 'Média ≥ 3,0',
+    description: 'Média ≥ 2,0',
     color: '#F1C40F',
   },
   {
     status: 'laranja',
     label: 'Laranja',
-    description: 'Média ≥ 2,0',
+    description: 'Média ≥ 1,0',
     color: '#E67E22',
   },
   {
     status: 'vermelho',
     label: 'Vermelho',
-    description: 'Média < 2,0',
+    description: 'Média < 1,0',
     color: '#E74C3C',
   },
   {
@@ -45,15 +45,15 @@ export function getSemaforoPorMedia(media: number | null): SemaforoStatus {
     return 'cinza';
   }
 
-  if (media >= 4) {
+  if (media >= 2.5) {
     return 'verde';
   }
 
-  if (media >= 3) {
+  if (media >= 2) {
     return 'amarelo';
   }
 
-  if (media >= 2) {
+  if (media >= 1) {
     return 'laranja';
   }
 

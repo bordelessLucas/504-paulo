@@ -1,4 +1,4 @@
-export const ALLOWED_SCORES = [0, 1, 2, 3, 5] as const;
+export const ALLOWED_SCORES = [0, 1, 2, 3] as const;
 
 export type AllowedScore = (typeof ALLOWED_SCORES)[number];
 
@@ -12,10 +12,6 @@ export function requiresJustificativa(nota: number | null): boolean {
   return nota === 2 || nota === 3;
 }
 
-export function requiresEvidencia(nota: number | null): boolean {
-  return nota === 5;
-}
-
 export function isRespostaCompleta(resposta: RespostaFormState): boolean {
   if (resposta.nota === null) {
     return false;
@@ -23,10 +19,6 @@ export function isRespostaCompleta(resposta: RespostaFormState): boolean {
 
   if (requiresJustificativa(resposta.nota)) {
     return resposta.justificativa.trim().length > 0;
-  }
-
-  if (requiresEvidencia(resposta.nota)) {
-    return resposta.evidencia.trim().length > 0;
   }
 
   return true;
@@ -39,10 +31,6 @@ export function getRespostaValidationMessage(resposta: RespostaFormState): strin
 
   if (requiresJustificativa(resposta.nota) && !resposta.justificativa.trim()) {
     return 'Informe a justificativa para notas 2 ou 3.';
-  }
-
-  if (requiresEvidencia(resposta.nota) && !resposta.evidencia.trim()) {
-    return 'Informe a evidência para nota 5.';
   }
 
   return null;

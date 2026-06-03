@@ -146,7 +146,7 @@ export function DashboardsGerenciaisScreen() {
 
           <DashboardCard title="Desempenho por departamento">
             <ThemedText themeColor="textSecondary" style={styles.hint}>
-              Média das notas por departamento (escala 0 a 5) — 12 áreas da empresa.
+              Média das notas por departamento (escala 0 a 3) — 12 áreas da empresa.
             </ThemedText>
             <RadarDesempenhoChart
               labels={data?.radarLabels ?? []}

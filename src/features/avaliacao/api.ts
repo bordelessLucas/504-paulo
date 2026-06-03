@@ -1,9 +1,20 @@
+import {
+  AVALIACAO_DATA_COLUMN,
+  getAvaliacaoDataDate,
+  type AvaliacaoComData,
+} from '@/features/avaliacao/avaliacao-date';
+import {
+  getCicloInicioPorTipo,
+  getQuinzenaStartDate,
+  SECAO_PERGUNTAS_UNIVERSAIS,
+} from '@/features/avaliacao/ciclos';
 import { supabase } from '@/lib/supabase';
 import type {
   PerguntaAvaliacao,
   PontoMelhoria,
   Profile,
   TipoAvaliacao,
+  UserRole,
 } from '@/types/supabase';
 
 export const COLABORADORES_PAGE_SIZE = 10;
@@ -27,6 +38,16 @@ export type ColaboradoresAvaliacaoExecutive = {
   cicloInicio: string;
 };
 
+export type ColaboradorEquipeStatus = ColaboradorResumo & {
+  avaliadoNaQuinzena: boolean;
+  ultimaAvaliacaoData?: string;
+};
+
+export type EquipeQuinzenaData = {
+  colaboradores: ColaboradorEquipeStatus[];
+  cicloInicio: string;
+};
+
 export type RespostaFormulario = {
   perguntaId: string;
   nota: number;
@@ -39,11 +60,20 @@ export type MelhoriaFormulario = {
   melhorou: boolean;
 };
 
-export function getQuinzenaStartDate(referenceDate = new Date()): string {
-  const day = referenceDate.getDate();
-  const start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), day <= 15 ? 1 : 16);
+export { getQuinzenaStartDate } from '@/features/avaliacao/ciclos';
 
-  return start.toISOString().slice(0, 10);
+export async function fetchPerguntasUniversais(): Promise<PerguntaAvaliacao[]> {
+  const { data, error } = await supabase
+    .from('perguntas')
+    .select('*')
+    .eq('secao_departamento', SECAO_PERGUNTAS_UNIVERSAIS)
+    .order('codigo', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ?? [];
 }
 
 export async function fetchColaboradoresPage(
@@ -76,8 +106,9 @@ export async function fetchColaboradoresPage(
 
 export async function fetchColaboradoresAvaliacaoExecutive(
   avaliadorId: string,
+  tipo: TipoAvaliacao = 'quinzenal',
 ): Promise<ColaboradoresAvaliacaoExecutive> {
-  const cicloInicio = getQuinzenaStartDate();
+  const cicloInicio = getCicloInicioPorTipo(tipo);
 
   const { data: colaboradores, error: colaboradoresError } = await supabase
     .from('profiles')
@@ -101,9 +132,10 @@ export async function fetchColaboradoresAvaliacaoExecutive(
 
   const { data: avaliacoes, error: avaliacoesError } = await supabase
     .from('avaliacoes')
-    .select('avaliado_id, data_criacao')
+    .select(`avaliado_id, ${AVALIACAO_DATA_COLUMN}`)
     .in('avaliado_id', colaboradorIds)
-    .gte('data_criacao', `${cicloInicio}T00:00:00.000Z`);
+    .eq('tipo', tipo)
+    .gte(AVALIACAO_DATA_COLUMN, `${cicloInicio}T00:00:00.000Z`);
 
   if (avaliacoesError) {
     throw new Error(avaliacoesError.message);
@@ -111,8 +143,10 @@ export async function fetchColaboradoresAvaliacaoExecutive(
 
   const ultimaAvaliacaoPorColaborador = new Map<string, string>();
 
-  for (const avaliacao of avaliacoes ?? []) {
-    const dataReferencia = avaliacao.data_criacao.slice(0, 10);
+  for (const avaliacao of (avaliacoes ?? []) as Array<
+    { avaliado_id: string } & AvaliacaoComData
+  >) {
+    const dataReferencia = getAvaliacaoDataDate(avaliacao);
     const atual = ultimaAvaliacaoPorColaborador.get(avaliacao.avaliado_id);
 
     if (!atual || dataReferencia > atual) {
@@ -137,40 +171,55 @@ export async function fetchColaboradoresAvaliacaoExecutive(
   return { pendentes, concluidas, cicloInicio };
 }
 
-export async function fetchPerguntasPorDepartamento(departamento?: string | null): Promise<{
+export async function fetchEquipeStatusCiclo(
+  avaliadorId: string,
+  role: UserRole | null | undefined,
+): Promise<EquipeQuinzenaData> {
+  const tipo: TipoAvaliacao = role === 'gestor' || role === 'gerente' ? 'semestral' : 'quinzenal';
+  const executive = await fetchColaboradoresAvaliacaoExecutive(avaliadorId, tipo);
+
+  const colaboradores: ColaboradorEquipeStatus[] = [
+    ...executive.concluidas.map((colaborador) => ({
+      ...colaborador,
+      avaliadoNaQuinzena: true,
+    })),
+    ...executive.pendentes.map((colaborador) => ({
+      ...colaborador,
+      avaliadoNaQuinzena: false,
+    })),
+  ].sort((left, right) => left.nome.localeCompare(right.nome, 'pt-BR'));
+
+  return {
+    colaboradores,
+    cicloInicio: executive.cicloInicio,
+  };
+}
+
+/** @deprecated Use fetchPerguntasUniversais */
+export async function fetchPerguntasPorDepartamento(_departamento?: string | null): Promise<{
   perguntas: PerguntaAvaliacao[];
   departamentoLabel: string;
 }> {
-  const departamentoLabel = departamento?.trim() || 'Sem departamento';
-
-  if (!departamento?.trim()) {
-    return { perguntas: [], departamentoLabel };
-  }
-
-  const { data, error } = await supabase
-    .from('perguntas')
-    .select('*')
-    .ilike('secao_departamento', departamento.trim())
-    .order('peso', { ascending: false });
-
-  if (error) {
-    throw new Error(error.message);
-  }
+  const perguntas = await fetchPerguntasUniversais();
 
   return {
-    perguntas: data ?? [],
-    departamentoLabel,
+    perguntas,
+    departamentoLabel: 'Metodologia 360°',
   };
 }
 
-/** @deprecated Use fetchPerguntasPorDepartamento */
-export async function fetchPerguntasPorAvaliador(departamento?: string | null) {
-  const result = await fetchPerguntasPorDepartamento(departamento);
+/** @deprecated Use fetchPerguntasUniversais */
+export async function fetchPerguntasPorAvaliador(_departamento?: string | null) {
+  const perguntas = await fetchPerguntasUniversais();
+
   return {
-    perguntas: result.perguntas,
-    perfilAlvo: result.departamentoLabel,
+    perguntas,
+    perfilAlvo: 'Metodologia 360°',
   };
 }
+
+/** @deprecated Use fetchEquipeStatusCiclo */
+export const fetchEquipeStatusQuinzena = fetchEquipeStatusCiclo;
 
 type RespostaComPergunta = {
   id: string;
@@ -185,7 +234,7 @@ export async function fetchPontosMelhoriaAnteriores(avaliadoId: string): Promise
     .from('avaliacoes')
     .select('id')
     .eq('avaliado_id', avaliadoId)
-    .order('data_criacao', { ascending: false })
+    .order(AVALIACAO_DATA_COLUMN, { ascending: false })
     .limit(1)
     .maybeSingle();
 

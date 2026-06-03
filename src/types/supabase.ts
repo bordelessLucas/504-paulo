@@ -113,21 +113,21 @@ export type Database = {
           avaliador_id: string | null;
           avaliado_id: string;
           tipo: TipoAvaliacaoEnum;
-          data_criacao: string;
+          created_at: string;
         };
         Insert: {
           id?: string;
           avaliador_id?: string | null;
           avaliado_id: string;
           tipo: TipoAvaliacaoEnum;
-          data_criacao?: string;
+          created_at?: string;
         };
         Update: {
           id?: string;
           avaliador_id?: string | null;
           avaliado_id?: string;
           tipo?: TipoAvaliacaoEnum;
-          data_criacao?: string;
+          created_at?: string;
         };
         Relationships: [
           {
@@ -239,7 +239,7 @@ export type Database = {
           id: string;
           avaliado_id: string;
           tipo: TipoAvaliacaoEnum;
-          data_criacao: string;
+          created_at: string;
         };
         Relationships: [];
       };

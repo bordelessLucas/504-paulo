@@ -109,12 +109,18 @@ export function getTabsForRole(role: UserRole): TabMenuItem[] {
   }
 
   if (isGerenteRole(role)) {
-    return [TAB_DEFINITIONS.Estrategico, TAB_DEFINITIONS.MinhaEquipe, TAB_DEFINITIONS.Perfil];
+    return [
+      TAB_DEFINITIONS.Estrategico,
+      TAB_DEFINITIONS.PainelAvaliacao,
+      TAB_DEFINITIONS.MinhaEquipe,
+      TAB_DEFINITIONS.Perfil,
+    ];
   }
 
   if (isGerencialDashboardRole(role)) {
     return [
       TAB_DEFINITIONS.DashboardsGerenciais,
+      TAB_DEFINITIONS.PainelAvaliacao,
       TAB_DEFINITIONS.AdminDashboard,
       TAB_DEFINITIONS.Aprovacoes,
       TAB_DEFINITIONS.Perfil,
@@ -122,7 +128,12 @@ export function getTabsForRole(role: UserRole): TabMenuItem[] {
   }
 
   if (isAdminDashboardRole(role)) {
-    return [TAB_DEFINITIONS.AdminDashboard, TAB_DEFINITIONS.Aprovacoes, TAB_DEFINITIONS.Perfil];
+    return [
+      TAB_DEFINITIONS.AdminDashboard,
+      TAB_DEFINITIONS.PainelAvaliacao,
+      TAB_DEFINITIONS.Aprovacoes,
+      TAB_DEFINITIONS.Perfil,
+    ];
   }
 
   return [TAB_DEFINITIONS.DashboardColaborador, TAB_DEFINITIONS.Perfil];

@@ -54,7 +54,7 @@ export async function fetchColaboradorDashboard(userId: string): Promise<Colabor
   const [{ data: profile, error: profileError }, { data: avaliacoes, error: avaliacoesError }] =
     await Promise.all([
       supabase.from('profiles').select('data_admissao').eq('id', userId).single(),
-      supabase.from('avaliacoes').select('id').eq('avaliado_id', userId),
+      supabase.from('avaliacoes_masked').select('id').eq('avaliado_id', userId),
     ]);
 
   if (profileError) {
@@ -77,7 +77,7 @@ export async function fetchColaboradorDashboard(userId: string): Promise<Colabor
   }
 
   const { data: respostas, error: respostasError } = await supabase
-    .from('respostas')
+    .from('respostas_masked')
     .select('id, nota, justificativa, evidencia, created_at')
     .in('avaliacao_id', avaliacaoIds);
 

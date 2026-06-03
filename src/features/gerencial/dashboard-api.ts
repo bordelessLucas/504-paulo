@@ -5,6 +5,7 @@ import {
   type DepartamentoEmpresa,
 } from '@/features/gerencial/departamentos';
 import { getSemaforoPorMedia, type SemaforoStatus } from '@/features/gerencial/semaforo';
+import { AVALIACAO_DATA_COLUMN } from '@/features/avaliacao/avaliacao-date';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types/supabase';
 
@@ -179,9 +180,9 @@ export async function fetchColaboradorFicha(colaboradorId: string) {
 
   const { data: avaliacoes, error: avaliacoesError } = await supabase
     .from('avaliacoes')
-    .select('id, tipo, data_criacao')
+    .select(`id, tipo, ${AVALIACAO_DATA_COLUMN}`)
     .eq('avaliado_id', colaboradorId)
-    .order('data_criacao', { ascending: false });
+    .order(AVALIACAO_DATA_COLUMN, { ascending: false });
 
   if (avaliacoesError) {
     throw new Error(avaliacoesError.message);

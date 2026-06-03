@@ -1,26 +1,26 @@
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { useRoute, type RouteProp } from '@react-navigation/native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AvaliacaoHistoricoCard } from '@/components/avaliacao/avaliacao-historico-card';
-import { EscalaLegenda } from '@/components/avaliacao/escala-legenda';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Spacing } from '@/constants/theme';
-import { useAuth } from '@/features/auth/auth-context';
-import { fetchHistoricoAvaliacoesMasked } from '@/features/avaliacao/historico-api';
-import type { AvaliacaoHistoricoItem } from '@/features/avaliacao/historico-api';
+import {
+  fetchHistoricoAvaliacoesCompleto,
+  fetchHistoricoAvaliacoesMasked,
+  type AvaliacaoHistoricoItem,
+} from '@/features/avaliacao/historico-api';
+import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 
-export function MinhasAvaliacoesScreen() {
-  const { user } = useAuth();
+type HistoricoRoute = RouteProp<AvaliacaoStackParamList, 'HistoricoAvaliacoes'>;
+
+export function HistoricoAvaliacoesScreen() {
+  const route = useRoute<HistoricoRoute>();
+  const { avaliadoId, avaliadoNome, revealAvaliador } = route.params;
+
   const [items, setItems] = useState<AvaliacaoHistoricoItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -28,10 +28,6 @@ export function MinhasAvaliacoesScreen() {
 
   const loadHistorico = useCallback(
     async (options?: { refreshing?: boolean }) => {
-      if (!user) {
-        return;
-      }
-
       if (options?.refreshing) {
         setIsRefreshing(true);
       } else {
@@ -41,10 +37,13 @@ export function MinhasAvaliacoesScreen() {
       setError(null);
 
       try {
-        const historico = await fetchHistoricoAvaliacoesMasked(user.id);
+        const historico = revealAvaliador
+          ? await fetchHistoricoAvaliacoesCompleto(avaliadoId)
+          : await fetchHistoricoAvaliacoesMasked(avaliadoId);
+
         setItems(historico);
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : 'Erro ao carregar avaliações.');
+        setError(loadError instanceof Error ? loadError.message : 'Erro ao carregar histórico.');
       } finally {
         if (options?.refreshing) {
           setIsRefreshing(false);
@@ -53,25 +52,16 @@ export function MinhasAvaliacoesScreen() {
         }
       }
     },
-    [user],
+    [avaliadoId, revealAvaliador],
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadHistorico();
-    }, [loadHistorico]),
-  );
+  useEffect(() => {
+    void loadHistorico();
+  }, [loadHistorico]);
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-        <View style={styles.pageHeader}>
-          <ThemedText type="heading">Minhas avaliações</ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.description}>
-            Metodologia 360° — você vê suas notas e feedbacks, sem identificação de quem avaliou.
-          </ThemedText>
-        </View>
-
         {isLoading ? (
           <View style={styles.centered}>
             <ActivityIndicator size="large" />
@@ -91,16 +81,26 @@ export function MinhasAvaliacoesScreen() {
               />
             }
             showsVerticalScrollIndicator={false}>
-            <EscalaLegenda />
+            <View style={styles.header}>
+              <ThemedText type="heading">{avaliadoNome}</ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.subtitle}>
+                {revealAvaliador
+                  ? 'Histórico completo de avaliações (visão gestão).'
+                  : 'Suas avaliações — o avaliador não é exibido.'}
+              </ThemedText>
+            </View>
 
             {items.length === 0 ? (
               <ThemedText themeColor="textSecondary" style={styles.empty}>
-                Nenhuma avaliação registrada ainda. Quando seu supervisor ou gestor concluir um
-                ciclo, os resultados aparecerão aqui.
+                Nenhuma avaliação registrada ainda.
               </ThemedText>
             ) : (
               items.map((item) => (
-                <AvaliacaoHistoricoCard key={item.id} item={item} showAvaliador={false} />
+                <AvaliacaoHistoricoCard
+                  key={item.id}
+                  item={item}
+                  showAvaliador={revealAvaliador}
+                />
               ))
             )}
           </ScrollView>
@@ -117,24 +117,23 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  pageHeader: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
-    gap: Spacing.one,
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
     gap: Spacing.three,
     paddingBottom: Spacing.six,
   },
+  header: {
+    gap: Spacing.one,
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
   empty: {
     fontSize: 14,
     lineHeight: 20,
+    paddingVertical: Spacing.four,
   },
   centered: {
     flex: 1,

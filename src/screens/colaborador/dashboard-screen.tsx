@@ -20,6 +20,8 @@ import {
   formatMediaGeral,
   type ColaboradorDashboardData,
 } from '@/features/colaborador/dashboard-api';
+import { createAutoavaliacaoSolicitacao } from '@/features/colaborador/autoavaliacao-api';
+import { AutoavaliacaoModal } from '@/features/colaborador/autoavaliacao-modal';
 import {
   formatDataAdmissao,
   isElegivelParaAutoavaliacao,
@@ -56,6 +58,7 @@ export function DashboardColaboradorScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAutoavaliacaoModalVisible, setIsAutoavaliacaoModalVisible] = useState(false);
 
   const loadDashboard = useCallback(
     async (options?: { refreshing?: boolean }) => {
@@ -102,8 +105,25 @@ export function DashboardColaboradorScreen() {
       return;
     }
 
-    showToast('Solicitação de autoavaliação registrada. Em breve você poderá completá-la aqui.', 'info');
+    setIsAutoavaliacaoModalVisible(true);
   }
+
+  const handleAutoavaliacaoSubmit = useCallback(
+    async (payload: { qualificacoes: string; investimento: string }) => {
+      if (!user) {
+        throw new Error('Sessão inválida. Faça login novamente.');
+      }
+
+      await createAutoavaliacaoSolicitacao({
+        colaboradorId: user.id,
+        qualificacoes: payload.qualificacoes,
+        investimento: payload.investimento,
+      });
+
+      showToast('Solicitação enviada com sucesso.', 'success');
+    },
+    [showToast, user],
+  );
 
   if (isLoading) {
     return (
@@ -203,6 +223,12 @@ export function DashboardColaboradorScreen() {
             />
           </DashboardCard>
         </ScrollView>
+
+        <AutoavaliacaoModal
+          visible={isAutoavaliacaoModalVisible}
+          onClose={() => setIsAutoavaliacaoModalVisible(false)}
+          onSubmit={handleAutoavaliacaoSubmit}
+        />
       </SafeAreaView>
     </ThemedView>
   );

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { EscalaLegenda } from '@/components/avaliacao/escala-legenda';
 import { NotionCheckbox } from '@/components/avaliacao/notion-checkbox';
 import { ScorePicker } from '@/components/avaliacao/score-picker';
 import { ThemedText } from '@/components/themed-text';
@@ -16,18 +17,19 @@ import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import {
-  fetchPerguntasPorDepartamento,
+  fetchPerguntasUniversais,
   fetchPontosMelhoriaAnteriores,
   submitAvaliacao,
 } from '@/features/avaliacao/api';
+import { resolveTipoAvaliacaoPorRole, TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
 import {
   getRespostaValidationMessage,
   isRespostaCompleta,
-  requiresEvidencia,
   requiresJustificativa,
   type RespostaFormState,
 } from '@/features/avaliacao/validation';
 import { useAuth } from '@/features/auth/auth-context';
+import { useAuthRole } from '@/hooks/use-auth-role';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 import type { PerguntaAvaliacao, PontoMelhoria } from '@/types/supabase';
 import { useTheme } from '@/hooks/use-theme';
@@ -44,12 +46,14 @@ function createEmptyResposta(): RespostaFormState {
 export function FormularioAvaliacaoScreen() {
   const theme = useTheme();
   const { user } = useAuth();
+  const { role } = useAuthRole();
   const route = useRoute<FormularioRoute>();
   const { avaliadoId, avaliadoNome } = route.params;
 
+  const tipoAvaliacao = resolveTipoAvaliacaoPorRole(role);
+
   const [perguntas, setPerguntas] = useState<PerguntaAvaliacao[]>([]);
   const [pontosMelhoria, setPontosMelhoria] = useState<PontoMelhoria[]>([]);
-  const [departamentoLabel, setDepartamentoLabel] = useState('');
   const [respostas, setRespostas] = useState<RespostasState>({});
   const [melhorias, setMelhorias] = useState<MelhoriasState>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -70,17 +74,16 @@ export function FormularioAvaliacaoScreen() {
     setError(null);
 
     try {
-      const [perguntasResult, pontos] = await Promise.all([
-        fetchPerguntasPorDepartamento(user?.departamento),
+      const [perguntasLista, pontos] = await Promise.all([
+        fetchPerguntasUniversais(),
         fetchPontosMelhoriaAnteriores(avaliadoId),
       ]);
 
-      setPerguntas(perguntasResult.perguntas);
-      setDepartamentoLabel(perguntasResult.departamentoLabel);
+      setPerguntas(perguntasLista);
       setPontosMelhoria(pontos);
 
       const initialRespostas: RespostasState = {};
-      perguntasResult.perguntas.forEach((pergunta) => {
+      perguntasLista.forEach((pergunta) => {
         initialRespostas[pergunta.id] = createEmptyResposta();
       });
       setRespostas(initialRespostas);
@@ -95,7 +98,7 @@ export function FormularioAvaliacaoScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [avaliadoId, user?.departamento]);
+  }, [avaliadoId]);
 
   useEffect(() => {
     void loadForm();
@@ -135,6 +138,7 @@ export function FormularioAvaliacaoScreen() {
       await submitAvaliacao({
         avaliadorId: user.id,
         avaliadoId,
+        tipo: tipoAvaliacao,
         respostas: perguntas.map((pergunta) => {
           const resposta = respostas[pergunta.id];
 
@@ -188,9 +192,11 @@ export function FormularioAvaliacaoScreen() {
           <View style={styles.header}>
             <ThemedText type="heading">{avaliadoNome}</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-              Perguntas do departamento {departamentoLabel} · notas permitidas: 0, 1, 2, 3 e 5
+              {TIPO_AVALIACAO_LABELS[tipoAvaliacao]} · 3 critérios universais · escala 0 a 3
             </ThemedText>
           </View>
+
+          <EscalaLegenda />
 
           {pontosMelhoria.length > 0 ? (
             <View style={[styles.section, styles.card, { backgroundColor: theme.backgroundElement }]}>
@@ -222,7 +228,8 @@ export function FormularioAvaliacaoScreen() {
 
             {perguntas.length === 0 ? (
               <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-                Nenhuma pergunta cadastrada para o departamento {departamentoLabel}.
+                Perguntas universais não encontradas. Execute o script sql/seed_perguntas_universais.sql
+                no Supabase.
               </ThemedText>
             ) : (
               perguntas.map((pergunta, index) => {
@@ -246,7 +253,7 @@ export function FormularioAvaliacaoScreen() {
                         updateResposta(pergunta.id, {
                           nota,
                           justificativa: requiresJustificativa(nota) ? resposta.justificativa : '',
-                          evidencia: requiresEvidencia(nota) ? resposta.evidencia : '',
+                          evidencia: '',
                         })
                       }
                     />
@@ -270,27 +277,6 @@ export function FormularioAvaliacaoScreen() {
                           onChangeText={(justificativa) =>
                             updateResposta(pergunta.id, { justificativa })
                           }
-                        />
-                      </View>
-                    ) : null}
-
-                    {requiresEvidencia(resposta.nota) ? (
-                      <View style={styles.fieldGroup}>
-                        <ThemedText style={styles.fieldLabel}>Evidência *</ThemedText>
-                        <TextInput
-                          multiline
-                          placeholder="Descreva ou referencie a evidência da nota 5"
-                          placeholderTextColor={theme.placeholder}
-                          style={[
-                            styles.textInput,
-                            {
-                              color: theme.text,
-                              backgroundColor: theme.background,
-                              borderColor: showValidation ? theme.danger : theme.border,
-                            },
-                          ]}
-                          value={resposta.evidencia}
-                          onChangeText={(evidencia) => updateResposta(pergunta.id, { evidencia })}
                         />
                       </View>
                     ) : null}

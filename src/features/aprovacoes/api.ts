@@ -24,21 +24,28 @@ type MelhoriaRow = {
   status: StatusSolicitacaoSalarialEnum;
   created_at: string;
   updated_at: string;
-  colaborador: { nome: string; departamento: string | null } | null;
-  gerente: { nome: string } | null;
 };
 
-const MELHORIA_SELECT = `
-  id,
-  colaborador_id,
-  gerente_id,
-  justificativa,
-  status,
-  created_at,
-  updated_at,
-  colaborador:profiles!melhorias_colaborador_id_fkey(nome, departamento),
-  gerente:profiles!melhorias_gerente_id_fkey(nome)
-`;
+type ProfileResumo = Pick<Profile, 'id' | 'nome' | 'departamento'>;
+
+async function fetchProfilesByIds(ids: string[]): Promise<Map<string, ProfileResumo>> {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+
+  if (uniqueIds.length === 0) {
+    return new Map();
+  }
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, nome, departamento')
+    .in('id', uniqueIds);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return new Map((data ?? []).map((profile) => [profile.id, profile]));
+}
 
 function calcularMedia(notas: number[]): number | null {
   if (notas.length === 0) {
@@ -48,14 +55,20 @@ function calcularMedia(notas: number[]): number | null {
   return notas.reduce((total, nota) => total + nota, 0) / notas.length;
 }
 
-function mapSolicitacao(row: MelhoriaRow): SolicitacaoMelhoria {
+function mapSolicitacao(
+  row: MelhoriaRow,
+  profilesById: Map<string, ProfileResumo>,
+): SolicitacaoMelhoria {
+  const colaborador = profilesById.get(row.colaborador_id);
+  const gerente = row.gerente_id ? profilesById.get(row.gerente_id) : null;
+
   return {
     id: row.id,
     colaboradorId: row.colaborador_id,
-    colaboradorNome: row.colaborador?.nome ?? 'Colaborador',
-    colaboradorDepartamento: row.colaborador?.departamento ?? null,
+    colaboradorNome: colaborador?.nome ?? 'Colaborador',
+    colaboradorDepartamento: colaborador?.departamento ?? null,
     gerenteId: row.gerente_id,
-    gerenteNome: row.gerente?.nome ?? null,
+    gerenteNome: gerente?.nome ?? null,
     justificativa: row.justificativa,
     status: row.status,
     createdAt: row.created_at,
@@ -144,7 +157,7 @@ export async function fetchSolicitacoesPorStatus(
 ): Promise<SolicitacaoMelhoria[]> {
   const { data, error } = await supabase
     .from('melhorias_salariais')
-    .select(MELHORIA_SELECT)
+    .select('id, colaborador_id, gerente_id, justificativa, status, created_at, updated_at')
     .eq('status', status)
     .order('created_at', { ascending: false });
 
@@ -152,7 +165,19 @@ export async function fetchSolicitacoesPorStatus(
     throw new Error(error.message);
   }
 
-  return ((data ?? []) as MelhoriaRow[]).map(mapSolicitacao);
+  const rows = (data ?? []) as MelhoriaRow[];
+
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const profileIds = rows.flatMap((row) =>
+    row.gerente_id ? [row.colaborador_id, row.gerente_id] : [row.colaborador_id],
+  );
+
+  const profilesById = await fetchProfilesByIds(profileIds);
+
+  return rows.map((row) => mapSolicitacao(row, profilesById));
 }
 
 export async function atualizarStatusSolicitacao(
