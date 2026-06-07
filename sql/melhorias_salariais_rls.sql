@@ -44,6 +44,19 @@ create policy melhorias_insert_gerente on public.melhorias_salariais
     and status = 'pendente_rh'
   );
 
+-- Gestor de base cria solicitação (status inicial pendente_rh)
+drop policy if exists melhorias_insert_gestor on public.melhorias_salariais;
+
+create policy melhorias_insert_gestor on public.melhorias_salariais
+  for insert with check (
+    exists (
+      select 1 from public.profiles p
+      where p.id = auth.uid() and p.role = 'gestor'
+    )
+    and gerente_id = auth.uid()
+    and status = 'pendente_rh'
+  );
+
 -- RH valida ou recusa (somente pendente_rh)
 drop policy if exists melhorias_update_rh on public.melhorias_salariais;
 

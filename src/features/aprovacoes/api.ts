@@ -1,3 +1,11 @@
+import {
+  isElegivelParaReajuste,
+  MENSAGEM_INELEGIVEL_REAJUSTE,
+} from '@/features/reajuste/eligibility';
+import {
+  TIPO_SOLICITACAO_REAJUSTE_LABELS,
+  type TipoSolicitacaoReajuste,
+} from '@/features/reajuste/types';
 import { supabase } from '@/lib/supabase';
 import type { Profile, StatusSolicitacaoSalarialEnum } from '@/types/supabase';
 
@@ -129,10 +137,27 @@ export async function fetchMediaGeralColaborador(colaboradorId: string): Promise
   };
 }
 
+function buildJustificativaSolicitacao(
+  tipoSolicitacao: TipoSolicitacaoReajuste,
+  justificativa: string,
+  mediaGeral: number | null,
+  totalRespostas: number,
+): string {
+  return [
+    `[${TIPO_SOLICITACAO_REAJUSTE_LABELS[tipoSolicitacao]}]`,
+    `Média geral: ${mediaGeral !== null ? mediaGeral.toFixed(1) : '—'} (${totalRespostas} respostas)`,
+    '',
+    justificativa.trim(),
+  ].join('\n');
+}
+
 export async function createSolicitacaoMelhoria(params: {
   colaboradorId: string;
-  gerenteId: string;
+  solicitanteId: string;
+  tipoSolicitacao: TipoSolicitacaoReajuste;
   justificativa: string;
+  mediaGeral: number | null;
+  totalRespostas: number;
 }): Promise<void> {
   const justificativa = params.justificativa.trim();
 
@@ -140,10 +165,19 @@ export async function createSolicitacaoMelhoria(params: {
     throw new Error('A justificativa deve ter pelo menos 10 caracteres.');
   }
 
+  if (!isElegivelParaReajuste(params.mediaGeral, params.totalRespostas)) {
+    throw new Error(MENSAGEM_INELEGIVEL_REAJUSTE);
+  }
+
   const { error } = await supabase.from('melhorias_salariais').insert({
     colaborador_id: params.colaboradorId,
-    gerente_id: params.gerenteId,
-    justificativa,
+    gerente_id: params.solicitanteId,
+    justificativa: buildJustificativaSolicitacao(
+      params.tipoSolicitacao,
+      justificativa,
+      params.mediaGeral,
+      params.totalRespostas,
+    ),
     status: 'pendente_rh',
   });
 

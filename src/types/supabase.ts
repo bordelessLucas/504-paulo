@@ -15,7 +15,13 @@ export type UserRoleEnum =
   | "ceo"
   | "admin";
 
-export type TipoAvaliacaoEnum = "quinzenal" | "semestral";
+export type TipoAvaliacaoEnum = "quinzenal" | "semestral" | "anual";
+
+export type TipoBeneficioAnualEnum =
+  | "reajuste"
+  | "plr"
+  | "bonificacao"
+  | "nenhum";
 
 export type StatusSolicitacaoSalarialEnum =
   | "pendente_rh"
@@ -189,6 +195,65 @@ export type Database = {
         ];
       };
 
+      decisoes_anuais_estrategicas: {
+        Row: {
+          id: string;
+          colaborador_id: string;
+          decidido_por_id: string;
+          ano_referencia: number;
+          tipo_beneficio: TipoBeneficioAnualEnum;
+          justificativa_financeira: string;
+          media_quinzenal_ano: number | null;
+          media_semestral_ano: number | null;
+          avaliacao_anual_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          colaborador_id: string;
+          decidido_por_id: string;
+          ano_referencia: number;
+          tipo_beneficio: TipoBeneficioAnualEnum;
+          justificativa_financeira: string;
+          media_quinzenal_ano?: number | null;
+          media_semestral_ano?: number | null;
+          avaliacao_anual_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          colaborador_id?: string;
+          decidido_por_id?: string;
+          ano_referencia?: number;
+          tipo_beneficio?: TipoBeneficioAnualEnum;
+          justificativa_financeira?: string;
+          media_quinzenal_ano?: number | null;
+          media_semestral_ano?: number | null;
+          avaliacao_anual_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "decisoes_anuais_colaborador_id_fkey";
+            columns: ["colaborador_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "decisoes_anuais_decidido_por_id_fkey";
+            columns: ["decidido_por_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "decisoes_anuais_avaliacao_anual_id_fkey";
+            columns: ["avaliacao_anual_id"];
+            referencedRelation: "avaliacoes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       melhorias_salariais: {
         Row: {
           id: string;
@@ -279,6 +344,7 @@ export type JsonValue = Json;
 
 export type UserRole = UserRoleEnum;
 export type TipoAvaliacao = TipoAvaliacaoEnum;
+export type TipoBeneficioAnual = TipoBeneficioAnualEnum;
 export type StatusSolicitacaoSalarial = StatusSolicitacaoSalarialEnum;
 
 // Convenience aliases used across the app
@@ -313,3 +379,14 @@ export function isAdminDashboardRole(role?: UserRole | null): boolean {
 export function isGerencialDashboardRole(role?: UserRole | null): boolean {
   return role === "ceo" || role === "admin";
 }
+
+export function isPainelAnualEstrategicoRole(role?: UserRole | null): boolean {
+  return role === "rh" || role === "ceo" || role === "gerente" || role === "admin";
+}
+
+export const TIPO_BENEFICIO_ANUAL_LABELS: Record<TipoBeneficioAnual, string> = {
+  reajuste: "Reajuste",
+  plr: "PLR",
+  bonificacao: "Bonificação",
+  nenhum: "Nenhum",
+};

@@ -31,6 +31,7 @@ export function getCicloInicioPorTipo(tipo: TipoAvaliacao, referenceDate = new D
 export const TIPO_AVALIACAO_LABELS: Record<TipoAvaliacao, string> = {
   quinzenal: 'Quinzenal — Avaliação de Bordo',
   semestral: 'Semestral — Avaliação de Gestores',
+  anual: 'Anual — Análise Estratégica',
 };
 
 export const NOTA_ESCALA_LEGENDA: Record<number, string> = {

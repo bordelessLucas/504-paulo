@@ -3,7 +3,6 @@ import {
   isAdminDashboardRole,
   isGerencialDashboardRole,
   isGerenteRole,
-  isSupervisorGestorRole,
   type UserRole,
 } from '@/types/supabase';
 
@@ -44,10 +43,10 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
     label: 'Equipe',
     icon: 'people-outline',
   },
-  Estrategico: {
-    name: 'Estrategico',
-    label: 'Estratégico',
-    icon: 'analytics-outline',
+  PainelReajuste: {
+    name: 'PainelReajuste',
+    label: 'Reajuste',
+    icon: 'trending-up-outline',
   },
   AdminDashboard: {
     name: 'AdminDashboard',
@@ -64,6 +63,11 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
     label: 'Aprovações',
     icon: 'checkmark-circle-outline',
   },
+  PainelAnualEstrategico: {
+    name: 'PainelAnualEstrategico',
+    label: 'Anual',
+    icon: 'calendar-outline',
+  },
   Perfil: {
     name: 'Perfil',
     label: 'Perfil',
@@ -76,12 +80,12 @@ export function getPrimaryTabForRole(role: UserRole): keyof MainTabParamList {
     return 'DashboardColaborador';
   }
 
-  if (isSupervisorGestorRole(role)) {
+  if (role === 'supervisor' || role === 'gestor') {
     return 'PainelAvaliacao';
   }
 
   if (isGerenteRole(role)) {
-    return 'Estrategico';
+    return 'PainelReajuste';
   }
 
   if (role === 'ceo') {
@@ -104,13 +108,23 @@ export function getTabsForRole(role: UserRole): TabMenuItem[] {
     ];
   }
 
-  if (isSupervisorGestorRole(role)) {
+  if (role === 'supervisor') {
     return [TAB_DEFINITIONS.PainelAvaliacao, TAB_DEFINITIONS.MinhaEquipe, TAB_DEFINITIONS.Perfil];
+  }
+
+  if (role === 'gestor') {
+    return [
+      TAB_DEFINITIONS.PainelAvaliacao,
+      TAB_DEFINITIONS.MinhaEquipe,
+      TAB_DEFINITIONS.PainelReajuste,
+      TAB_DEFINITIONS.Perfil,
+    ];
   }
 
   if (isGerenteRole(role)) {
     return [
-      TAB_DEFINITIONS.Estrategico,
+      TAB_DEFINITIONS.PainelReajuste,
+      TAB_DEFINITIONS.PainelAnualEstrategico,
       TAB_DEFINITIONS.PainelAvaliacao,
       TAB_DEFINITIONS.MinhaEquipe,
       TAB_DEFINITIONS.Perfil,
@@ -120,6 +134,7 @@ export function getTabsForRole(role: UserRole): TabMenuItem[] {
   if (isGerencialDashboardRole(role)) {
     return [
       TAB_DEFINITIONS.DashboardsGerenciais,
+      TAB_DEFINITIONS.PainelAnualEstrategico,
       TAB_DEFINITIONS.PainelAvaliacao,
       TAB_DEFINITIONS.AdminDashboard,
       TAB_DEFINITIONS.Aprovacoes,
@@ -130,6 +145,7 @@ export function getTabsForRole(role: UserRole): TabMenuItem[] {
   if (isAdminDashboardRole(role)) {
     return [
       TAB_DEFINITIONS.AdminDashboard,
+      TAB_DEFINITIONS.PainelAnualEstrategico,
       TAB_DEFINITIONS.PainelAvaliacao,
       TAB_DEFINITIONS.Aprovacoes,
       TAB_DEFINITIONS.Perfil,

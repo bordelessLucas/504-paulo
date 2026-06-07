@@ -9,11 +9,12 @@ import type { MainTabParamList, TabIconName } from '@/navigation/types';
 import { AdminDashboardScreen } from '@/screens/admin/admin-dashboard-screen';
 import { DashboardsGerenciaisScreen } from '@/screens/admin/dashboards-gerenciais-screen';
 import { AprovacoesScreen } from '@/screens/admin/aprovacoes-screen';
+import { PainelAnualEstrategicoScreen } from '@/screens/admin/painel-anual-estrategico';
 import { PainelAvaliacaoScreen } from '@/screens/avaliacao/painel-screen';
 import { MinhaEquipeTabScreen } from '@/screens/avaliacao/minha-equipe-tab-screen';
 import { DashboardColaboradorScreen } from '@/screens/colaborador/dashboard-screen';
 import { MinhasAvaliacoesScreen } from '@/screens/colaborador/minhas-avaliacoes-screen';
-import { EstrategicoScreen } from '@/screens/gerente/estrategico-screen';
+import { PainelReajusteScreen } from '@/screens/gerente/painel-reajuste-screen';
 import { PerfilScreen } from '@/screens/shared/perfil-screen';
 import type { UserRole } from '@/types/supabase';
 
@@ -24,10 +25,11 @@ const TAB_SCREENS: Record<keyof MainTabParamList, ComponentType> = {
   MinhasAvaliacoes: MinhasAvaliacoesScreen,
   PainelAvaliacao: PainelAvaliacaoScreen,
   MinhaEquipe: MinhaEquipeTabScreen,
-  Estrategico: EstrategicoScreen,
+  PainelReajuste: PainelReajusteScreen,
   AdminDashboard: AdminDashboardScreen,
   DashboardsGerenciais: DashboardsGerenciaisScreen,
   Aprovacoes: AprovacoesScreen,
+  PainelAnualEstrategico: PainelAnualEstrategicoScreen,
   Perfil: PerfilScreen,
 };
 

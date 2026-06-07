@@ -9,7 +9,7 @@ DO $do$ BEGIN
     CREATE TYPE public.user_role AS ENUM ('colaborador','supervisor','gestor','gerente','rh','ceo');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tipo_avaliacao') THEN
-    CREATE TYPE public.tipo_avaliacao AS ENUM ('quinzenal','semestral');
+    CREATE TYPE public.tipo_avaliacao AS ENUM ('quinzenal','semestral','anual');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'status_solicitacao_salarial') THEN
     CREATE TYPE public.status_solicitacao_salarial AS ENUM ('pendente_rh','pendente_ceo','aprovado','recusado');
