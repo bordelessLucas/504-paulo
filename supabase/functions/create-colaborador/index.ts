@@ -17,16 +17,54 @@ const VALID_ROLES = new Set([
 
 const DEFAULT_PASSWORD = '12345678';
 
+const NIVEL_IRATA_VALUES = new Set(['N1', 'N2', 'N3', 'N/A']);
+const PROFILE_STATUS_VALUES = new Set(['ativo', 'inativo', 'ferias', 'afastado']);
+
 type CreateColaboradorBody = {
   email?: string;
   nome?: string;
   funcao?: string;
   departamento?: string;
+  classificacao?: string;
+  nivel_irata?: string;
+  data_nascimento?: string;
   data_admissao?: string;
+  ddd?: string;
+  telefone?: string;
+  expertise?: string;
+  formacao_tecnica?: string;
+  certificacao_edn?: boolean;
   senha_temporaria?: string;
   role?: string;
   status?: string;
 };
+
+function normalizeNivelIrata(value?: string): string | null {
+  if (!value?.trim()) {
+    return null;
+  }
+
+  const upper = value.trim().toUpperCase();
+  if (upper === 'NA' || upper === 'N-A') {
+    return 'N/A';
+  }
+
+  return NIVEL_IRATA_VALUES.has(upper) ? upper : null;
+}
+
+function normalizeStatus(value?: string): string {
+  if (!value?.trim()) {
+    return 'ativo';
+  }
+
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  return PROFILE_STATUS_VALUES.has(normalized) ? normalized : 'ativo';
+}
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -164,7 +202,8 @@ Deno.serve(async (request) => {
       ? body.role.trim()
       : 'colaborador';
 
-    const status = body.status?.trim() || 'ativo';
+    const status = normalizeStatus(body.status);
+    const nivelIrata = normalizeNivelIrata(body.nivel_irata);
     const password = body.senha_temporaria?.trim() || DEFAULT_PASSWORD;
 
     if (password.length < 6) {
@@ -201,7 +240,15 @@ Deno.serve(async (request) => {
         nome,
         funcao: body.funcao?.trim() || null,
         departamento: body.departamento?.trim() || null,
+        classificacao: body.classificacao?.trim() || null,
+        nivel_irata: nivelIrata,
+        data_nascimento: body.data_nascimento?.trim() || null,
         data_admissao: body.data_admissao?.trim() || null,
+        ddd: body.ddd?.trim() || null,
+        telefone: body.telefone?.trim() || null,
+        expertise: body.expertise?.trim() || null,
+        formacao_tecnica: body.formacao_tecnica?.trim() || null,
+        certificacao_edn: body.certificacao_edn ?? false,
         status,
         role,
       },

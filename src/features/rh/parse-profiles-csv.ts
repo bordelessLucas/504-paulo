@@ -1,9 +1,18 @@
-import Papa from "papaparse";
+import Papa from 'papaparse';
 
-import type { Database, UserRole } from "@/types/supabase";
+import {
+  normalizeNivelIrata,
+  normalizeProfileStatus,
+  parseCertificacaoEdn,
+  sanitizeTelefoneDigits,
+  validateTelefonePair,
+  type NivelIrataValue,
+  type ProfileStatusValue,
+} from '@/features/rh/profile-fields';
+import { parseDateField } from '@/features/rh/validation';
+import type { Database, UserRole } from '@/types/supabase';
 
-type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
-type ProfileStatus = string;
+type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 
 export type CsvProfileRow = {
   rowNumber: number;
@@ -12,8 +21,16 @@ export type CsvProfileRow = {
   nome: string;
   funcao?: string;
   departamento?: string;
+  classificacao?: string;
+  nivel_irata?: NivelIrataValue;
+  data_nascimento?: string;
   data_admissao?: string;
-  status?: ProfileStatus;
+  ddd?: string;
+  telefone?: string;
+  expertise?: string;
+  formacao_tecnica?: string;
+  certificacao_edn?: boolean;
+  status?: ProfileStatusValue;
   role?: UserRole;
 };
 
@@ -23,59 +40,58 @@ export type ParseProfilesResult = {
 };
 
 const USER_ROLES = new Set<string>([
-  "colaborador",
-  "supervisor",
-  "gestor",
-  "gerente",
-  "rh",
-  "ceo",
-  "admin",
+  'colaborador',
+  'supervisor',
+  'gestor',
+  'gerente',
+  'rh',
+  'ceo',
+  'admin',
 ]);
 
-const HEADER_ALIASES: Record<string, keyof Omit<CsvProfileRow, "rowNumber">> = {
-  id: "id",
-  email: "email",
-  e_mail: "email",
-  "e-mail": "email",
-  nome: "nome",
-  name: "nome",
-  funcao: "funcao",
-  departamento: "departamento",
-  data_admissao: "data_admissao",
-  dataadmissao: "data_admissao",
-  "data admissao": "data_admissao",
-  status: "status",
-  role: "role",
-  perfil: "role",
-  papel: "role",
+const HEADER_ALIASES: Record<string, keyof Omit<CsvProfileRow, 'rowNumber'>> = {
+  id: 'id',
+  email: 'email',
+  e_mail: 'email',
+  'e-mail': 'email',
+  nome: 'nome',
+  name: 'nome',
+  funcao: 'funcao',
+  departamento: 'departamento',
+  classificacao: 'classificacao',
+  nivel_irata: 'nivel_irata',
+  nivelirata: 'nivel_irata',
+  'nivel irata': 'nivel_irata',
+  data_nascimento: 'data_nascimento',
+  datanascimento: 'data_nascimento',
+  'data nascimento': 'data_nascimento',
+  data_admissao: 'data_admissao',
+  dataadmissao: 'data_admissao',
+  'data admissao': 'data_admissao',
+  ddd: 'ddd',
+  telefone: 'telefone',
+  celular: 'telefone',
+  expertise: 'expertise',
+  especialidade: 'expertise',
+  formacao_tecnica: 'formacao_tecnica',
+  formacaotecnica: 'formacao_tecnica',
+  'formacao tecnica': 'formacao_tecnica',
+  certificacao_edn: 'certificacao_edn',
+  certificacaoedn: 'certificacao_edn',
+  'certificacao edn': 'certificacao_edn',
+  edn: 'certificacao_edn',
+  status: 'status',
+  role: 'role',
+  perfil: 'role',
+  papel: 'role',
 };
 
 function normalizeHeader(header: string): string {
   return header
     .trim()
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-function parseDate(value: string | undefined): string | undefined {
-  if (!value?.trim()) {
-    return undefined;
-  }
-
-  const trimmed = value.trim();
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return trimmed;
-  }
-
-  const brMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (brMatch) {
-    const [, day, month, year] = brMatch;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  }
-
-  return undefined;
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
 function mapRawRow(
@@ -95,29 +111,63 @@ function mapRawRow(
       continue;
     }
 
-    if (field === "status") {
-      mapped.status = trimmed as ProfileStatus;
+    if (field === 'status') {
+      const status = normalizeProfileStatus(trimmed);
+      if (!status) {
+        return {
+          error: `Erro na linha ${rowNumber}: Status "${trimmed}" inválido (use ativo, inativo, ferias, afastado).`,
+        };
+      }
+      mapped.status = status;
       continue;
     }
 
-    if (field === "role") {
+    if (field === 'role') {
       if (!USER_ROLES.has(trimmed)) {
         return {
-          error: `Linha ${rowNumber}: role "${trimmed}" inválido.`,
+          error: `Erro na linha ${rowNumber}: role "${trimmed}" inválido.`,
         };
       }
       mapped.role = trimmed as UserRole;
       continue;
     }
 
-    if (field === "data_admissao") {
-      const parsedDate = parseDate(trimmed);
-      if (!parsedDate) {
+    if (field === 'nivel_irata') {
+      const nivel = normalizeNivelIrata(trimmed);
+      if (!nivel) {
         return {
-          error: `Linha ${rowNumber}: data_admissao "${trimmed}" inválida (use AAAA-MM-DD ou DD/MM/AAAA).`,
+          error: `Erro na linha ${rowNumber}: nivel_irata "${trimmed}" inválido (use N1, N2, N3 ou N/A).`,
         };
       }
-      mapped.data_admissao = parsedDate;
+      mapped.nivel_irata = nivel;
+      continue;
+    }
+
+    if (field === 'certificacao_edn') {
+      const cert = parseCertificacaoEdn(trimmed);
+      if (cert === undefined) {
+        return {
+          error: `Erro na linha ${rowNumber}: certificacao_edn "${trimmed}" inválido (use sim ou nao).`,
+        };
+      }
+      mapped.certificacao_edn = cert;
+      continue;
+    }
+
+    if (field === 'data_admissao' || field === 'data_nascimento') {
+      const parsedDate = parseDateField(trimmed);
+      if (!parsedDate) {
+        const label = field === 'data_admissao' ? 'data_admissao' : 'data_nascimento';
+        return {
+          error: `Erro na linha ${rowNumber}: ${label} "${trimmed}" inválida (use AAAA-MM-DD ou DD/MM/AAAA).`,
+        };
+      }
+      mapped[field] = parsedDate;
+      continue;
+    }
+
+    if (field === 'ddd' || field === 'telefone') {
+      mapped[field] = sanitizeTelefoneDigits(trimmed);
       continue;
     }
 
@@ -125,13 +175,18 @@ function mapRawRow(
   }
 
   if (!mapped.nome) {
-    return { error: `Linha ${rowNumber}: campo "nome" é obrigatório.` };
+    return { error: `Erro na linha ${rowNumber}: campo "nome" é obrigatório.` };
   }
 
   if (!mapped.id && !mapped.email) {
     return {
-      error: `Linha ${rowNumber}: informe "id" ou "email" para vincular ao usuário.`,
+      error: `Erro na linha ${rowNumber}: informe "id" ou "email" para vincular ao usuário.`,
     };
+  }
+
+  const telefoneError = validateTelefonePair(mapped.ddd, mapped.telefone);
+  if (telefoneError) {
+    return { error: `Erro na linha ${rowNumber}: ${telefoneError}` };
   }
 
   return {
@@ -142,7 +197,15 @@ function mapRawRow(
       nome: mapped.nome,
       funcao: mapped.funcao,
       departamento: mapped.departamento,
+      classificacao: mapped.classificacao,
+      nivel_irata: mapped.nivel_irata,
+      data_nascimento: mapped.data_nascimento,
       data_admissao: mapped.data_admissao,
+      ddd: mapped.ddd,
+      telefone: mapped.telefone,
+      expertise: mapped.expertise,
+      formacao_tecnica: mapped.formacao_tecnica,
+      certificacao_edn: mapped.certificacao_edn,
       status: mapped.status,
       role: mapped.role,
     },
@@ -181,23 +244,48 @@ export function parseProfilesCsv(csvContent: string): ParseProfilesResult {
   });
 
   if (rows.length === 0 && errors.length === 0) {
-    errors.push("A planilha não contém linhas válidas para importar.");
+    errors.push('A planilha não contém linhas válidas para importar.');
   }
 
   return { rows, errors };
 }
 
-export function toProfileInsert(
-  row: CsvProfileRow,
-  resolvedId: string,
-): ProfileInsert {
+export function csvRowToCreateInput(row: CsvProfileRow) {
+  return {
+    email: row.email ?? '',
+    nome: row.nome,
+    funcao: row.funcao,
+    departamento: row.departamento,
+    classificacao: row.classificacao,
+    nivel_irata: row.nivel_irata,
+    data_nascimento: row.data_nascimento,
+    data_admissao: row.data_admissao,
+    ddd: row.ddd,
+    telefone: row.telefone,
+    expertise: row.expertise,
+    formacao_tecnica: row.formacao_tecnica,
+    certificacao_edn: row.certificacao_edn ?? false,
+    role: row.role ?? 'colaborador',
+    status: row.status ?? 'ativo',
+  };
+}
+
+export function toProfileInsert(row: CsvProfileRow, resolvedId: string): ProfileInsert {
   return {
     id: resolvedId,
     nome: row.nome,
     funcao: row.funcao ?? null,
     departamento: row.departamento ?? null,
+    classificacao: row.classificacao ?? null,
+    nivel_irata: row.nivel_irata ?? null,
+    data_nascimento: row.data_nascimento ?? null,
     data_admissao: row.data_admissao ?? null,
-    status: row.status ?? "ativo",
-    role: row.role ?? "colaborador",
+    ddd: row.ddd ?? null,
+    telefone: row.telefone ?? null,
+    expertise: row.expertise ?? null,
+    formacao_tecnica: row.formacao_tecnica ?? null,
+    certificacao_edn: row.certificacao_edn ?? false,
+    status: row.status ?? 'ativo',
+    role: row.role ?? 'colaborador',
   };
 }

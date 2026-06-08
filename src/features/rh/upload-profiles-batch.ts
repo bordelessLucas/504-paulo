@@ -1,5 +1,6 @@
 import { createColaborador } from '@/features/rh/create-colaborador';
 import {
+  csvRowToCreateInput,
   parseProfilesCsv,
   toProfileInsert,
   type CsvProfileRow,
@@ -32,7 +33,7 @@ async function resolveOrCreateUserId(
   }
 
   if (!row.email) {
-    throw new Error(`Linha ${row.rowNumber}: informe "email" para criar o acesso.`);
+    throw new Error(`Erro na linha ${row.rowNumber}: informe "email" para criar o acesso.`);
   }
 
   const email = row.email.trim().toLowerCase();
@@ -43,18 +44,12 @@ async function resolveOrCreateUserId(
   }
 
   const result = await createColaborador({
-    email,
-    nome: row.nome,
-    funcao: row.funcao,
-    departamento: row.departamento,
-    data_admissao: row.data_admissao,
+    ...csvRowToCreateInput(row),
     senha_temporaria: CSV_IMPORT_DEFAULT_PASSWORD,
-    role: row.role ?? 'colaborador',
-    status: row.status ?? 'ativo',
   });
 
   if ('field' in result) {
-    throw new Error(`Linha ${row.rowNumber}: ${result.message}`);
+    throw new Error(`Erro na linha ${row.rowNumber}: ${result.message}`);
   }
 
   return { userId: result.id, authCreated: result.authCreated };
@@ -63,19 +58,17 @@ async function resolveOrCreateUserId(
 export type UploadProfilesResult = {
   importedCount: number;
   createdAuthCount: number;
-  skippedErrors: string[];
+  lineErrors: string[];
 };
 
-export async function uploadProfilesFromCsv(
-  csvContent: string,
-): Promise<UploadProfilesResult> {
+export async function uploadProfilesFromCsv(csvContent: string): Promise<UploadProfilesResult> {
   const { rows, errors: parseErrors } = parseProfilesCsv(csvContent);
+  const lineErrors = [...parseErrors];
 
-  if (parseErrors.length > 0) {
-    return { importedCount: 0, createdAuthCount: 0, skippedErrors: parseErrors };
+  if (rows.length === 0) {
+    return { importedCount: 0, createdAuthCount: 0, lineErrors };
   }
 
-  const skippedErrors: string[] = [];
   const profilesToUpsert: ProfileInsert[] = [];
   let createdAuthCount = 0;
 
@@ -90,15 +83,13 @@ export async function uploadProfilesFromCsv(
       profilesToUpsert.push(toProfileInsert(row, userId));
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Erro desconhecido ao processar linha.';
-      skippedErrors.push(message);
+        error instanceof Error ? error.message : `Erro na linha ${row.rowNumber}: erro desconhecido.`;
+      lineErrors.push(message);
     }
   }
 
   if (profilesToUpsert.length === 0) {
-    return { importedCount: 0, createdAuthCount: 0, skippedErrors };
+    return { importedCount: 0, createdAuthCount: 0, lineErrors };
   }
 
   for (let index = 0; index < profilesToUpsert.length; index += BATCH_SIZE) {
@@ -118,6 +109,6 @@ export async function uploadProfilesFromCsv(
   return {
     importedCount: profilesToUpsert.length,
     createdAuthCount,
-    skippedErrors,
+    lineErrors,
   };
 }

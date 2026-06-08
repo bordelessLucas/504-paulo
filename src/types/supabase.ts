@@ -42,6 +42,11 @@ export type Database = {
           nivel_irata: string | null;
           data_admissao: string | null;
           departamento: string | null;
+          ddd: string | null;
+          telefone: string | null;
+          expertise: string | null;
+          formacao_tecnica: string | null;
+          certificacao_edn: boolean;
           status: string | null;
           role: UserRoleEnum;
           created_at: string;
@@ -56,6 +61,11 @@ export type Database = {
           nivel_irata?: string | null;
           data_admissao?: string | null;
           departamento?: string | null;
+          ddd?: string | null;
+          telefone?: string | null;
+          expertise?: string | null;
+          formacao_tecnica?: string | null;
+          certificacao_edn?: boolean;
           status?: string | null;
           role?: UserRoleEnum;
           created_at?: string;
@@ -70,6 +80,11 @@ export type Database = {
           nivel_irata?: string | null;
           data_admissao?: string | null;
           departamento?: string | null;
+          ddd?: string | null;
+          telefone?: string | null;
+          expertise?: string | null;
+          formacao_tecnica?: string | null;
+          certificacao_edn?: boolean;
           status?: string | null;
           role?: UserRoleEnum;
           created_at?: string;

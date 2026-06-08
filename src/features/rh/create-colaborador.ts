@@ -25,8 +25,8 @@ export async function createColaborador(
   const { data, error } = await supabase.functions.invoke('create-colaborador', {
     body: {
       ...normalized,
-      role: input.role ?? 'colaborador',
-      status: input.status?.trim() || 'ativo',
+      role: normalized.role ?? 'colaborador',
+      status: normalized.status ?? 'ativo',
     },
   });
 

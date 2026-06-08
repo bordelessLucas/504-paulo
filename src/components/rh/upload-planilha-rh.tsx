@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as DocumentPicker from 'expo-document-picker';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
@@ -25,6 +25,7 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
   const { role, isLoading: isRoleLoading } = useUserRole();
   const [status, setStatus] = useState<UploadStatus>('idle');
   const [message, setMessage] = useState<string | null>(null);
+  const [lineErrors, setLineErrors] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
 
   const canUpload = isAdminDashboardRole(role);
@@ -38,6 +39,7 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
     try {
       setStatus('loading');
       setMessage(null);
+      setLineErrors([]);
 
       const result = await DocumentPicker.getDocumentAsync({
         type: Platform.OS === 'web' ? ['text/csv', 'text/plain', 'application/vnd.ms-excel', '*/*'] : '*/*',
@@ -62,12 +64,17 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
       setFileName(asset.name);
 
       const csvContent = await readPickedDocumentText(asset);
-
       const uploadResult = await uploadProfilesFromCsv(csvContent);
 
-      if (uploadResult.importedCount === 0 && uploadResult.skippedErrors.length > 0) {
+      setLineErrors(uploadResult.lineErrors);
+
+      if (uploadResult.importedCount === 0) {
         setStatus('error');
-        setMessage(uploadResult.skippedErrors.slice(0, 3).join('\n'));
+        setMessage(
+          uploadResult.lineErrors.length > 0
+            ? 'Nenhuma linha importada. Revise os erros abaixo.'
+            : 'Nenhum perfil válido encontrado no arquivo.',
+        );
         return;
       }
 
@@ -76,14 +83,14 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
           ? ` ${uploadResult.createdAuthCount} conta(s) criada(s) com senha padrão.`
           : '';
 
-      const warningSuffix =
-        uploadResult.skippedErrors.length > 0
-          ? ` (${uploadResult.skippedErrors.length} linha(s) ignorada(s))`
+      const errorSuffix =
+        uploadResult.lineErrors.length > 0
+          ? ` ${uploadResult.lineErrors.length} linha(s) com erro.`
           : '';
 
-      setStatus('success');
+      setStatus(uploadResult.lineErrors.length > 0 ? 'error' : 'success');
       setMessage(
-        `${uploadResult.importedCount} perfil(is) importado(s) com sucesso.${createdSuffix}${warningSuffix}`,
+        `${uploadResult.importedCount} perfil(is) importado(s) com sucesso.${createdSuffix}${errorSuffix}`,
       );
       onImported?.(uploadResult.importedCount);
     } catch (error) {
@@ -101,7 +108,7 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
       <View
         style={[
           styles.container,
-          { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+          { backgroundColor: theme.background, borderColor: '#F0F0F0' },
         ]}>
         <ThemedText themeColor="textSecondary" style={styles.hint}>
           Apenas RH, CEO e administradores podem importar planilhas de RH.
@@ -114,13 +121,14 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
     <View
       style={[
         styles.container,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+        { backgroundColor: theme.background, borderColor: '#F0F0F0' },
       ]}>
       <View style={styles.header}>
         <ThemedText type="subtitle">Importar colaboradores</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.hint}>
-          Arquivo .csv: email, nome, funcao, departamento, data_admissao, status, role. E-mails novos
-          recebem acesso automaticamente (senha padrão: 12345678).
+          CSV com ficha completa: email, nome, classificacao, nivel_irata, datas, ddd, telefone,
+          expertise, formacao_tecnica, certificacao_edn, status, role. Contas novas recebem senha
+          padrão 12345678.
         </ThemedText>
       </View>
 
@@ -160,6 +168,25 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
           style={styles.feedback}>
           {message}
         </ThemedText>
+      ) : null}
+
+      {lineErrors.length > 0 ? (
+        <View
+          style={[
+            styles.errorReport,
+            { backgroundColor: theme.dangerMuted, borderColor: '#E67E22' },
+          ]}>
+          <ThemedText style={[styles.errorReportTitle, { color: '#E67E22' }]}>
+            Relatório de erros por linha
+          </ThemedText>
+          <ScrollView style={styles.errorList} nestedScrollEnabled>
+            {lineErrors.map((lineError, index) => (
+              <ThemedText key={`${lineError}-${index}`} style={[styles.errorLine, { color: '#C0392B' }]}>
+                {lineError}
+              </ThemedText>
+            ))}
+          </ScrollView>
+        </View>
       ) : null}
     </View>
   );
@@ -202,6 +229,26 @@ const styles = StyleSheet.create({
   feedback: {
     fontSize: 13,
     lineHeight: 18,
+  },
+  errorReport: {
+    borderWidth: 1,
+    borderRadius: Radius.sm,
+    padding: Spacing.three,
+    gap: Spacing.two,
+    maxHeight: 220,
+  },
+  errorReportTitle: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  errorList: {
+    maxHeight: 160,
+  },
+  errorLine: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: Spacing.one,
   },
   pressed: {
     opacity: 0.86,

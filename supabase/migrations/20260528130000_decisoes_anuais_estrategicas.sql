@@ -1,10 +1,6 @@
 -- Ciclo anual + decisões estratégicas (PLR, bonificação, reajuste)
--- Execute no Supabase SQL Editor em DUAS etapas (rodar cada bloco separadamente):
-
--- ETAPA 1 — enum (rodar primeiro, sozinho):
--- ALTER TYPE public.tipo_avaliacao ADD VALUE IF NOT EXISTS 'anual';
-
--- ETAPA 2 — tabela + políticas (rodar depois):
+-- Nota: o valor 'anual' no enum deve ser aplicado em migration separada
+-- (20260528125000_tipo_avaliacao_anual.sql) por limitação do PostgreSQL.
 
 CREATE TABLE IF NOT EXISTS public.decisoes_anuais_estrategicas (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -47,7 +43,6 @@ CREATE POLICY decisoes_anuais_insert_exec ON public.decisoes_anuais_estrategicas
     )
   );
 
--- Avaliação formal tipo anual (marcador do ciclo)
 DROP POLICY IF EXISTS avaliacoes_insert_decisao_anual ON public.avaliacoes;
 
 CREATE POLICY avaliacoes_insert_decisao_anual ON public.avaliacoes
