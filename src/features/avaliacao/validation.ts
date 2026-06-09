@@ -9,7 +9,7 @@ export type RespostaFormState = {
 };
 
 export function requiresJustificativa(nota: number | null): boolean {
-  return nota === 2 || nota === 3;
+  return nota !== null;
 }
 
 export function isRespostaCompleta(resposta: RespostaFormState): boolean {
@@ -17,11 +17,7 @@ export function isRespostaCompleta(resposta: RespostaFormState): boolean {
     return false;
   }
 
-  if (requiresJustificativa(resposta.nota)) {
-    return resposta.justificativa.trim().length > 0;
-  }
-
-  return true;
+  return resposta.justificativa.trim().length > 0;
 }
 
 export function getRespostaValidationMessage(resposta: RespostaFormState): string | null {
@@ -29,8 +25,8 @@ export function getRespostaValidationMessage(resposta: RespostaFormState): strin
     return 'Selecione uma nota.';
   }
 
-  if (requiresJustificativa(resposta.nota) && !resposta.justificativa.trim()) {
-    return 'Informe a justificativa para notas 2 ou 3.';
+  if (!resposta.justificativa.trim()) {
+    return 'Informe a justificativa da nota atribuída.';
   }
 
   return null;

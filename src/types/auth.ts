@@ -8,6 +8,7 @@ export type AuthUser = {
   role?: UserRole;
   departamento?: string | null;
   funcao?: string | null;
+  avatarUrl?: string | null;
 };
 
 export type LoginCredentials = {

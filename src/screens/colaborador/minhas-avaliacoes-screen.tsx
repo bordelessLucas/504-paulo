@@ -18,6 +18,7 @@ import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchHistoricoAvaliacoesMasked } from '@/features/avaliacao/historico-api';
 import type { AvaliacaoHistoricoItem } from '@/features/avaliacao/historico-api';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 
 export function MinhasAvaliacoesScreen() {
   const { user } = useAuth();
@@ -62,9 +63,11 @@ export function MinhasAvaliacoesScreen() {
     }, [loadHistorico]),
   );
 
+  const { scrollPaddingBottom } = useTabScreenLayout();
+
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.pageHeader}>
           <ThemedText type="heading">Minhas avaliações</ThemedText>
           <ThemedText themeColor="textSecondary" style={styles.description}>
@@ -83,7 +86,7 @@ export function MinhasAvaliacoesScreen() {
           </View>
         ) : (
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
@@ -130,7 +133,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
     gap: Spacing.three,
-    paddingBottom: Spacing.six,
   },
   empty: {
     fontSize: 14,

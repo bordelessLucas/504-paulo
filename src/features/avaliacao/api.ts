@@ -276,7 +276,7 @@ export async function submitAvaliacao(params: {
   tipo?: TipoAvaliacao;
   respostas: RespostaFormulario[];
   melhorias: MelhoriaFormulario[];
-}): Promise<void> {
+}): Promise<{ avaliacaoId: string }> {
   const { data: avaliacao, error: avaliacaoError } = await supabase
     .from('avaliacoes')
     .insert({
@@ -318,5 +318,30 @@ export async function submitAvaliacao(params: {
     if (error) {
       throw new Error(error.message);
     }
+  }
+
+  return { avaliacaoId: avaliacao.id };
+}
+
+export async function addPontoMelhoriaAvaliacao(
+  avaliacaoId: string,
+  texto: string,
+): Promise<void> {
+  const trimmed = texto.trim();
+
+  if (trimmed.length < 5) {
+    throw new Error('O ponto de melhoria deve ter pelo menos 5 caracteres.');
+  }
+
+  const { error } = await supabase.from('respostas').insert({
+    avaliacao_id: avaliacaoId,
+    pergunta_id: null,
+    nota: null,
+    justificativa: null,
+    evidencia: trimmed,
+  });
+
+  if (error) {
+    throw new Error(error.message);
   }
 }

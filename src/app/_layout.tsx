@@ -10,6 +10,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, useColorScheme } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ThemedView } from '@/components/themed-view';
 import { ToastProvider } from '@/components/ui/toast';
@@ -65,11 +66,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <RootNavigator />
-      </AuthProvider>
-    </ToastProvider>
+    <SafeAreaProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <RootNavigator />
+        </AuthProvider>
+      </ToastProvider>
+    </SafeAreaProvider>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useRoute, type RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -7,9 +7,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { EscalaLegenda } from '@/components/avaliacao/escala-legenda';
+import { PontoMelhoriaAvaliacaoModal } from '@/components/avaliacao/ponto-melhoria-avaliacao-modal';
 import { NotionCheckbox } from '@/components/avaliacao/notion-checkbox';
 import { ScorePicker } from '@/components/avaliacao/score-picker';
 import { ThemedText } from '@/components/themed-text';
@@ -17,6 +16,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import {
+  addPontoMelhoriaAvaliacao,
   fetchPerguntasUniversais,
   fetchPontosMelhoriaAnteriores,
   submitAvaliacao,
@@ -25,13 +25,13 @@ import { resolveTipoAvaliacaoPorRole, TIPO_AVALIACAO_LABELS } from '@/features/a
 import {
   getRespostaValidationMessage,
   isRespostaCompleta,
-  requiresJustificativa,
   type RespostaFormState,
 } from '@/features/avaliacao/validation';
 import { useAuth } from '@/features/auth/auth-context';
 import { useAuthRole } from '@/hooks/use-auth-role';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 import type { PerguntaAvaliacao, PontoMelhoria } from '@/types/supabase';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 
 type FormularioRoute = RouteProp<AvaliacaoStackParamList, 'FormularioAvaliacao'>;
@@ -45,12 +45,14 @@ function createEmptyResposta(): RespostaFormState {
 
 export function FormularioAvaliacaoScreen() {
   const theme = useTheme();
+  const navigation = useNavigation();
   const { user } = useAuth();
   const { role } = useAuthRole();
   const route = useRoute<FormularioRoute>();
   const { avaliadoId, avaliadoNome } = route.params;
 
   const tipoAvaliacao = resolveTipoAvaliacaoPorRole(role);
+  const { scrollPaddingBottom } = useTabScreenLayout();
 
   const [perguntas, setPerguntas] = useState<PerguntaAvaliacao[]>([]);
   const [pontosMelhoria, setPontosMelhoria] = useState<PontoMelhoria[]>([]);
@@ -60,6 +62,8 @@ export function FormularioAvaliacaoScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [lastAvaliacaoId, setLastAvaliacaoId] = useState<string | null>(null);
+  const [isPontoMelhoriaModalVisible, setIsPontoMelhoriaModalVisible] = useState(false);
 
   const canSubmit = useMemo(() => {
     if (perguntas.length === 0) {
@@ -135,7 +139,7 @@ export function FormularioAvaliacaoScreen() {
     setFeedback(null);
 
     try {
-      await submitAvaliacao({
+      const { avaliacaoId } = await submitAvaliacao({
         avaliadorId: user.id,
         avaliadoId,
         tipo: tipoAvaliacao,
@@ -155,7 +159,8 @@ export function FormularioAvaliacaoScreen() {
         })),
       });
 
-      setFeedback('Avaliação registrada com sucesso.');
+      setLastAvaliacaoId(avaliacaoId);
+      setIsPontoMelhoriaModalVisible(true);
     } catch (submitError) {
       setFeedback(
         submitError instanceof Error ? submitError.message : 'Não foi possível salvar a avaliação.',
@@ -164,6 +169,32 @@ export function FormularioAvaliacaoScreen() {
       setIsSubmitting(false);
     }
   }
+
+  const finishAvaliacaoFlow = useCallback(
+    (message: string) => {
+      setIsPontoMelhoriaModalVisible(false);
+      setLastAvaliacaoId(null);
+      setFeedback(message);
+      navigation.goBack();
+    },
+    [navigation],
+  );
+
+  const handleSkipPontoMelhoria = useCallback(() => {
+    finishAvaliacaoFlow('Avaliação registrada com sucesso.');
+  }, [finishAvaliacaoFlow]);
+
+  const handleSubmitPontoMelhoria = useCallback(
+    async (texto: string) => {
+      if (!lastAvaliacaoId) {
+        throw new Error('Não foi possível vincular o ponto de melhoria à avaliação.');
+      }
+
+      await addPontoMelhoriaAvaliacao(lastAvaliacaoId, texto);
+      finishAvaliacaoFlow('Avaliação e ponto de melhoria registrados com sucesso.');
+    },
+    [finishAvaliacaoFlow, lastAvaliacaoId],
+  );
 
   if (isLoading) {
     return (
@@ -184,9 +215,9 @@ export function FormularioAvaliacaoScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <View style={styles.safeArea}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
@@ -252,18 +283,17 @@ export function FormularioAvaliacaoScreen() {
                       onChange={(nota) =>
                         updateResposta(pergunta.id, {
                           nota,
-                          justificativa: requiresJustificativa(nota) ? resposta.justificativa : '',
                           evidencia: '',
                         })
                       }
                     />
 
-                    {requiresJustificativa(resposta.nota) ? (
+                    {resposta.nota !== null ? (
                       <View style={styles.fieldGroup}>
                         <ThemedText style={styles.fieldLabel}>Justificativa *</ThemedText>
                         <TextInput
                           multiline
-                          placeholder="Descreva o motivo da nota 2 ou 3"
+                          placeholder="Descreva o motivo da nota atribuída"
                           placeholderTextColor={theme.placeholder}
                           style={[
                             styles.textInput,
@@ -307,7 +337,15 @@ export function FormularioAvaliacaoScreen() {
             onPress={() => void handleSubmit()}
           />
         </ScrollView>
-      </SafeAreaView>
+      </View>
+
+      <PontoMelhoriaAvaliacaoModal
+        visible={isPontoMelhoriaModalVisible}
+        colaboradorNome={avaliadoNome}
+        onClose={handleSkipPontoMelhoria}
+        onSkip={handleSkipPontoMelhoria}
+        onSubmit={handleSubmitPontoMelhoria}
+      />
     </ThemedView>
   );
 }
@@ -323,7 +361,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
     gap: Spacing.four,
-    paddingBottom: Spacing.six,
   },
   centered: {
     flex: 1,

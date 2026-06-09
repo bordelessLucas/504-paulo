@@ -24,6 +24,7 @@ import {
   type GerencialDashboardData,
 } from '@/features/gerencial/dashboard-api';
 import { exportColaboradorFichaPdf } from '@/features/gerencial/export-ficha-pdf';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 
 function DashboardCard({
@@ -54,6 +55,7 @@ export function DashboardsGerenciaisScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { scrollPaddingBottom } = useTabScreenLayout();
 
   const loadDashboard = useCallback(async (options?: { refreshing?: boolean }) => {
     if (options?.refreshing) {
@@ -127,9 +129,9 @@ export function DashboardsGerenciaisScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: scrollPaddingBottom }]}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -198,7 +200,6 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth + 200,
     width: '100%',
     alignSelf: 'center',
-    paddingBottom: Spacing.six,
   },
   header: {
     gap: Spacing.two,

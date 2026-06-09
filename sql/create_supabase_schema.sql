@@ -37,6 +37,7 @@ create table if not exists public.profiles (
   formacao_tecnica text,
   certificacao_edn boolean not null default false,
   status text,
+  avatar_url text,
   role public.user_role not null default 'colaborador',
   created_at timestamptz default now(),
   updated_at timestamptz default now()

@@ -1,8 +1,6 @@
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { AvaliacaoHistoricoCard } from '@/components/avaliacao/avaliacao-historico-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -13,6 +11,7 @@ import {
   fetchHistoricoAvaliacoesMasked,
   type AvaliacaoHistoricoItem,
 } from '@/features/avaliacao/historico-api';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 
 type HistoricoRoute = RouteProp<AvaliacaoStackParamList, 'HistoricoAvaliacoes'>;
@@ -25,6 +24,7 @@ export function HistoricoAvaliacoesScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { scrollPaddingBottom } = useTabScreenLayout();
 
   const loadHistorico = useCallback(
     async (options?: { refreshing?: boolean }) => {
@@ -61,7 +61,7 @@ export function HistoricoAvaliacoesScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <View style={styles.safeArea}>
         {isLoading ? (
           <View style={styles.centered}>
             <ActivityIndicator size="large" />
@@ -73,7 +73,7 @@ export function HistoricoAvaliacoesScreen() {
           </View>
         ) : (
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
@@ -105,7 +105,7 @@ export function HistoricoAvaliacoesScreen() {
             )}
           </ScrollView>
         )}
-      </SafeAreaView>
+      </View>
     </ThemedView>
   );
 }
@@ -121,7 +121,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
     gap: Spacing.three,
-    paddingBottom: Spacing.six,
   },
   header: {
     gap: Spacing.one,

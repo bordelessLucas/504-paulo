@@ -12,6 +12,7 @@ import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
+import { TAB_BAR_BASE_HEIGHT } from '@/constants/layout';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -39,6 +40,7 @@ function ToastBanner({
 }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const toastBottomOffset = TAB_BAR_BASE_HEIGHT + insets.bottom + Spacing.two;
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(12)).current;
 
@@ -98,7 +100,7 @@ function ToastBanner({
       style={[
         styles.wrapper,
         {
-          paddingBottom: insets.bottom + Spacing.three,
+          bottom: toastBottomOffset,
           opacity,
           transform: [{ translateY }],
         },
@@ -155,7 +157,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: Spacing.four,
     right: Spacing.four,
-    bottom: 0,
     zIndex: 999,
   },
   banner: {

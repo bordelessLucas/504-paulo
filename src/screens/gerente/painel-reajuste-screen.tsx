@@ -35,6 +35,7 @@ import {
   type TipoSolicitacaoReajuste,
 } from '@/features/reajuste/types';
 import { useAuth } from '@/features/auth/auth-context';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 
 export function PainelReajusteScreen() {
@@ -176,11 +177,13 @@ export function PainelReajusteScreen() {
     );
   }
 
+  const { scrollPaddingBottom } = useTabScreenLayout();
+
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: scrollPaddingBottom }]}
           keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl
@@ -367,7 +370,6 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth + 360,
     width: '100%',
     alignSelf: 'center',
-    paddingBottom: Spacing.six,
   },
   header: {
     gap: Spacing.two,

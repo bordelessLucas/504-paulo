@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { mapAuthError } from '@/features/auth/map-auth-error';
+import { resolveUserRole } from '@/features/auth/resolve-user-role';
 import { validateLogin, validateRegister } from '@/features/auth/validation';
 import { supabase } from '@/lib/supabase';
 import type {
@@ -12,11 +13,11 @@ import type {
   RegisterCredentials,
   RegisterResult,
 } from '@/types/auth';
-import type { UserRole } from '@/types/supabase';
 
 type AuthContextValue = {
   user: AuthUser | null;
   isLoading: boolean;
+  isProfileReady: boolean;
   isSubmitting: boolean;
   login: (credentials: LoginCredentials) => Promise<AuthError | null>;
   register: (credentials: RegisterCredentials) => Promise<RegisterResult>;
@@ -26,49 +27,91 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function buildAuthUser(session: Session): Promise<AuthUser> {
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('nome, role, created_at, departamento, funcao')
-    .eq('id', session.user.id)
-    .single();
+type ProfileRow = {
+  nome: string;
+  role: string;
+  created_at: string;
+  departamento: string | null;
+  funcao: string | null;
+  avatar_url?: string | null;
+};
 
-  if (profileError) {
-    console.warn('[Auth] Falha ao carregar profile:', profileError.message);
+async function fetchProfileByUserId(userId: string): Promise<ProfileRow | null> {
+  const baseSelect = 'nome, role, created_at, departamento, funcao';
+
+  const { data: baseData, error: baseError } = await supabase
+    .from('profiles')
+    .select(baseSelect)
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (baseError) {
+    console.warn('[Auth] Falha ao carregar profile:', baseError.message);
+    return null;
   }
+
+  if (!baseData) {
+    return null;
+  }
+
+  const profile: ProfileRow = { ...(baseData as ProfileRow), avatar_url: null };
+
+  const { data: avatarData, error: avatarError } = await supabase
+    .from('profiles')
+    .select('avatar_url')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (!avatarError && avatarData && 'avatar_url' in avatarData) {
+    profile.avatar_url = (avatarData as { avatar_url: string | null }).avatar_url;
+  }
+
+  return profile;
+}
+
+async function buildAuthUser(session: Session): Promise<AuthUser> {
+  const profile = await fetchProfileByUserId(session.user.id);
 
   const metadataName =
     typeof session.user.user_metadata?.nome === 'string'
       ? session.user.user_metadata.nome
       : undefined;
 
+  const role = resolveUserRole(session, profile?.role);
+
   return {
     id: session.user.id,
     name: profile?.nome ?? metadataName ?? session.user.email?.split('@')[0] ?? 'Usuário',
     email: session.user.email ?? '',
     createdAt: profile?.created_at ?? session.user.created_at,
-    role: profile?.role as UserRole | undefined,
+    role,
     departamento: profile?.departamento ?? null,
     funcao: profile?.funcao ?? null,
+    avatarUrl: profile?.avatar_url ?? null,
   };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProfileReady, setIsProfileReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const syncSession = useCallback(async (session: Session | null) => {
     if (!session) {
       setUser(null);
+      setIsProfileReady(true);
       return;
     }
 
     const authUser = await buildAuthUser(session);
     setUser(authUser);
+    setIsProfileReady(true);
   }, []);
 
   const refetchProfile = useCallback(async () => {
+    setIsProfileReady(false);
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -94,13 +137,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        void syncSession(session);
+        await syncSession(session);
       }
 
       if (event === 'SIGNED_OUT') {
         setUser(null);
+        setIsProfileReady(true);
       }
     });
 
@@ -184,6 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setIsProfileReady(true);
     router.replace('/(auth)/login');
   }, []);
 
@@ -191,13 +236,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       isLoading,
+      isProfileReady,
       isSubmitting,
       login,
       register,
       signOut,
       refetchProfile,
     }),
-    [user, isLoading, isSubmitting, login, register, signOut, refetchProfile],
+    [user, isLoading, isProfileReady, isSubmitting, login, register, signOut, refetchProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

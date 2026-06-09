@@ -7,8 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
@@ -143,15 +142,15 @@ export function DashboardColaboradorScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadDashboard({ refreshing: true })} />
-          }
-          showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
+    <>
+      <TabScreenContainer
+        scrollable
+        maxContentWidth={MaxContentWidth + 120}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadDashboard({ refreshing: true })} />
+        }>
+        <View style={styles.header}>
             <ThemedText type="heading">Olá, {user?.name.split(' ')[0] ?? 'colaborador'}</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.subtitle}>
               Acompanhe seu desempenho e os feedbacks recebidos nas avaliações.
@@ -222,15 +221,14 @@ export function DashboardColaboradorScreen() {
               onPress={handleAutoavaliacaoPress}
             />
           </DashboardCard>
-        </ScrollView>
+      </TabScreenContainer>
 
-        <AutoavaliacaoModal
-          visible={isAutoavaliacaoModalVisible}
-          onClose={() => setIsAutoavaliacaoModalVisible(false)}
-          onSubmit={handleAutoavaliacaoSubmit}
-        />
-      </SafeAreaView>
-    </ThemedView>
+      <AutoavaliacaoModal
+        visible={isAutoavaliacaoModalVisible}
+        onClose={() => setIsAutoavaliacaoModalVisible(false)}
+        onSubmit={handleAutoavaliacaoSubmit}
+      />
+    </>
   );
 }
 
@@ -238,20 +236,8 @@ export function DashboardColaboradorScreen() {
 export const ColaboradorDashboardScreen = DashboardColaboradorScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
   content: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.four,
     gap: Spacing.four,
-    maxWidth: MaxContentWidth + 120,
-    width: '100%',
-    alignSelf: 'center',
-    paddingBottom: Spacing.six,
   },
   header: {
     gap: Spacing.two,

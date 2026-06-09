@@ -48,6 +48,7 @@ export type Database = {
           formacao_tecnica: string | null;
           certificacao_edn: boolean;
           status: string | null;
+          avatar_url: string | null;
           role: UserRoleEnum;
           created_at: string;
           updated_at: string;
@@ -67,6 +68,7 @@ export type Database = {
           formacao_tecnica?: string | null;
           certificacao_edn?: boolean;
           status?: string | null;
+          avatar_url?: string | null;
           role?: UserRoleEnum;
           created_at?: string;
           updated_at?: string;
@@ -86,6 +88,7 @@ export type Database = {
           formacao_tecnica?: string | null;
           certificacao_edn?: boolean;
           status?: string | null;
+          avatar_url?: string | null;
           role?: UserRoleEnum;
           created_at?: string;
           updated_at?: string;

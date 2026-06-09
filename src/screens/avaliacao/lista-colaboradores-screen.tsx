@@ -9,8 +9,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { ColaboradorRow } from '@/components/avaliacao/colaborador-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -25,6 +23,7 @@ import {
 } from '@/features/avaliacao/api';
 import { useAuth } from '@/features/auth/auth-context';
 import { useAuthRole } from '@/hooks/use-auth-role';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { isAdminDashboardRole } from '@/types/supabase';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 
@@ -141,13 +140,14 @@ function ListaColaboradoresExecutiveView({
     );
   }
 
+  const { scrollPaddingBottom } = useTabScreenLayout();
   const pendentes = data?.pendentes ?? [];
   const concluidas = data?.concluidas ?? [];
   const total = pendentes.length + concluidas.length;
 
   return (
     <ScrollView
-      contentContainerStyle={styles.executiveContent}
+      contentContainerStyle={[styles.executiveContent, { paddingBottom: scrollPaddingBottom }]}
       refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadData({ refreshing: true })} />
       }
@@ -213,6 +213,7 @@ function ListaColaboradoresGerenteView({
   const [error, setError] = useState<string | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / COLABORADORES_PAGE_SIZE));
+  const { scrollPaddingBottom, footerPaddingBottom } = useTabScreenLayout();
 
   const loadPage = useCallback(
     async (targetPage: number, options?: { refreshing?: boolean }) => {
@@ -247,7 +248,7 @@ function ListaColaboradoresGerenteView({
   }, [loadPage]);
 
   return (
-    <>
+    <View style={styles.body}>
       <View style={styles.header}>
         <ThemedText type="heading">Colaboradores a avaliar</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.subtitle}>
@@ -266,7 +267,8 @@ function ListaColaboradoresGerenteView({
         </View>
       ) : (
         <FlatList
-          contentContainerStyle={styles.listContent}
+          style={styles.list}
+          contentContainerStyle={[styles.listContent, { paddingBottom: scrollPaddingBottom }]}
           data={items}
           keyExtractor={(item) => item.id}
           refreshControl={
@@ -296,7 +298,7 @@ function ListaColaboradoresGerenteView({
       )}
 
       {!isLoading && !error && total > 0 ? (
-        <View style={styles.pagination}>
+        <View style={[styles.pagination, { paddingBottom: footerPaddingBottom }]}>
           <Button
             label="Anterior"
             variant="secondary"
@@ -314,7 +316,7 @@ function ListaColaboradoresGerenteView({
           />
         </View>
       ) : null}
-    </>
+    </View>
   );
 }
 
@@ -327,18 +329,16 @@ export function ListaColaboradoresScreen() {
   if (!user || isRoleLoading) {
     return (
       <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-          <View style={styles.centered}>
-            <ActivityIndicator size="large" />
-          </View>
-        </SafeAreaView>
+        <View style={[styles.safeArea, styles.centered]}>
+          <ActivityIndicator size="large" />
+        </View>
       </ThemedView>
     );
   }
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <View style={styles.safeArea}>
         {isExecutiveView ? (
           <>
             <View style={styles.header}>
@@ -349,7 +349,7 @@ export function ListaColaboradoresScreen() {
         ) : (
           <ListaColaboradoresGerenteView avaliadorId={user.id} navigation={navigation} />
         )}
-      </SafeAreaView>
+      </View>
     </ThemedView>
   );
 }
@@ -363,6 +363,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
   },
+  body: {
+    flex: 1,
+  },
+  list: {
+    flex: 1,
+  },
   header: {
     gap: Spacing.one,
     marginBottom: Spacing.three,
@@ -373,7 +379,6 @@ const styles = StyleSheet.create({
   },
   executiveContent: {
     gap: Spacing.four,
-    paddingBottom: Spacing.four,
   },
   section: {
     gap: Spacing.two,
@@ -391,7 +396,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: Spacing.two,
-    paddingBottom: Spacing.three,
   },
   emptySection: {
     fontSize: 14,
@@ -416,7 +420,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
     paddingTop: Spacing.two,
-    paddingBottom: Spacing.two,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
   pageLabel: {
     fontFamily: Fonts.sansMedium,

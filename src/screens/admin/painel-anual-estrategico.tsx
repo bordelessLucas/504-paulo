@@ -29,6 +29,7 @@ import {
 } from '@/features/anual/painel-anual-api';
 import { useAuth } from '@/features/auth/auth-context';
 import { useAuthRole } from '@/hooks/use-auth-role';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 import {
   isPainelAnualEstrategicoRole,
@@ -115,6 +116,7 @@ export function PainelAnualEstrategicoScreen() {
 
   const anoReferencia = new Date().getFullYear();
   const canAccess = isPainelAnualEstrategicoRole(role);
+  const { scrollPaddingBottom } = useTabScreenLayout();
 
   const [colaboradores, setColaboradores] = useState<ColaboradorConsolidado[]>([]);
   const [selected, setSelected] = useState<ColaboradorConsolidado | null>(null);
@@ -259,9 +261,9 @@ export function PainelAnualEstrategicoScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -404,7 +406,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
-    paddingBottom: Spacing.six,
     gap: Spacing.four,
     maxWidth: MaxContentWidth,
     width: '100%',

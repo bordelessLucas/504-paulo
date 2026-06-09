@@ -9,8 +9,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
@@ -21,6 +19,7 @@ import {
 } from '@/features/avaliacao/api';
 import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
 import { useAuth } from '@/features/auth/auth-context';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useAuthRole } from '@/hooks/use-auth-role';
 import type { MinhaEquipeStackParamList } from '@/navigation/minha-equipe-stack';
 
@@ -140,6 +139,7 @@ export function MinhaEquipeScreen() {
   );
 
   const pendentesCount = colaboradores.filter((item) => !item.avaliadoNaQuinzena).length;
+  const { scrollPaddingBottom } = useTabScreenLayout();
 
   if (!user || isLoading) {
     return (
@@ -162,7 +162,7 @@ export function MinhaEquipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <View style={styles.safeArea}>
         <View style={styles.header}>
           <ThemedText themeColor="textSecondary" style={styles.subtitle}>
             {cicloLabel} · ciclo desde{' '}
@@ -174,7 +174,7 @@ export function MinhaEquipeScreen() {
         <FlatList
           data={colaboradores}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: scrollPaddingBottom }]}
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadEquipe({ refreshing: true })} />
           }
@@ -191,7 +191,7 @@ export function MinhaEquipeScreen() {
           )}
           showsVerticalScrollIndicator={false}
         />
-      </SafeAreaView>
+      </View>
     </ThemedView>
   );
 }
@@ -216,7 +216,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   listContent: {
-    paddingBottom: Spacing.six,
     maxWidth: MaxContentWidth + 360,
     width: '100%',
     alignSelf: 'center',

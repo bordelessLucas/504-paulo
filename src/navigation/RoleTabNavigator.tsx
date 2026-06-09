@@ -1,7 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { ComponentType } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { TAB_BAR_BASE_HEIGHT } from '@/constants/layout';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getPrimaryTabForRole, getTabsForRole } from '@/navigation/role-menus';
@@ -43,30 +45,38 @@ type RoleTabNavigatorProps = {
 
 export function RoleTabNavigator({ role }: RoleTabNavigatorProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const tabs = getTabsForRole(role);
   const initialRouteName = getPrimaryTabForRole(role);
+  const tabBarHeight = TAB_BAR_BASE_HEIGHT + insets.bottom;
 
   return (
     <Tab.Navigator
       initialRouteName={initialRouteName}
+      safeAreaInsets={{ bottom: insets.bottom }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.text,
         tabBarInactiveTintColor: theme.textSecondary,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.border,
           borderTopWidth: 1,
-          height: 58,
-          paddingTop: Spacing.one,
-          paddingBottom: Spacing.one,
+          height: tabBarHeight,
+          paddingTop: Spacing.two,
+          paddingBottom: Math.max(insets.bottom, Spacing.two),
           elevation: 0,
           shadowOpacity: 0,
         },
+        tabBarItemStyle: {
+          paddingVertical: Spacing.one,
+        },
         tabBarLabelStyle: {
           fontFamily: Fonts.sansMedium,
-          fontSize: 11,
-          lineHeight: 14,
+          fontSize: 10,
+          lineHeight: 13,
+          marginTop: 2,
         },
       }}>
       {tabs.map((tab) => (

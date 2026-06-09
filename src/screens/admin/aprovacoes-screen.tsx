@@ -20,6 +20,7 @@ import {
   type SolicitacaoMelhoria,
 } from '@/features/aprovacoes/api';
 import { useAuthRole } from '@/hooks/use-auth-role';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import type { UserRole } from '@/types/supabase';
 
 type AprovacoesViewMode = 'rh' | 'ceo';
@@ -136,12 +137,13 @@ export function AprovacoesScreen() {
   }
 
   const isRhView = viewMode === 'rh';
+  const { scrollPaddingBottom } = useTabScreenLayout();
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: scrollPaddingBottom }]}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -227,7 +229,6 @@ const styles = StyleSheet.create({
     maxWidth: MaxContentWidth + 360,
     width: '100%',
     alignSelf: 'center',
-    paddingBottom: Spacing.six,
   },
   header: {
     gap: Spacing.two,
