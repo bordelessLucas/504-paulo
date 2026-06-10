@@ -19,11 +19,14 @@ import {
   formatMediaGeral,
   type ColaboradorDashboardData,
 } from '@/features/colaborador/dashboard-api';
+import { BloqueioDeveresHint } from '@/components/colaborador/bloqueio-deveres-hint';
 import { createAutoavaliacaoSolicitacao } from '@/features/colaborador/autoavaliacao-api';
 import { AutoavaliacaoModal } from '@/features/colaborador/autoavaliacao-modal';
 import {
   formatDataAdmissao,
   isElegivelParaAutoavaliacao,
+  MENSAGEM_BLOQUEIO_TEMPO_CASA,
+  resolveMotivoBloqueioAutoavaliacao,
 } from '@/features/colaborador/eligibility';
 import { useAuth } from '@/features/auth/auth-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -97,7 +100,14 @@ export function DashboardColaboradorScreen() {
     }, [loadDashboard]),
   );
 
-  const isAutoavaliacaoEnabled = isElegivelParaAutoavaliacao(data?.dataAdmissao);
+  const isAutoavaliacaoEnabled = isElegivelParaAutoavaliacao(
+    data?.dataAdmissao,
+    data?.temIncidentesRecentes ?? false,
+  );
+  const bloqueioMotivo = resolveMotivoBloqueioAutoavaliacao(
+    data?.dataAdmissao,
+    data?.temIncidentesRecentes ?? false,
+  );
 
   function handleAutoavaliacaoPress() {
     if (!isAutoavaliacaoEnabled) {
@@ -209,9 +219,11 @@ export function DashboardColaboradorScreen() {
               </ThemedText>
             ) : null}
 
-            {!isAutoavaliacaoEnabled ? (
+            {bloqueioMotivo === 'deveres' ? <BloqueioDeveresHint visible /> : null}
+
+            {bloqueioMotivo === 'tempo_casa' ? (
               <ThemedText themeColor="textSecondary" style={styles.disabledHint}>
-                Você poderá solicitar uma nova autoavaliação quando completar 6 meses de casa.
+                {MENSAGEM_BLOQUEIO_TEMPO_CASA}
               </ThemedText>
             ) : null}
 

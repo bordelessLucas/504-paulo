@@ -8,3 +8,6 @@ export const TAB_CONTENT_EXTRA_PADDING = Spacing.three;
 
 /** Folga para toasts e footers fixos acima da tab bar. */
 export const TAB_FOOTER_EXTRA_PADDING = Spacing.two;
+
+/** Largura mínima para painéis master-detail (lista + detalhe lado a lado). */
+export const SPLIT_LAYOUT_MIN_WIDTH = 768;

@@ -10,8 +10,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ColaboradorRankingList } from '@/components/gerencial/colaborador-ranking-list';
-import { DesempenhoSemaforo } from '@/components/gerencial/desempenho-semaforo';
+import { ImaGaugeChart } from '@/components/gerencial/ima-gauge-chart';
 import { RadarDesempenhoChart } from '@/components/gerencial/radar-desempenho-chart';
+import { StatusPreenchimentoList } from '@/components/gerencial/status-preenchimento-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
@@ -29,9 +30,11 @@ import { useTheme } from '@/hooks/use-theme';
 
 function DashboardCard({
   title,
+  description,
   children,
 }: {
   title: string;
+  description?: string;
   children: ReactNode;
 }) {
   const theme = useTheme();
@@ -40,9 +43,16 @@ function DashboardCard({
     <View
       style={[
         styles.card,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+        { backgroundColor: theme.background, borderColor: theme.border },
       ]}>
-      <ThemedText type="subtitle">{title}</ThemedText>
+      <View style={styles.cardHeader}>
+        <ThemedText type="subtitle">{title}</ThemedText>
+        {description ? (
+          <ThemedText themeColor="textSecondary" style={styles.cardDescription}>
+            {description}
+          </ThemedText>
+        ) : null}
+      </View>
       {children}
     </View>
   );
@@ -140,30 +150,37 @@ export function DashboardsGerenciaisScreen() {
           }
           showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <ThemedText type="heading">Dashboards gerenciais</ThemedText>
+            <ThemedText type="heading">Dashboard executivo</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-              Visão executiva do desempenho por departamento e ranking de colaboradores.
+              Visão consolidada da metodologia 360° com as 3 perguntas universais e o Índice Médio
+              de Avaliação (IMA).
             </ThemedText>
           </View>
 
-          <DashboardCard title="Desempenho por departamento">
-            <ThemedText themeColor="textSecondary" style={styles.hint}>
-              Média das notas por departamento (escala 0 a 3) — 12 áreas da empresa.
-            </ThemedText>
+          <DashboardCard
+            title="Radar de desempenho"
+            description="Média geral da empresa nas 3 perguntas universais da metodologia 360°.">
             <RadarDesempenhoChart
-              labels={data?.radarLabels ?? []}
-              valores={data?.radarValores ?? []}
+              labels={data?.radarUniversal.labels ?? []}
+              valores={data?.radarUniversal.valores ?? []}
             />
           </DashboardCard>
 
-          <DashboardCard title="Semáforo de desempenho">
-            <DesempenhoSemaforo
-              mediaEmpresa={data?.mediaEmpresa ?? null}
-              status={data?.semaforoStatus ?? 'cinza'}
-            />
+          <DashboardCard
+            title="Velocímetro IMA"
+            description="Média global de performance dos colaboradores ativos, com faixas do semáforo na escala 0 a 3.">
+            <ImaGaugeChart ima={data?.ima ?? null} />
           </DashboardCard>
 
-          <DashboardCard title="Top 5 colaboradores">
+          <DashboardCard
+            title="Status de preenchimento"
+            description="Acompanhamento das avaliações pendentes por supervisor (quinzena) e gestor (semestre), por departamento.">
+            <StatusPreenchimentoList items={data?.statusPreenchimento ?? []} />
+          </DashboardCard>
+
+          <DashboardCard
+            title="Top 5 colaboradores"
+            description="Colaboradores com melhor média geral no período.">
             <ColaboradorRankingList
               exportingId={exportingId}
               items={data?.top5 ?? []}
@@ -172,7 +189,9 @@ export function DashboardsGerenciaisScreen() {
             />
           </DashboardCard>
 
-          <DashboardCard title="Bottom 5 colaboradores">
+          <DashboardCard
+            title="Bottom 5 colaboradores"
+            description="Colaboradores com menor média geral — útil para planos de melhoria.">
             <ColaboradorRankingList
               exportingId={exportingId}
               items={data?.bottom5 ?? []}
@@ -214,7 +233,10 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.three,
   },
-  hint: {
+  cardHeader: {
+    gap: Spacing.one,
+  },
+  cardDescription: {
     fontSize: 13,
     lineHeight: 18,
   },

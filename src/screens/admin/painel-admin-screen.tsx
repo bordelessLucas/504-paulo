@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { FormularioColaborador } from '@/components/rh/formulario-colaborador';
+import { RegistroIncidente } from '@/components/rh/registro-incidente';
 import { UploadPlanilhaRH } from '@/components/rh/upload-planilha-rh';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
@@ -18,6 +19,7 @@ export function PainelAdminScreen() {
       </View>
 
       <FormularioColaborador />
+      <RegistroIncidente />
       <UploadPlanilhaRH />
     </TabScreenContainer>
   );

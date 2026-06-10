@@ -29,6 +29,8 @@ export type StatusSolicitacaoSalarialEnum =
   | "aprovado"
   | "recusado";
 
+export type TipoIncidenteEnum = "acidente_sms" | "no_show" | "advertencia";
+
 export type Database = {
   public: {
     Tables: {
@@ -272,6 +274,50 @@ export type Database = {
         ];
       };
 
+      incidentes: {
+        Row: {
+          id: string;
+          colaborador_id: string;
+          registrado_por_id: string;
+          tipo_incidente: TipoIncidenteEnum;
+          data_ocorrencia: string;
+          descricao: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          colaborador_id: string;
+          registrado_por_id: string;
+          tipo_incidente: TipoIncidenteEnum;
+          data_ocorrencia: string;
+          descricao: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          colaborador_id?: string;
+          registrado_por_id?: string;
+          tipo_incidente?: TipoIncidenteEnum;
+          data_ocorrencia?: string;
+          descricao?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "incidentes_colaborador_id_fkey";
+            columns: ["colaborador_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "incidentes_registrado_por_id_fkey";
+            columns: ["registrado_por_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       melhorias_salariais: {
         Row: {
           id: string;
@@ -351,6 +397,7 @@ export type Database = {
       user_role: UserRoleEnum;
       tipo_avaliacao: TipoAvaliacaoEnum;
       status_solicitacao_salarial: StatusSolicitacaoSalarialEnum;
+      tipo_incidente: TipoIncidenteEnum;
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -364,6 +411,7 @@ export type UserRole = UserRoleEnum;
 export type TipoAvaliacao = TipoAvaliacaoEnum;
 export type TipoBeneficioAnual = TipoBeneficioAnualEnum;
 export type StatusSolicitacaoSalarial = StatusSolicitacaoSalarialEnum;
+export type TipoIncidente = TipoIncidenteEnum;
 
 // Convenience aliases used across the app
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -401,6 +449,12 @@ export function isGerencialDashboardRole(role?: UserRole | null): boolean {
 export function isPainelAnualEstrategicoRole(role?: UserRole | null): boolean {
   return role === "rh" || role === "ceo" || role === "gerente" || role === "admin";
 }
+
+export const TIPO_INCIDENTE_LABELS: Record<TipoIncidente, string> = {
+  acidente_sms: "Acidente SMS",
+  no_show: "Falta (No-show)",
+  advertencia: "Advertência",
+};
 
 export const TIPO_BENEFICIO_ANUAL_LABELS: Record<TipoBeneficioAnual, string> = {
   reajuste: "Reajuste",

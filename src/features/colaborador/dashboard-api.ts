@@ -1,3 +1,4 @@
+import { hasIncidentesRecentes } from '@/features/incidentes/api';
 import { supabase } from '@/lib/supabase';
 
 export type ColaboradorDashboardData = {
@@ -5,6 +6,7 @@ export type ColaboradorDashboardData = {
   totalRespostas: number;
   feedbacks: FeedbackColaborador[];
   dataAdmissao: string | null;
+  temIncidentesRecentes: boolean;
 };
 
 export type FeedbackColaborador = {
@@ -51,11 +53,15 @@ function buildFeedbacksFromRespostas(respostas: RespostaFeedbackRow[]): Feedback
 }
 
 export async function fetchColaboradorDashboard(userId: string): Promise<ColaboradorDashboardData> {
-  const [{ data: profile, error: profileError }, { data: avaliacoes, error: avaliacoesError }] =
-    await Promise.all([
-      supabase.from('profiles').select('data_admissao').eq('id', userId).single(),
-      supabase.from('avaliacoes_masked').select('id').eq('avaliado_id', userId),
-    ]);
+  const [
+    { data: profile, error: profileError },
+    { data: avaliacoes, error: avaliacoesError },
+    temIncidentesRecentes,
+  ] = await Promise.all([
+    supabase.from('profiles').select('data_admissao').eq('id', userId).single(),
+    supabase.from('avaliacoes_masked').select('id').eq('avaliado_id', userId),
+    hasIncidentesRecentes(userId),
+  ]);
 
   if (profileError) {
     throw new Error(profileError.message);
@@ -73,6 +79,7 @@ export async function fetchColaboradorDashboard(userId: string): Promise<Colabor
       totalRespostas: 0,
       feedbacks: [],
       dataAdmissao: profile.data_admissao,
+      temIncidentesRecentes,
     };
   }
 
@@ -98,6 +105,7 @@ export async function fetchColaboradorDashboard(userId: string): Promise<Colabor
     totalRespostas: notas.length,
     feedbacks: buildFeedbacksFromRespostas(listaRespostas),
     dataAdmissao: profile.data_admissao,
+    temIncidentesRecentes,
   };
 }
 

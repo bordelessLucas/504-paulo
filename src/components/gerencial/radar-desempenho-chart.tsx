@@ -6,8 +6,8 @@ import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-const MAX_SCORE = 5;
-const GRID_LEVELS = 5;
+const MAX_SCORE = 3;
+const GRID_LEVELS = 3;
 
 type RadarDesempenhoChartProps = {
   labels: string[];
@@ -131,7 +131,7 @@ export function RadarDesempenhoChart({
       </Svg>
 
       <ThemedText themeColor="textSecondary" style={styles.scaleHint}>
-        Escala 0–5 · média por departamento
+        Escala 0–3 · média das 3 perguntas universais
       </ThemedText>
     </View>
   );

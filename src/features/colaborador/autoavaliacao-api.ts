@@ -1,3 +1,8 @@
+import {
+  isElegivelParaAutoavaliacao,
+  MENSAGEM_BLOQUEIO_DEVERES,
+} from '@/features/colaborador/eligibility';
+import { hasIncidentesRecentes } from '@/features/incidentes/api';
 import { supabase } from '@/lib/supabase';
 
 export function buildAutoavaliacaoJustificativa(
@@ -26,6 +31,23 @@ export async function createAutoavaliacaoSolicitacao(params: {
 
   if (!qualificacoesTexto && !investimentoTexto) {
     throw new Error('Preencha ao menos um dos campos antes de enviar.');
+  }
+
+  const [{ data: profile, error: profileError }, temIncidentesRecentes] = await Promise.all([
+    supabase.from('profiles').select('data_admissao').eq('id', params.colaboradorId).single(),
+    hasIncidentesRecentes(params.colaboradorId),
+  ]);
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  if (!isElegivelParaAutoavaliacao(profile.data_admissao, temIncidentesRecentes)) {
+    throw new Error(
+      temIncidentesRecentes
+        ? MENSAGEM_BLOQUEIO_DEVERES
+        : 'Autoavaliação disponível apenas após 6 meses de admissão.',
+    );
   }
 
   const justificativa = buildAutoavaliacaoJustificativa(qualificacoesTexto, investimentoTexto);

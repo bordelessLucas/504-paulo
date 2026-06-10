@@ -10,9 +10,15 @@ type ColaboradorRowProps = {
   colaborador: ColaboradorResumo;
   onPress: () => void;
   detail?: string;
+  isSelected?: boolean;
 };
 
-export function ColaboradorRow({ colaborador, onPress, detail }: ColaboradorRowProps) {
+export function ColaboradorRow({
+  colaborador,
+  onPress,
+  detail,
+  isSelected = false,
+}: ColaboradorRowProps) {
   const theme = useTheme();
 
   return (
@@ -21,7 +27,11 @@ export function ColaboradorRow({ colaborador, onPress, detail }: ColaboradorRowP
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,
-        { backgroundColor: theme.backgroundElement },
+        {
+          backgroundColor: isSelected ? theme.backgroundSelected : theme.backgroundElement,
+          borderColor: isSelected ? theme.text : theme.border,
+          borderWidth: isSelected ? 1 : 0,
+        },
         pressed && styles.pressed,
       ]}>
       <View style={styles.info}>

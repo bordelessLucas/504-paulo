@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useCallback, useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -12,6 +13,7 @@ import {
 
 import { ThemedText } from '@/components/themed-text';
 import { ActionButton } from '@/components/ui/action-button';
+import { Button } from '@/components/ui/button';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -104,7 +106,15 @@ export function PontoMelhoriaAvaliacaoModal({
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardView}>
-          <Pressable style={styles.dialog} onPress={(event) => event.stopPropagation()}>
+          <Pressable
+            style={[
+              styles.dialog,
+              {
+                backgroundColor: theme.background,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={(event) => event.stopPropagation()}>
             <ScrollView
               bounces={false}
               keyboardShouldPersistTaps="handled"
@@ -112,23 +122,57 @@ export function PontoMelhoriaAvaliacaoModal({
               <View style={styles.content}>
                 {step === 'confirm' ? (
                   <>
-                    <ThemedText type="subtitle">Ponto de melhoria</ThemedText>
-                    <ThemedText themeColor="textSecondary" style={styles.description}>
-                      Gostaria de deixar um ponto de melhoria para {colaboradorNome}?
-                    </ThemedText>
+                    <View
+                      style={[
+                        styles.iconBadge,
+                        { backgroundColor: theme.accentMuted, borderColor: theme.border },
+                      ]}>
+                      <Ionicons color={theme.accent} name="bulb-outline" size={22} />
+                    </View>
 
-                    <View style={styles.actions}>
-                      <ActionButton label="Sim" variant="primary" onPress={handleConfirmYes} />
-                      <ActionButton label="Não" variant="secondary" onPress={handleSkip} />
+                    <View style={styles.textBlock}>
+                      <ThemedText type="subtitle">Ponto de melhoria</ThemedText>
+                      <ThemedText style={styles.question}>
+                        Gostaria de deixar um ponto de melhoria para{' '}
+                        <ThemedText style={styles.nomeDestaque}>{colaboradorNome}</ThemedText>?
+                      </ThemedText>
+                      <ThemedText themeColor="textSecondary" style={styles.hint}>
+                        Opcional. O feedback aparecerá no dashboard do colaborador.
+                      </ThemedText>
+                    </View>
+
+                    <View style={styles.confirmActions}>
+                      <Button
+                        label="Sim, registrar"
+                        style={styles.confirmButton}
+                        onPress={handleConfirmYes}
+                      />
+                      <Button
+                        label="Não, obrigado"
+                        variant="secondary"
+                        style={styles.confirmButton}
+                        onPress={handleSkip}
+                      />
                     </View>
                   </>
                 ) : (
                   <>
-                    <ThemedText type="subtitle">Registrar ponto de melhoria</ThemedText>
-                    <ThemedText themeColor="textSecondary" style={styles.description}>
-                      Este feedback aparecerá para {colaboradorNome} no dashboard, em Pontos de
-                      melhoria.
-                    </ThemedText>
+                    <View
+                      style={[
+                        styles.iconBadge,
+                        { backgroundColor: theme.accentMuted, borderColor: theme.border },
+                      ]}>
+                      <Ionicons color={theme.accent} name="create-outline" size={22} />
+                    </View>
+
+                    <View style={styles.textBlock}>
+                      <ThemedText type="subtitle">Registrar ponto de melhoria</ThemedText>
+                      <ThemedText themeColor="textSecondary" style={styles.description}>
+                        Este feedback será exibido para{' '}
+                        <ThemedText style={styles.nomeDestaque}>{colaboradorNome}</ThemedText> em
+                        Pontos de melhoria.
+                      </ThemedText>
+                    </View>
 
                     <View style={styles.field}>
                       <ThemedText style={styles.fieldLabel}>Ponto de melhoria *</ThemedText>
@@ -138,10 +182,10 @@ export function PontoMelhoriaAvaliacaoModal({
                         placeholder="Descreva o que o colaborador pode desenvolver ou melhorar..."
                         placeholderTextColor={theme.placeholder}
                         style={[
-                          styles.textBlock,
+                          styles.textArea,
                           {
                             color: theme.text,
-                            backgroundColor: theme.backgroundElement,
+                            backgroundColor: theme.inputBackground,
                             borderColor: error ? theme.danger : theme.border,
                           },
                         ]}
@@ -164,7 +208,7 @@ export function PontoMelhoriaAvaliacaoModal({
                       </ThemedText>
                     ) : null}
 
-                    <View style={styles.actions}>
+                    <View style={styles.inputActions}>
                       <ActionButton
                         label="Salvar ponto de melhoria"
                         variant="primary"
@@ -196,29 +240,75 @@ export function PontoMelhoriaAvaliacaoModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(47, 52, 55, 0.32)',
+    backgroundColor: 'rgba(47, 52, 55, 0.45)',
     justifyContent: 'center',
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.five,
   },
   keyboardView: {
     width: '100%',
-    maxWidth: 480,
+    maxWidth: 420,
     alignSelf: 'center',
   },
   dialog: {
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
     borderRadius: Radius.lg,
     maxHeight: '90%',
     overflow: 'hidden',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+      },
+      default: {
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+      },
+    }),
   },
   content: {
     padding: Spacing.four,
     gap: Spacing.three,
   },
+  iconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+  textBlock: {
+    gap: Spacing.two,
+  },
+  question: {
+    fontFamily: Fonts.sans,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  nomeDestaque: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  hint: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
   description: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    paddingTop: Spacing.one,
+  },
+  confirmButton: {
+    flex: 1,
   },
   field: {
     gap: Spacing.two,
@@ -228,7 +318,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  textBlock: {
+  textArea: {
     minHeight: 120,
     borderWidth: 1,
     borderRadius: Radius.sm,
@@ -246,7 +336,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  actions: {
+  inputActions: {
     gap: Spacing.three,
     paddingTop: Spacing.one,
   },

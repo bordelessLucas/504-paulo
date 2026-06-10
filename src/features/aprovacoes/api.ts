@@ -1,3 +1,5 @@
+import { MENSAGEM_BLOQUEIO_DEVERES } from '@/features/colaborador/eligibility';
+import { hasIncidentesRecentes } from '@/features/incidentes/api';
 import {
   isElegivelParaReajuste,
   MENSAGEM_INELEGIVEL_REAJUSTE,
@@ -102,6 +104,7 @@ export async function fetchColaboradoresAtivos(): Promise<ColaboradorAtivo[]> {
 export async function fetchMediaGeralColaborador(colaboradorId: string): Promise<{
   media: number | null;
   totalRespostas: number;
+  temIncidentesRecentes: boolean;
 }> {
   const { data: avaliacoes, error: avaliacoesError } = await supabase
     .from('avaliacoes')
@@ -114,8 +117,10 @@ export async function fetchMediaGeralColaborador(colaboradorId: string): Promise
 
   const avaliacaoIds = (avaliacoes ?? []).map((avaliacao) => avaliacao.id);
 
+  const temIncidentesRecentes = await hasIncidentesRecentes(colaboradorId);
+
   if (avaliacaoIds.length === 0) {
-    return { media: null, totalRespostas: 0 };
+    return { media: null, totalRespostas: 0, temIncidentesRecentes };
   }
 
   const { data: respostas, error: respostasError } = await supabase
@@ -134,6 +139,7 @@ export async function fetchMediaGeralColaborador(colaboradorId: string): Promise
   return {
     media: calcularMedia(notas),
     totalRespostas: notas.length,
+    temIncidentesRecentes,
   };
 }
 
@@ -165,7 +171,13 @@ export async function createSolicitacaoMelhoria(params: {
     throw new Error('A justificativa deve ter pelo menos 10 caracteres.');
   }
 
-  if (!isElegivelParaReajuste(params.mediaGeral, params.totalRespostas)) {
+  const temIncidentesRecentes = await hasIncidentesRecentes(params.colaboradorId);
+
+  if (temIncidentesRecentes) {
+    throw new Error(MENSAGEM_BLOQUEIO_DEVERES);
+  }
+
+  if (!isElegivelParaReajuste(params.mediaGeral, params.totalRespostas, temIncidentesRecentes)) {
     throw new Error(MENSAGEM_INELEGIVEL_REAJUSTE);
   }
 
