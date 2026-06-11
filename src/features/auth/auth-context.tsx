@@ -4,6 +4,11 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 
 import { mapAuthError } from '@/features/auth/map-auth-error';
 import { resolveUserRole } from '@/features/auth/resolve-user-role';
+import {
+  clearStaleAuthSession,
+  getSafeSession,
+  isInvalidRefreshTokenError,
+} from '@/features/auth/session-utils';
 import { validateLogin, validateRegister } from '@/features/auth/validation';
 import { supabase } from '@/lib/supabase';
 import type {
@@ -112,10 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refetchProfile = useCallback(async () => {
     setIsProfileReady(false);
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
+    const session = await getSafeSession();
     await syncSession(session);
   }, [syncSession]);
 
@@ -123,13 +125,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let isMounted = true;
 
     async function bootstrapSession() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      try {
+        const session = await getSafeSession();
 
-      if (isMounted) {
-        await syncSession(session);
-        setIsLoading(false);
+        if (isMounted) {
+          await syncSession(session);
+        }
+      } catch (error) {
+        if (isInvalidRefreshTokenError(error)) {
+          await clearStaleAuthSession();
+        }
+
+        if (isMounted) {
+          setUser(null);
+          setIsProfileReady(true);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -138,13 +152,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        await syncSession(session);
-      }
+      try {
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          await syncSession(session);
+        }
 
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setIsProfileReady(true);
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setIsProfileReady(true);
+        }
+      } catch (error) {
+        if (isInvalidRefreshTokenError(error)) {
+          await clearStaleAuthSession();
+          setUser(null);
+          setIsProfileReady(true);
+        }
       }
     });
 
@@ -226,7 +248,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      await clearStaleAuthSession();
+    }
+
     setUser(null);
     setIsProfileReady(true);
     router.replace('/(auth)/login');

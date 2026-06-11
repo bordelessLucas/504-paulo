@@ -15,6 +15,29 @@ const VALID_ROLES = new Set([
   'admin',
 ]);
 
+const CEO_ADMIN_ASSIGNABLE_ROLES = new Set([
+  'colaborador',
+  'supervisor',
+  'gestor',
+  'gerente',
+  'rh',
+  'admin',
+]);
+
+const RH_ASSIGNABLE_ROLES = new Set(['colaborador', 'supervisor', 'gestor', 'gerente']);
+
+function canAssignRole(callerRole: string, targetRole: string): boolean {
+  if (callerRole === 'ceo' || callerRole === 'admin') {
+    return CEO_ADMIN_ASSIGNABLE_ROLES.has(targetRole);
+  }
+
+  if (callerRole === 'rh') {
+    return RH_ASSIGNABLE_ROLES.has(targetRole);
+  }
+
+  return false;
+}
+
 const DEFAULT_PASSWORD = '12345678';
 
 const NIVEL_IRATA_VALUES = new Set(['N1', 'N2', 'N3', 'N/A']);
@@ -201,6 +224,14 @@ Deno.serve(async (request) => {
     const role = body.role?.trim() && VALID_ROLES.has(body.role.trim())
       ? body.role.trim()
       : 'colaborador';
+
+    if (role === 'ceo') {
+      return jsonResponse({ error: 'Não é permitido criar acessos com papel CEO.' }, 403);
+    }
+
+    if (!canAssignRole(callerRole, role)) {
+      return jsonResponse({ error: 'Sem permissão para atribuir este papel.' }, 403);
+    }
 
     const status = normalizeStatus(body.status);
     const nivelIrata = normalizeNivelIrata(body.nivel_irata);

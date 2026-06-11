@@ -65,6 +65,7 @@ async function fetchMediasPorTipo(
     .select('id')
     .eq('avaliado_id', colaboradorId)
     .eq('tipo', tipo)
+    .eq('status', 'aprovada')
     .gte(AVALIACAO_DATA_COLUMN, inicio)
     .lt(AVALIACAO_DATA_COLUMN, fim);
 
@@ -206,6 +207,7 @@ export async function salvarDecisaoAnualEstrategica(params: {
       avaliador_id: params.decididoPorId,
       avaliado_id: params.colaboradorId,
       tipo: 'anual',
+      status: 'pendente_rh',
     })
     .select('id')
     .single();

@@ -2,6 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -9,11 +10,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AvaliacaoValidacaoCard } from '@/components/aprovacoes/avaliacao-validacao-card';
 import { SolicitacaoMelhoriaCard } from '@/components/aprovacoes/solicitacao-melhoria-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/ui/toast';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import {
+  isCeoApprovalRole,
+  isRhValidationRole,
+} from '@/features/aprovacoes/approval-roles';
+import {
+  atualizarStatusAvaliacao,
+  fetchAvaliacoesPorStatusValidacao,
+  type AvaliacaoPendenteValidacao,
+} from '@/features/aprovacoes/avaliacoes-validacao-api';
 import {
   atualizarStatusSolicitacao,
   fetchSolicitacoesPorStatus,
@@ -21,39 +32,38 @@ import {
 } from '@/features/aprovacoes/api';
 import { useAuthRole } from '@/hooks/use-auth-role';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
-import type { UserRole } from '@/types/supabase';
+import { useTheme } from '@/hooks/use-theme';
+import type { StatusSolicitacaoSalarialEnum, StatusValidacaoEnum } from '@/types/supabase';
 
-type AprovacoesViewMode = 'rh' | 'ceo';
+type AprovacoesSection = 'solicitacoes' | 'avaliacoes';
 
-function getAprovacoesViewMode(role: UserRole | null): AprovacoesViewMode | null {
-  if (role === 'rh') {
-    return 'rh';
-  }
-
-  if (role === 'ceo' || role === 'admin') {
-    return 'ceo';
-  }
-
-  return null;
-}
+type PendingAction =
+  | { kind: 'solicitacao'; id: string; action: 'primary' | 'danger' }
+  | { kind: 'avaliacao'; id: string; action: 'primary' | 'danger' };
 
 export function AprovacoesScreen() {
+  const theme = useTheme();
   const { role, isLoading: isRoleLoading } = useAuthRole();
   const { showToast } = useToast();
-  const viewMode = getAprovacoesViewMode(role);
 
+  const isRhView = isRhValidationRole(role);
+  const isCeoView = isCeoApprovalRole(role);
+  const canAccess = isRhView || isCeoView;
+
+  const statusSolicitacao: StatusSolicitacaoSalarialEnum = isRhView ? 'pendente_rh' : 'pendente_ceo';
+  const statusAvaliacao: StatusValidacaoEnum = isRhView ? 'pendente_rh' : 'pendente_ceo';
+
+  const [section, setSection] = useState<AprovacoesSection>('solicitacoes');
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoMelhoria[]>([]);
+  const [avaliacoes, setAvaliacoes] = useState<AvaliacaoPendenteValidacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [actionId, setActionId] = useState<string | null>(null);
-  const [actionType, setActionType] = useState<'primary' | 'secondary' | 'danger' | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
-  const statusFiltro = viewMode === 'rh' ? 'pendente_rh' : 'pendente_ceo';
-
-  const loadSolicitacoes = useCallback(
+  const loadData = useCallback(
     async (options?: { refreshing?: boolean }) => {
-      if (!viewMode) {
+      if (!canAccess) {
         return;
       }
 
@@ -66,11 +76,16 @@ export function AprovacoesScreen() {
       setError(null);
 
       try {
-        const lista = await fetchSolicitacoesPorStatus(statusFiltro);
-        setSolicitacoes(lista);
+        const [listaSolicitacoes, listaAvaliacoes] = await Promise.all([
+          fetchSolicitacoesPorStatus(statusSolicitacao),
+          fetchAvaliacoesPorStatusValidacao(statusAvaliacao),
+        ]);
+
+        setSolicitacoes(listaSolicitacoes);
+        setAvaliacoes(listaAvaliacoes);
       } catch (loadError) {
         setError(
-          loadError instanceof Error ? loadError.message : 'Erro ao carregar solicitações.',
+          loadError instanceof Error ? loadError.message : 'Erro ao carregar validações.',
         );
       } finally {
         if (options?.refreshing) {
@@ -80,24 +95,23 @@ export function AprovacoesScreen() {
         }
       }
     },
-    [statusFiltro, viewMode],
+    [canAccess, statusAvaliacao, statusSolicitacao],
   );
 
   useFocusEffect(
     useCallback(() => {
-      void loadSolicitacoes();
-    }, [loadSolicitacoes]),
+      void loadData();
+    }, [loadData]),
   );
 
-  const handleAction = useCallback(
+  const handleSolicitacaoAction = useCallback(
     async (
       solicitacao: SolicitacaoMelhoria,
-      novoStatus: 'pendente_ceo' | 'aprovado' | 'recusado',
-      tipo: 'primary' | 'secondary' | 'danger',
+      novoStatus: StatusSolicitacaoSalarialEnum,
+      action: 'primary' | 'danger',
       successMessage: string,
     ) => {
-      setActionId(solicitacao.id);
-      setActionType(tipo);
+      setPendingAction({ kind: 'solicitacao', id: solicitacao.id, action });
 
       try {
         await atualizarStatusSolicitacao(solicitacao.id, novoStatus);
@@ -111,8 +125,34 @@ export function AprovacoesScreen() {
           'error',
         );
       } finally {
-        setActionId(null);
-        setActionType(null);
+        setPendingAction(null);
+      }
+    },
+    [showToast],
+  );
+
+  const handleAvaliacaoAction = useCallback(
+    async (
+      avaliacao: AvaliacaoPendenteValidacao,
+      novoStatus: StatusValidacaoEnum,
+      action: 'primary' | 'danger',
+      successMessage: string,
+    ) => {
+      setPendingAction({ kind: 'avaliacao', id: avaliacao.id, action });
+
+      try {
+        await atualizarStatusAvaliacao(avaliacao.id, novoStatus);
+        setAvaliacoes((current) => current.filter((item) => item.id !== avaliacao.id));
+        showToast(successMessage, 'success');
+      } catch (actionError) {
+        showToast(
+          actionError instanceof Error
+            ? actionError.message
+            : 'Não foi possível atualizar a avaliação.',
+          'error',
+        );
+      } finally {
+        setPendingAction(null);
       }
     },
     [showToast],
@@ -126,18 +166,23 @@ export function AprovacoesScreen() {
     );
   }
 
-  if (!viewMode) {
+  if (!canAccess) {
     return (
       <ThemedView style={styles.centered}>
         <ThemedText themeColor="textSecondary" style={styles.unauthorized}>
-          Você não tem permissão para acessar as aprovações.
+          Você não tem permissão para acessar validações e aprovações.
         </ThemedText>
       </ThemedView>
     );
   }
 
-  const isRhView = viewMode === 'rh';
   const { scrollPaddingBottom } = useTabScreenLayout();
+  const emptySolicitacoes = isRhView
+    ? 'Nenhuma solicitação aguardando validação do RH.'
+    : 'Nenhuma solicitação aguardando aprovação do CEO.';
+  const emptyAvaliacoes = isRhView
+    ? 'Nenhuma avaliação aguardando validação do RH.'
+    : 'Nenhuma avaliação aguardando aprovação do CEO.';
 
   return (
     <ThemedView style={styles.container}>
@@ -147,17 +192,52 @@ export function AprovacoesScreen() {
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
-              onRefresh={() => void loadSolicitacoes({ refreshing: true })}
+              onRefresh={() => void loadData({ refreshing: true })}
             />
           }
           showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <ThemedText type="heading">Aprovações</ThemedText>
+            <ThemedText type="heading">
+              {isRhView ? 'Validações' : 'Aprovações finais'}
+            </ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.description}>
               {isRhView
-                ? 'Valide os requisitos das solicitações enviadas pelos gerentes antes de encaminhar ao CEO.'
-                : 'Analise solicitações validadas pelo RH e defina a aprovação final.'}
+                ? 'Valide solicitações e avaliações antes de encaminhar ao CEO para decisão final.'
+                : 'Aprove ou recuse solicitações e avaliações já validadas pelo RH.'}
             </ThemedText>
+          </View>
+
+          <View style={styles.segmented}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setSection('solicitacoes')}
+              style={[
+                styles.segment,
+                {
+                  backgroundColor:
+                    section === 'solicitacoes' ? theme.backgroundSelected : theme.background,
+                  borderColor: theme.border,
+                },
+              ]}>
+              <ThemedText style={styles.segmentLabel}>
+                Solicitações ({solicitacoes.length})
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setSection('avaliacoes')}
+              style={[
+                styles.segment,
+                {
+                  backgroundColor:
+                    section === 'avaliacoes' ? theme.backgroundSelected : theme.background,
+                  borderColor: theme.border,
+                },
+              ]}>
+              <ThemedText style={styles.segmentLabel}>
+                Avaliações ({avaliacoes.length})
+              </ThemedText>
+            </Pressable>
           </View>
 
           {isLoading ? (
@@ -166,43 +246,99 @@ export function AprovacoesScreen() {
             <ThemedText themeColor="danger" style={styles.error}>
               {error}
             </ThemedText>
-          ) : solicitacoes.length === 0 ? (
+          ) : section === 'solicitacoes' ? (
+            solicitacoes.length === 0 ? (
+              <View style={styles.emptyBox}>
+                <ThemedText themeColor="textSecondary" style={styles.empty}>
+                  {emptySolicitacoes}
+                </ThemedText>
+              </View>
+            ) : (
+              <View style={styles.list}>
+                {solicitacoes.map((solicitacao) => (
+                  <SolicitacaoMelhoriaCard
+                    key={solicitacao.id}
+                    solicitacao={solicitacao}
+                    showRhValidatedBadge={isCeoView}
+                    primaryLabel={isRhView ? 'Validar e encaminhar ao CEO' : 'Aprovar'}
+                    dangerLabel={isRhView ? 'Devolver ao solicitante' : 'Recusar'}
+                    isPrimaryLoading={
+                      pendingAction?.kind === 'solicitacao' &&
+                      pendingAction.id === solicitacao.id &&
+                      pendingAction.action === 'primary'
+                    }
+                    isDangerLoading={
+                      pendingAction?.kind === 'solicitacao' &&
+                      pendingAction.id === solicitacao.id &&
+                      pendingAction.action === 'danger'
+                    }
+                    onPrimary={() =>
+                      void handleSolicitacaoAction(
+                        solicitacao,
+                        isRhView ? 'pendente_ceo' : 'aprovado',
+                        'primary',
+                        isRhView
+                          ? 'Solicitação encaminhada ao CEO.'
+                          : 'Solicitação aprovada pelo CEO.',
+                      )
+                    }
+                    onDanger={() =>
+                      void handleSolicitacaoAction(
+                        solicitacao,
+                        isRhView ? 'devolvida' : 'recusado',
+                        'danger',
+                        isRhView
+                          ? 'Solicitação devolvida ao solicitante.'
+                          : 'Solicitação recusada pelo CEO.',
+                      )
+                    }
+                  />
+                ))}
+              </View>
+            )
+          ) : avaliacoes.length === 0 ? (
             <View style={styles.emptyBox}>
               <ThemedText themeColor="textSecondary" style={styles.empty}>
-                {isRhView
-                  ? 'Nenhuma solicitação aguardando validação do RH.'
-                  : 'Nenhuma solicitação aguardando aprovação do CEO.'}
+                {emptyAvaliacoes}
               </ThemedText>
             </View>
           ) : (
             <View style={styles.list}>
-              {solicitacoes.map((solicitacao) => (
-                <SolicitacaoMelhoriaCard
-                  key={solicitacao.id}
-                  solicitacao={solicitacao}
-                  showRhValidatedBadge={!isRhView}
-                  primaryLabel={isRhView ? 'Validar requisitos' : 'Aprovar definitivo'}
-                  dangerLabel={isRhView ? 'Devolver / Recusar' : 'Recusar'}
-                  isPrimaryLoading={actionId === solicitacao.id && actionType === 'primary'}
-                  isDangerLoading={actionId === solicitacao.id && actionType === 'danger'}
+              {avaliacoes.map((avaliacao) => (
+                <AvaliacaoValidacaoCard
+                  key={avaliacao.id}
+                  avaliacao={avaliacao}
+                  showRhValidatedBadge={isCeoView}
+                  primaryLabel={isRhView ? 'Validar e encaminhar ao CEO' : 'Aprovar'}
+                  dangerLabel={isRhView ? 'Devolver ao avaliador' : 'Recusar'}
+                  isPrimaryLoading={
+                    pendingAction?.kind === 'avaliacao' &&
+                    pendingAction.id === avaliacao.id &&
+                    pendingAction.action === 'primary'
+                  }
+                  isDangerLoading={
+                    pendingAction?.kind === 'avaliacao' &&
+                    pendingAction.id === avaliacao.id &&
+                    pendingAction.action === 'danger'
+                  }
                   onPrimary={() =>
-                    void handleAction(
-                      solicitacao,
-                      isRhView ? 'pendente_ceo' : 'aprovado',
+                    void handleAvaliacaoAction(
+                      avaliacao,
+                      isRhView ? 'pendente_ceo' : 'aprovada',
                       'primary',
                       isRhView
-                        ? 'Solicitação encaminhada ao CEO.'
-                        : 'Solicitação aprovada definitivamente.',
+                        ? 'Avaliação encaminhada ao CEO.'
+                        : 'Avaliação aprovada pelo CEO.',
                     )
                   }
                   onDanger={() =>
-                    void handleAction(
-                      solicitacao,
-                      'recusado',
+                    void handleAvaliacaoAction(
+                      avaliacao,
+                      isRhView ? 'devolvida' : 'recusada',
                       'danger',
                       isRhView
-                        ? 'Solicitação devolvida ao gerente.'
-                        : 'Solicitação recusada.',
+                        ? 'Avaliação devolvida ao avaliador.'
+                        : 'Avaliação recusada pelo CEO.',
                     )
                   }
                 />
@@ -236,6 +372,23 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 15,
     lineHeight: 22,
+  },
+  segmented: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  segment: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    alignItems: 'center',
+  },
+  segmentLabel: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
   },
   list: {
     gap: Spacing.three,

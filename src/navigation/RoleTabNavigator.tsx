@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TAB_BAR_BASE_HEIGHT } from '@/constants/layout';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { getPrimaryTabForRole, getTabsForRole } from '@/navigation/role-menus';
+import { getPrimaryTabForRole, getTabLabelForRole, getTabsForRole } from '@/navigation/role-menus';
 import type { MainTabParamList, TabIconName } from '@/navigation/types';
 import { AdminDashboardScreen } from '@/screens/admin/admin-dashboard-screen';
 import { DashboardsGerenciaisScreen } from '@/screens/admin/dashboards-gerenciais-screen';
@@ -85,7 +85,7 @@ export function RoleTabNavigator({ role }: RoleTabNavigatorProps) {
           name={tab.name}
           component={TAB_SCREENS[tab.name]}
           options={{
-            title: tab.label,
+            title: getTabLabelForRole(tab.name, role),
             tabBarIcon: ({ color }) => <TabIcon color={color} name={tab.icon} />,
           }}
         />

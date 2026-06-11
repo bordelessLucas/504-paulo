@@ -109,7 +109,8 @@ export async function fetchMediaGeralColaborador(colaboradorId: string): Promise
   const { data: avaliacoes, error: avaliacoesError } = await supabase
     .from('avaliacoes')
     .select('id')
-    .eq('avaliado_id', colaboradorId);
+    .eq('avaliado_id', colaboradorId)
+    .eq('status', 'aprovada');
 
   if (avaliacoesError) {
     throw new Error(avaliacoesError.message);

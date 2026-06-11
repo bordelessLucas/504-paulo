@@ -27,9 +27,27 @@ export type StatusSolicitacaoSalarialEnum =
   | "pendente_rh"
   | "pendente_ceo"
   | "aprovado"
-  | "recusado";
+  | "recusado"
+  | "devolvida";
+
+export type StatusValidacaoEnum =
+  | "pendente_rh"
+  | "pendente_ceo"
+  | "aprovada"
+  | "recusada"
+  | "devolvida";
 
 export type TipoIncidenteEnum = "acidente_sms" | "no_show" | "advertencia";
+
+export type TipoNotificacaoEnum =
+  | "avaliacao_registrada"
+  | "autoavaliacao_enviada"
+  | "solicitacao_reajuste"
+  | "solicitacao_pendente_ceo"
+  | "solicitacao_aprovada"
+  | "solicitacao_recusada"
+  | "incidente_registrado"
+  | "decisao_anual_registrada";
 
 export type Database = {
   public: {
@@ -139,6 +157,7 @@ export type Database = {
           avaliador_id: string | null;
           avaliado_id: string;
           tipo: TipoAvaliacaoEnum;
+          status: StatusValidacaoEnum;
           created_at: string;
         };
         Insert: {
@@ -146,6 +165,7 @@ export type Database = {
           avaliador_id?: string | null;
           avaliado_id: string;
           tipo: TipoAvaliacaoEnum;
+          status?: StatusValidacaoEnum;
           created_at?: string;
         };
         Update: {
@@ -153,6 +173,7 @@ export type Database = {
           avaliador_id?: string | null;
           avaliado_id?: string;
           tipo?: TipoAvaliacaoEnum;
+          status?: StatusValidacaoEnum;
           created_at?: string;
         };
         Relationships: [
@@ -312,6 +333,47 @@ export type Database = {
           {
             foreignKeyName: "incidentes_registrado_por_id_fkey";
             columns: ["registrado_por_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      notificacoes: {
+        Row: {
+          id: string;
+          destinatario_id: string;
+          tipo: TipoNotificacaoEnum;
+          titulo: string;
+          mensagem: string;
+          metadata: Json;
+          lida: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          destinatario_id: string;
+          tipo: TipoNotificacaoEnum;
+          titulo: string;
+          mensagem: string;
+          metadata?: Json;
+          lida?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          destinatario_id?: string;
+          tipo?: TipoNotificacaoEnum;
+          titulo?: string;
+          mensagem?: string;
+          metadata?: Json;
+          lida?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_destinatario_id_fkey";
+            columns: ["destinatario_id"];
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },

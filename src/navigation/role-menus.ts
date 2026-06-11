@@ -99,6 +99,14 @@ export function getPrimaryTabForRole(role: UserRole): keyof MainTabParamList {
   return 'DashboardColaborador';
 }
 
+export function getTabLabelForRole(tabName: keyof MainTabParamList, role: UserRole): string {
+  if (tabName === 'Aprovacoes') {
+    return role === 'ceo' ? 'Aprovações' : 'Validações';
+  }
+
+  return TAB_DEFINITIONS[tabName].label;
+}
+
 export function getTabsForRole(role: UserRole): TabMenuItem[] {
   if (role === 'colaborador') {
     return [

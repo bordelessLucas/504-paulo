@@ -181,18 +181,121 @@ Resumo completo do que foi implementado, corrigido e documentado nesta sessão.
 
 ---
 
-## 12. Migrations Supabase (ordem recomendada)
+## 12. Correção — sessão Supabase (`Invalid Refresh Token`)
+
+- [x] `src/lib/supabase-storage.ts` — troca de SecureStore para **AsyncStorage** (limite 2048 bytes corrompia JWT)
+- [x] `src/features/auth/session-utils.ts` — `getSafeSession`, limpeza de token inválido
+- [x] `src/features/auth/auth-context.tsx` — bootstrap e logout com recuperação graciosa
+- [x] `@react-native-async-storage/async-storage` instalado
+
+### Validação pendente
+- [ ] Reiniciar app e fazer login limpo após a mudança de storage
+
+---
+
+## 13. Painel Admin CEO — cards + modais + gerar acessos
+
+- [x] `src/screens/admin/painel-admin-screen.tsx` — grid de cards (2 colunas no desktop)
+- [x] `src/components/admin/admin-feature-card.tsx`
+- [x] `src/components/admin/admin-feature-modal.tsx`
+- [x] `src/components/rh/formulario-acesso-plataforma.tsx` — criar login com papel (RH, supervisor, admin, colaborador, etc.)
+- [x] `src/features/rh/access-roles.ts` — regras de quem pode atribuir qual papel
+- [x] Forms RH com modo `embedded` (modal): colaborador, incidente, planilha
+- [x] Edge Function `create-colaborador` — validação de papéis no servidor (CEO/Admin vs RH)
+
+### Cards do painel
+| Card | Quem vê |
+|------|---------|
+| Gerar acesso à plataforma | CEO, Admin |
+| Cadastrar colaborador | RH, CEO, Admin |
+| Registrar incidente | RH, CEO, Admin |
+| Importar planilha RH | RH, CEO, Admin |
+
+### Deploy pendente
+- [ ] Republicar Edge Function `create-colaborador`
+
+---
+
+## 14. Alertas em tempo real (notificações)
+
+### Banco de dados
+- [x] Migration `supabase/migrations/20260528160000_notificacoes.sql`
+- [x] Tabela `notificacoes` + enum `tipo_notificacao` + RLS
+- [x] Triggers em: `avaliacoes`, `melhorias_salariais`, `incidentes`, `decisoes_anuais_estrategicas`
+- [x] Supabase Realtime habilitado na tabela
+
+### App
+- [x] `src/features/notificacoes/api.ts` + `types.ts` + `notifications-context.tsx`
+- [x] `src/components/notificacoes/notification-bell.tsx` — sino flutuante com badge
+- [x] `src/components/notificacoes/notifications-panel.tsx` — painel de alertas
+- [x] Integrado em `AppNavigator.tsx` (toast instantâneo + lista)
+
+### Quem recebe o quê (resumo)
+| Evento | Destinatários |
+|--------|---------------|
+| Avaliação registrada | RH/Admin (validação) |
+| Avaliação validada pelo RH | CEO |
+| Solicitação / autoavaliação nova | RH |
+| RH encaminha ao CEO | CEO |
+| Incidente registrado | CEO, RH, gerentes do dept., colaborador |
+| Decisão anual | CEO, RH |
+
+### Deploy pendente
+- [ ] Aplicar migration `20260528160000_notificacoes.sql`
+- [ ] Confirmar Realtime ativo em `notificacoes` no painel Supabase
+
+---
+
+## 15. Fluxo RH valida → CEO aprova (avaliações + solicitações)
+
+### Banco de dados
+- [x] Migration `20260528165000_status_devolvida_solicitacao.sql` — status `devolvida` em solicitações
+- [x] Migration `20260528170000_fluxo_validacao_rh_ceo.sql`
+- [x] Coluna `status` em `avaliacoes` (`status_validacao`: pendente_rh → pendente_ceo → aprovada/recusada/devolvida)
+- [x] RLS: RH/Admin validam; **somente CEO** aprova ou recusa definitivamente
+- [x] View `avaliacoes_masked` — colaborador só vê avaliações **aprovadas**
+- [x] Triggers de notificação atualizados para o novo fluxo
+
+### App
+- [x] `src/features/aprovacoes/approval-roles.ts`
+- [x] `src/features/aprovacoes/avaliacoes-validacao-api.ts`
+- [x] `src/components/aprovacoes/avaliacao-validacao-card.tsx`
+- [x] `src/screens/admin/aprovacoes-screen.tsx` — abas **Solicitações** e **Avaliações**
+- [x] RH: **Validar e encaminhar** ou **Devolver** (não recusa definitivo)
+- [x] CEO: **Aprovar** ou **Recusar** (decisão final)
+- [x] Tab **Validações** (RH/Admin) vs **Aprovações** (CEO) em `role-menus.ts`
+- [x] Novas avaliações iniciam em `pendente_rh`; mensagem ao salvar: *"enviada para validação do RH"*
+- [x] Métricas (reajuste, dashboard CEO, painel anual) usam só avaliações `aprovada`
+
+### Fluxo resumido
+
+**Solicitações:** Gerente/Colaborador → `pendente_rh` → RH valida → `pendente_ceo` → CEO aprova/recusa
+
+**Avaliações:** Avaliador → `pendente_rh` → RH valida → `pendente_ceo` → CEO aprova/recusa
+
+---
+
+## 16. Migrations Supabase (ordem recomendada)
 
 1. [ ] `20260528120000_cadastro_colaborador_completo.sql`
 2. [ ] `20260528125000_tipo_avaliacao_anual.sql`
 3. [ ] `20260528130000_decisoes_anuais_estrategicas.sql`
 4. [ ] `20260528140000_profile_avatar.sql`
 5. [ ] `20260528150000_incidentes.sql`
+6. [ ] `20260528160000_notificacoes.sql`
+7. [ ] `20260528165000_status_devolvida_solicitacao.sql`
+8. [ ] `20260528170000_fluxo_validacao_rh_ceo.sql`
+
+```bash
+supabase db push
+supabase functions deploy create-colaborador
+```
 
 ---
 
-## 13. Testes manuais sugeridos
+## 17. Testes manuais sugeridos
 
+### Sessão anterior (ainda válidos)
 - [ ] CEO → Dashboard Gerencial: radar 3 eixos, IMA, status gestores
 - [ ] CEO → tab **Anual**: split desktop / modal mobile
 - [ ] Gestor → tab **Reajuste**: média + badge na lista; split/modal
@@ -201,11 +304,24 @@ Resumo completo do que foi implementado, corrigido e documentado nesta sessão.
 - [ ] Avaliador → modal ponto de melhoria com UI corrigida
 - [ ] CEO → Perfil mostra papel **CEO** e tabs corretas
 
+### Entregas de hoje
+- [ ] Login após fix de refresh token (sem `AuthApiError`)
+- [ ] CEO → Admin → cards abrem modais (gerar acesso, cadastro, incidente, planilha)
+- [ ] CEO → Gerar acesso → criar usuário RH/supervisor com papel correto
+- [ ] Supervisor avalia → RH recebe alerta → **Validações → Avaliações**
+- [ ] RH valida → CEO recebe alerta → **Aprovações → Avaliações** → aprovar
+- [ ] Colaborador só vê avaliação após aprovação do CEO
+- [ ] Gerente solicita reajuste → RH valida → CEO aprova/recusa
+- [ ] RH **devolve** solicitação (status `devolvida`) — CEO não vê como recusada
+- [ ] Sino de notificações: badge, toast em tempo real, marcar como lida
+
 ---
 
-## 14. Limpeza / próximos passos
+## 18. Limpeza / próximos passos
 
 - [x] `npx tsc --noEmit` passando
-- [ ] Atualizar `docs/fluxo-teste-app.md` com cenários novos (incidentes, split layouts)
+- [ ] Aplicar todas as migrations no Supabase remoto
+- [ ] Atualizar `docs/fluxo-teste-app.md` com validação RH/CEO e notificações
 - [ ] Commit das alterações (quando solicitado)
 - [ ] Opcional: Edge Function de e-mail para incidentes graves
+- [ ] Opcional: reenvio de avaliação devolvida pelo avaliador (fluxo de correção)

@@ -22,6 +22,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { isAdminDashboardRole } from '@/types/supabase';
 
 type FormularioColaboradorProps = {
+  embedded?: boolean;
   onCreated?: () => void;
 };
 
@@ -43,7 +44,7 @@ const INITIAL_FORM: CreateColaboradorInput = {
   status: 'ativo',
 };
 
-export function FormularioColaborador({ onCreated }: FormularioColaboradorProps) {
+export function FormularioColaborador({ embedded = false, onCreated }: FormularioColaboradorProps) {
   const theme = useTheme();
   const { role, isLoading: isRoleLoading } = useUserRole();
   const [form, setForm] = useState<CreateColaboradorInput>(INITIAL_FORM);
@@ -95,11 +96,7 @@ export function FormularioColaborador({ onCreated }: FormularioColaboradorProps)
 
   if (!canCreate) {
     return (
-      <View
-        style={[
-          styles.container,
-          { backgroundColor: theme.background, borderColor: '#F0F0F0' },
-        ]}>
+      <View style={embedded ? styles.embedded : [styles.container, { backgroundColor: theme.background, borderColor: '#F0F0F0' }]}>
         <ThemedText themeColor="textSecondary" style={styles.hint}>
           Apenas RH, CEO e administradores podem cadastrar colaboradores.
         </ThemedText>
@@ -109,16 +106,19 @@ export function FormularioColaborador({ onCreated }: FormularioColaboradorProps)
 
   return (
     <View
-      style={[
-        styles.container,
-        { backgroundColor: theme.background, borderColor: '#F0F0F0' },
-      ]}>
-      <View style={styles.header}>
-        <ThemedText type="subtitle">Cadastrar colaborador</ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.hint}>
-          Ficha completa offshore — dados pessoais, contratuais e certificações.
-        </ThemedText>
-      </View>
+      style={
+        embedded
+          ? styles.embedded
+          : [styles.container, { backgroundColor: theme.background, borderColor: '#F0F0F0' }]
+      }>
+      {!embedded ? (
+        <View style={styles.header}>
+          <ThemedText type="subtitle">Cadastrar colaborador</ThemedText>
+          <ThemedText themeColor="textSecondary" style={styles.hint}>
+            Ficha completa offshore — dados pessoais, contratuais e certificações.
+          </ThemedText>
+        </View>
+      ) : null}
 
       <FormSection title="Dados pessoais">
         <Input
@@ -286,6 +286,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Radius.lg,
     padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  embedded: {
     gap: Spacing.three,
   },
   header: {

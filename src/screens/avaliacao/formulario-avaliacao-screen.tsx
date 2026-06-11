@@ -181,7 +181,7 @@ export function FormularioAvaliacaoScreen() {
   );
 
   const handleSkipPontoMelhoria = useCallback(() => {
-    finishAvaliacaoFlow('Avaliação registrada com sucesso.');
+    finishAvaliacaoFlow('Avaliação enviada para validação do RH.');
   }, [finishAvaliacaoFlow]);
 
   const handleSubmitPontoMelhoria = useCallback(
@@ -191,7 +191,7 @@ export function FormularioAvaliacaoScreen() {
       }
 
       await addPontoMelhoriaAvaliacao(lastAvaliacaoId, texto);
-      finishAvaliacaoFlow('Avaliação e ponto de melhoria registrados com sucesso.');
+      finishAvaliacaoFlow('Avaliação enviada para validação do RH.');
     },
     [finishAvaliacaoFlow, lastAvaliacaoId],
   );

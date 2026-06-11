@@ -3,11 +3,13 @@ import { Redirect } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { NotificationBell } from '@/components/notificacoes/notification-bell';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
+import { NotificationsProvider } from '@/features/notificacoes/notifications-context';
 import { RoleTabNavigator } from '@/navigation/RoleTabNavigator';
 
 export function AppNavigator() {
@@ -50,12 +52,20 @@ export function AppNavigator() {
 
   return (
     <NavigationIndependentTree>
-      <RoleTabNavigator key={role} role={role} />
+      <NotificationsProvider>
+        <View style={styles.appShell}>
+          <RoleTabNavigator key={role} role={role} />
+          <NotificationBell />
+        </View>
+      </NotificationsProvider>
     </NavigationIndependentTree>
   );
 }
 
 const styles = StyleSheet.create({
+  appShell: {
+    flex: 1,
+  },
   loading: {
     flex: 1,
     alignItems: 'center',

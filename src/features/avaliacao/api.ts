@@ -283,6 +283,7 @@ export async function submitAvaliacao(params: {
       avaliador_id: params.avaliadorId,
       avaliado_id: params.avaliadoId,
       tipo: params.tipo ?? 'quinzenal',
+      status: 'pendente_rh',
     })
     .select('id')
     .single();

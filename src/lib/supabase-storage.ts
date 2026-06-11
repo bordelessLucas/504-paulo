@@ -1,9 +1,9 @@
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 /**
- * Adapter de storage para Supabase Auth compatível com Expo Go.
- * AsyncStorage v3 falha no Expo Go ("Native module is null").
+ * Storage do Supabase Auth.
+ * AsyncStorage evita o limite de 2048 bytes do SecureStore, que corrompia sessões JWT.
  */
 export const supabaseStorage = {
   getItem: async (key: string): Promise<string | null> => {
@@ -11,7 +11,7 @@ export const supabaseStorage = {
       return globalThis.localStorage?.getItem(key) ?? null;
     }
 
-    return SecureStore.getItemAsync(key);
+    return AsyncStorage.getItem(key);
   },
 
   setItem: async (key: string, value: string): Promise<void> => {
@@ -20,7 +20,7 @@ export const supabaseStorage = {
       return;
     }
 
-    await SecureStore.setItemAsync(key, value);
+    await AsyncStorage.setItem(key, value);
   },
 
   removeItem: async (key: string): Promise<void> => {
@@ -29,6 +29,6 @@ export const supabaseStorage = {
       return;
     }
 
-    await SecureStore.deleteItemAsync(key);
+    await AsyncStorage.removeItem(key);
   },
 };

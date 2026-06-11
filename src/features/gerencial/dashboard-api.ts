@@ -256,7 +256,11 @@ export async function fetchGerencialDashboard(): Promise<GerencialDashboardData>
   const [perguntasPorCodigo, avaliacoesResult, avaliadosQuinzena, avaliadosSemestre] =
     await Promise.all([
       fetchPerguntasUniversaisIds(),
-      supabase.from('avaliacoes').select('id, avaliado_id').in('avaliado_id', colaboradorIds),
+      supabase
+        .from('avaliacoes')
+        .select('id, avaliado_id')
+        .in('avaliado_id', colaboradorIds)
+        .eq('status', 'aprovada'),
       fetchAvaliadosNoCiclo(colaboradorIds, 'quinzenal', cicloQuinzena),
       fetchAvaliadosNoCiclo(colaboradorIds, 'semestral', cicloSemestre),
     ]);
@@ -354,6 +358,7 @@ export async function fetchColaboradorFicha(colaboradorId: string) {
     .from('avaliacoes')
     .select(`id, tipo, ${AVALIACAO_DATA_COLUMN}`)
     .eq('avaliado_id', colaboradorId)
+    .eq('status', 'aprovada')
     .order(AVALIACAO_DATA_COLUMN, { ascending: false });
 
   if (avaliacoesError) {

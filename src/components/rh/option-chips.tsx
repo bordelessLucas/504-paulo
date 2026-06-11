@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 
 type OptionChipsProps<T extends string> = {
   options: readonly T[];
-  labels?: Record<T, string>;
+  labels?: Partial<Record<T, string>>;
   value?: T;
   onChange: (value: T) => void;
 };

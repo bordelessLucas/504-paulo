@@ -32,7 +32,11 @@ const INITIAL_FORM = {
   descricao: '',
 };
 
-export function RegistroIncidente() {
+type RegistroIncidenteProps = {
+  embedded?: boolean;
+};
+
+export function RegistroIncidente({ embedded = false }: RegistroIncidenteProps) {
   const theme = useTheme();
   const { user } = useAuth();
   const { role, isLoading: isRoleLoading } = useUserRole();
@@ -110,11 +114,12 @@ export function RegistroIncidente() {
   if (!canRegister) {
     return (
       <View
-        style={[
-          styles.card,
-          { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-        ]}>
-        <ThemedText type="subtitle">Registro de incidentes</ThemedText>
+        style={
+          embedded
+            ? styles.embedded
+            : [styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]
+        }>
+        {!embedded ? <ThemedText type="subtitle">Registro de incidentes</ThemedText> : null}
         <ThemedText themeColor="textSecondary" style={styles.hint}>
           Apenas RH, CEO e administradores podem registrar quebras de deveres.
         </ThemedText>
@@ -124,15 +129,20 @@ export function RegistroIncidente() {
 
   return (
     <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}>
-      <ThemedText type="subtitle">Registro de incidentes</ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.hint}>
-        Registre acidentes SMS, faltas ou advertências. Incidentes nos últimos 6 meses bloqueiam
-        autoavaliação e solicitações de reajuste do colaborador.
-      </ThemedText>
+      style={
+        embedded
+          ? styles.embedded
+          : [styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]
+      }>
+      {!embedded ? (
+        <>
+          <ThemedText type="subtitle">Registro de incidentes</ThemedText>
+          <ThemedText themeColor="textSecondary" style={styles.hint}>
+            Registre acidentes SMS, faltas ou advertências. Incidentes nos últimos 6 meses bloqueiam
+            autoavaliação e solicitações de reajuste do colaborador.
+          </ThemedText>
+        </>
+      ) : null}
 
       {error ? (
         <ThemedText themeColor="danger" style={styles.error}>
@@ -236,6 +246,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Radius.sm,
     padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  embedded: {
     gap: Spacing.three,
   },
   hint: {

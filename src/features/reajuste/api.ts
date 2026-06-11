@@ -61,7 +61,11 @@ export async function fetchColaboradoresReajusteResumo(): Promise<ColaboradorRea
   const colaboradorIds = lista.map((colaborador) => colaborador.id);
 
   const [avaliacoesResult, colaboradoresComIncidentes] = await Promise.all([
-    supabase.from('avaliacoes').select('id, avaliado_id').in('avaliado_id', colaboradorIds),
+    supabase
+      .from('avaliacoes')
+      .select('id, avaliado_id')
+      .in('avaliado_id', colaboradorIds)
+      .eq('status', 'aprovada'),
     fetchColaboradoresComIncidentesRecentes(colaboradorIds),
   ]);
 

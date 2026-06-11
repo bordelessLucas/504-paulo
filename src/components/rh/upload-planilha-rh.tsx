@@ -17,10 +17,11 @@ import { isAdminDashboardRole } from '@/types/supabase';
 type UploadStatus = 'idle' | 'loading' | 'success' | 'error';
 
 type UploadPlanilhaRHProps = {
+  embedded?: boolean;
   onImported?: (count: number) => void;
 };
 
-export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
+export function UploadPlanilhaRH({ embedded = false, onImported }: UploadPlanilhaRHProps) {
   const theme = useTheme();
   const { role, isLoading: isRoleLoading } = useUserRole();
   const [status, setStatus] = useState<UploadStatus>('idle');
@@ -106,10 +107,11 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
   if (!canUpload) {
     return (
       <View
-        style={[
-          styles.container,
-          { backgroundColor: theme.background, borderColor: '#F0F0F0' },
-        ]}>
+        style={
+          embedded
+            ? styles.embedded
+            : [styles.container, { backgroundColor: theme.background, borderColor: '#F0F0F0' }]
+        }>
         <ThemedText themeColor="textSecondary" style={styles.hint}>
           Apenas RH, CEO e administradores podem importar planilhas de RH.
         </ThemedText>
@@ -119,18 +121,21 @@ export function UploadPlanilhaRH({ onImported }: UploadPlanilhaRHProps) {
 
   return (
     <View
-      style={[
-        styles.container,
-        { backgroundColor: theme.background, borderColor: '#F0F0F0' },
-      ]}>
-      <View style={styles.header}>
-        <ThemedText type="subtitle">Importar colaboradores</ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.hint}>
-          CSV com ficha completa: email, nome, classificacao, nivel_irata, datas, ddd, telefone,
-          expertise, formacao_tecnica, certificacao_edn, status, role. Contas novas recebem senha
-          padrão 12345678.
-        </ThemedText>
-      </View>
+      style={
+        embedded
+          ? styles.embedded
+          : [styles.container, { backgroundColor: theme.background, borderColor: '#F0F0F0' }]
+      }>
+      {!embedded ? (
+        <View style={styles.header}>
+          <ThemedText type="subtitle">Importar colaboradores</ThemedText>
+          <ThemedText themeColor="textSecondary" style={styles.hint}>
+            CSV com ficha completa: email, nome, classificacao, nivel_irata, datas, ddd, telefone,
+            expertise, formacao_tecnica, certificacao_edn, status, role. Contas novas recebem senha
+            padrão 12345678.
+          </ThemedText>
+        </View>
+      ) : null}
 
       <Pressable
         accessibilityRole="button"
@@ -197,6 +202,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Radius.lg,
     padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  embedded: {
     gap: Spacing.three,
   },
   header: {

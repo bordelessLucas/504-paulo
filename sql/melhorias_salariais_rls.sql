@@ -57,7 +57,7 @@ create policy melhorias_insert_gestor on public.melhorias_salariais
     and status = 'pendente_rh'
   );
 
--- RH valida ou recusa (somente pendente_rh)
+-- RH valida ou devolve (somente pendente_rh) — aprovação final é do CEO
 drop policy if exists melhorias_update_rh on public.melhorias_salariais;
 
 create policy melhorias_update_rh on public.melhorias_salariais
@@ -73,24 +73,24 @@ create policy melhorias_update_rh on public.melhorias_salariais
       select 1 from public.profiles p
       where p.id = auth.uid() and p.role = 'rh'
     )
-    and status in ('pendente_ceo', 'recusado')
+    and status in ('pendente_ceo', 'devolvida')
   );
 
--- CEO/Admin aprova ou recusa (somente pendente_ceo)
+-- Somente CEO aprova ou recusa (somente pendente_ceo)
 drop policy if exists melhorias_update_ceo on public.melhorias_salariais;
 
 create policy melhorias_update_ceo on public.melhorias_salariais
   for update using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role in ('ceo', 'admin')
+      where p.id = auth.uid() and p.role = 'ceo'
     )
     and status = 'pendente_ceo'
   )
   with check (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role in ('ceo', 'admin')
+      where p.id = auth.uid() and p.role = 'ceo'
     )
     and status in ('aprovado', 'recusado')
   );
