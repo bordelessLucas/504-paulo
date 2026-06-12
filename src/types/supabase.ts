@@ -500,6 +500,10 @@ export function isGerenteRole(role?: UserRole | null): boolean {
   return role === "gerente";
 }
 
+export function isRhRole(role?: UserRole | null): boolean {
+  return role === "rh";
+}
+
 export function isAdminDashboardRole(role?: UserRole | null): boolean {
   return role === "rh" || role === "ceo" || role === "admin";
 }

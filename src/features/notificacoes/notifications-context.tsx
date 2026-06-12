@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 
 import { useToast } from '@/components/ui/toast';
 import {
@@ -32,6 +33,8 @@ type NotificationsContextValue = {
 };
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
+
+const POLL_INTERVAL_MS = 45_000;
 
 function mapRealtimeRow(record: Record<string, unknown>): Notificacao {
   return {
@@ -115,10 +118,39 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     void refreshNotifications();
   }, [refreshNotifications, user?.id]);
 
+  const handleIncomingNotification = useCallback(
+    (nova: Notificacao, options?: { showToast?: boolean }) => {
+      if (seenNotificationIdsRef.current.has(nova.id)) {
+        return;
+      }
+
+      seenNotificationIdsRef.current.add(nova.id);
+
+      setNotifications((current) => {
+        if (current.some((item) => item.id === nova.id)) {
+          return current;
+        }
+
+        return [nova, ...current];
+      });
+
+      if (!nova.lida) {
+        setUnreadCount((current) => current + 1);
+
+        if (options?.showToast !== false) {
+          showToast(nova.titulo, 'info');
+        }
+      }
+    },
+    [showToast],
+  );
+
   useEffect(() => {
     if (!user?.id) {
       return;
     }
+
+    let isMounted = true;
 
     const channel = supabase
       .channel(`notificacoes:${user.id}`)
@@ -131,34 +163,64 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
           filter: `destinatario_id=eq.${user.id}`,
         },
         (payload) => {
-          const nova = mapRealtimeRow(payload.new as Record<string, unknown>);
-
-          if (seenNotificationIdsRef.current.has(nova.id)) {
+          if (!isMounted) {
             return;
           }
 
-          seenNotificationIdsRef.current.add(nova.id);
-
-          setNotifications((current) => {
-            if (current.some((item) => item.id === nova.id)) {
-              return current;
-            }
-
-            return [nova, ...current];
-          });
-
-          if (!nova.lida) {
-            setUnreadCount((current) => current + 1);
-            showToast(nova.titulo, 'info');
-          }
+          handleIncomingNotification(mapRealtimeRow(payload.new as Record<string, unknown>));
         },
       )
-      .subscribe();
+      .subscribe((status, error) => {
+        if (status === 'SUBSCRIBED') {
+          console.info('[Notificações] Realtime conectado');
+          return;
+        }
+
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn(
+            '[Notificações] Realtime indisponível:',
+            error?.message ?? status,
+          );
+        }
+      });
 
     return () => {
+      isMounted = false;
       void supabase.removeChannel(channel);
     };
-  }, [showToast, user?.id]);
+  }, [handleIncomingNotification, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
+    const poll = setInterval(() => {
+      void refreshNotifications();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      clearInterval(poll);
+    };
+  }, [refreshNotifications, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
+    const handleAppState = (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        void refreshNotifications();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppState);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [refreshNotifications, user?.id]);
 
   const value = useMemo(
     () => ({

@@ -26,6 +26,7 @@ export function MinhasAvaliacoesScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadHistorico = useCallback(
     async (options?: { refreshing?: boolean }) => {
@@ -44,6 +45,7 @@ export function MinhasAvaliacoesScreen() {
       try {
         const historico = await fetchHistoricoAvaliacoesMasked(user.id);
         setItems(historico);
+        setExpandedId(historico[0]?.id ?? null);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Erro ao carregar avaliações.');
       } finally {
@@ -103,7 +105,15 @@ export function MinhasAvaliacoesScreen() {
               </ThemedText>
             ) : (
               items.map((item) => (
-                <AvaliacaoHistoricoCard key={item.id} item={item} showAvaliador={false} />
+                <AvaliacaoHistoricoCard
+                  key={item.id}
+                  isExpanded={items.length === 1 || expandedId === item.id}
+                  item={item}
+                  showAvaliador={false}
+                  onToggle={() =>
+                    setExpandedId((current) => (current === item.id ? null : item.id))
+                  }
+                />
               ))
             )}
           </ScrollView>

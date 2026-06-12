@@ -77,6 +77,7 @@ function ListaColaboradoresExecutiveView({
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { scrollPaddingBottom } = useTabScreenLayout();
 
   const loadData = useCallback(
     async (options?: { refreshing?: boolean }) => {
@@ -140,7 +141,6 @@ function ListaColaboradoresExecutiveView({
     );
   }
 
-  const { scrollPaddingBottom } = useTabScreenLayout();
   const pendentes = data?.pendentes ?? [];
   const concluidas = data?.concluidas ?? [];
   const total = pendentes.length + concluidas.length;

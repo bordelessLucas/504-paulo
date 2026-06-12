@@ -60,6 +60,7 @@ export function AprovacoesScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const { scrollPaddingBottom } = useTabScreenLayout();
 
   const loadData = useCallback(
     async (options?: { refreshing?: boolean }) => {
@@ -176,7 +177,6 @@ export function AprovacoesScreen() {
     );
   }
 
-  const { scrollPaddingBottom } = useTabScreenLayout();
   const emptySolicitacoes = isRhView
     ? 'Nenhuma solicitação aguardando validação do RH.'
     : 'Nenhuma solicitação aguardando aprovação do CEO.';

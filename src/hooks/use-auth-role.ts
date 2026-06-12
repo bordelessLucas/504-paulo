@@ -4,6 +4,7 @@ import {
   isAdminDashboardRole,
   isGerencialDashboardRole,
   isGerenteRole,
+  isRhRole,
   isSupervisorGestorRole,
 } from '@/types/supabase';
 
@@ -15,6 +16,7 @@ type UseAuthRoleResult = {
   isColaborador: boolean;
   isSupervisorGestor: boolean;
   isGerente: boolean;
+  isRh: boolean;
   isAdminDashboard: boolean;
   isGerencialDashboard: boolean;
   refetch: () => Promise<void>;
@@ -32,6 +34,7 @@ export function useAuthRole(): UseAuthRoleResult {
     isColaborador: role === 'colaborador',
     isSupervisorGestor: isSupervisorGestorRole(role),
     isGerente: isGerenteRole(role),
+    isRh: isRhRole(role),
     isAdminDashboard: isAdminDashboardRole(role),
     isGerencialDashboard: isGerencialDashboardRole(role),
     refetch: refetchProfile,

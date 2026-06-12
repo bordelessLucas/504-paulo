@@ -1,6 +1,6 @@
 import { AVALIACAO_DATA_COLUMN } from '@/features/avaliacao/avaliacao-date';
 import { supabase } from '@/lib/supabase';
-import type { TipoAvaliacao } from '@/types/supabase';
+import type { StatusValidacaoEnum, TipoAvaliacao } from '@/types/supabase';
 
 export type RespostaHistorico = {
   perguntaCodigo: string | null;
@@ -16,6 +16,7 @@ export type AvaliacaoHistoricoItem = {
   media: number | null;
   respostas: RespostaHistorico[];
   avaliadorNome?: string;
+  status?: StatusValidacaoEnum;
 };
 
 function calcularMediaRespostas(respostas: RespostaHistorico[]): number | null {
@@ -145,7 +146,7 @@ export async function fetchHistoricoAvaliacoesCompleto(
 ): Promise<AvaliacaoHistoricoItem[]> {
   const { data: avaliacoes, error: avaliacoesError } = await supabase
     .from('avaliacoes')
-    .select(`id, tipo, avaliador_id, ${AVALIACAO_DATA_COLUMN}`)
+    .select(`id, tipo, avaliador_id, status, ${AVALIACAO_DATA_COLUMN}`)
     .eq('avaliado_id', colaboradorId)
     .order(AVALIACAO_DATA_COLUMN, { ascending: false });
 
@@ -215,8 +216,21 @@ export async function fetchHistoricoAvaliacoesCompleto(
       avaliadorNome: avaliacao.avaliador_id
         ? avaliadorNomePorId.get(avaliacao.avaliador_id)
         : undefined,
+      status: (avaliacao as { status?: StatusValidacaoEnum }).status,
     };
   });
+}
+
+export function calcularMediaHistorico(items: AvaliacaoHistoricoItem[]): number | null {
+  const medias = items
+    .map((item) => item.media)
+    .filter((media): media is number => typeof media === 'number');
+
+  if (medias.length === 0) {
+    return null;
+  }
+
+  return medias.reduce((total, media) => total + media, 0) / medias.length;
 }
 
 export function formatHistoricoData(isoDate: string): string {

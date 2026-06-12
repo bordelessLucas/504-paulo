@@ -325,3 +325,131 @@ supabase functions deploy create-colaborador
 - [ ] Commit das alterações (quando solicitado)
 - [ ] Opcional: Edge Function de e-mail para incidentes graves
 - [ ] Opcional: reenvio de avaliação devolvida pelo avaliador (fluxo de correção)
+
+---
+
+## 19. Correção — sistema de alertas (investigação + Realtime)
+
+### Diagnóstico
+- [x] Triggers no banco existem e funcionam (`avaliacoes`, `melhorias_salariais`, `incidentes`, `decisoes_anuais`)
+- [x] Tabela `notificacoes` na publication `supabase_realtime`
+- [x] Causa 1: Realtime no React Native sem `react-native-url-polyfill`
+- [x] Causa 2: trigger de avaliação insert notificava só `rh`/`admin` — sem usuário RH ativo, CEO não via pendências
+- [x] Causa 3: quem registra incidente é excluído do alerta (comportamento esperado ao testar como CEO)
+
+### App
+- [x] `react-native-url-polyfill` instalado
+- [x] Import do polyfill em `src/lib/supabase.ts`
+- [x] `notifications-context.tsx` — callback de status Realtime (`SUBSCRIBED` / erro)
+- [x] Polling fallback a cada 45s
+- [x] Refresh ao voltar ao app (AppState `active`)
+
+### Banco de dados
+- [x] Migration `supabase/migrations/20260528180000_notificacoes_ceo_avaliacao.sql`
+- [x] CEO também recebe alerta quando avaliação é registrada (`rh`, `admin`, `ceo`)
+- [x] Migration aplicada no Supabase remoto
+
+### Validação pendente
+- [ ] Reiniciar Metro (`npm start`) após instalar polyfill
+- [ ] Supervisor/gerente avalia → RH e CEO recebem alerta
+- [ ] RH valida → CEO recebe alerta em tempo real (sino + toast)
+- [ ] Abrir painel de alertas e marcar como lida
+
+---
+
+## 20. Correção — navegação e papéis do RH
+
+### Problema
+- [x] Usuário "Rh 1" tinha `role: colaborador` no banco → via tabs de colaborador, sem Validações/Admin
+- [x] Navegação RH dependia de helpers genéricos; tab inicial era Admin em vez de Validações
+
+### Banco de dados
+- [x] Perfil **Rh 1** corrigido para `role: 'rh'` no Supabase remoto
+
+### App
+- [x] `src/navigation/role-menus.ts` — blocos explícitos por papel + matriz documentada no código
+- [x] Tab inicial RH e Admin: **Validações** (`Aprovacoes`)
+- [x] Tabs RH: **Validações · Admin · Anual · Avaliação · Perfil**
+- [x] Tabs Admin: **Validações · Admin · Gerencial · Anual · Avaliação · Perfil**
+- [x] `isRhRole()` em `src/types/supabase.ts`
+- [x] `useAuthRole().isRh` em `src/hooks/use-auth-role.ts`
+- [x] `canAccessAprovacoesTab()` em `role-menus.ts`
+
+### Matriz de papéis (referência)
+
+| Papel | Tabs principais | Fluxo |
+|-------|-----------------|-------|
+| colaborador | Dashboard · Avaliações · Perfil | Histórico aprovado, autoavaliação |
+| supervisor | Avaliação · Equipe · Perfil | Avaliar quinzenal |
+| gestor | Avaliação · Equipe · Reajuste · Perfil | Avaliar semestral + reajuste |
+| gerente | Reajuste · Anual · Avaliação · Equipe · Perfil | Reajuste e decisões anuais |
+| **rh** | **Validações · Admin · Anual · Avaliação · Perfil** | Validar → encaminhar CEO |
+| admin | Validações · Admin · Gerencial · Anual · Avaliação · Perfil | Como RH + dashboard gerencial |
+| ceo | Gerencial · Anual · Avaliação · Admin · Aprovações · Perfil | Aprovação final |
+
+### Validação pendente
+- [ ] Logout/login como Rh 1 → Perfil mostra **RH**
+- [ ] Tab **Validações** visível com solicitações/avaliações `pendente_rh`
+- [ ] Admin → cadastro, incidente, planilha (sem gerar acesso)
+- [ ] CEO → Admin → gerar acesso com papel `rh` correto no `profiles`
+
+---
+
+## 21. Melhoria — histórico de avaliações (visão executiva)
+
+- [x] `src/features/avaliacao/historico-labels.ts` — labels de tipo e status
+- [x] `src/features/avaliacao/historico-api.ts` — suporte a múltiplas avaliações e filtros
+- [x] `src/components/avaliacao/avaliacao-historico-card.tsx` — accordion, resumo, timeline
+- [x] `src/screens/avaliacao/historico-avaliacoes-screen.tsx` — filtros por tipo, visão CEO/RH
+- [x] `lista-colaboradores-screen.tsx` — fix Rules of Hooks (`useTabScreenLayout` antes de early returns)
+- [x] `aprovacoes-screen.tsx` — mesmo fix de Hooks
+
+### Validação pendente
+- [ ] CEO/RH → Avaliação → colaborador → histórico com múltiplas avaliações e filtros
+
+---
+
+## 22. Migrations Supabase (ordem atualizada)
+
+1. [ ] `20260528120000_cadastro_colaborador_completo.sql`
+2. [ ] `20260528125000_tipo_avaliacao_anual.sql`
+3. [ ] `20260528130000_decisoes_anuais_estrategicas.sql`
+4. [ ] `20260528140000_profile_avatar.sql`
+5. [ ] `20260528150000_incidentes.sql`
+6. [ ] `20260528160000_notificacoes.sql`
+7. [ ] `20260528165000_status_devolvida_solicitacao.sql`
+8. [ ] `20260528170000_fluxo_validacao_rh_ceo.sql`
+9. [x] `20260528180000_notificacoes_ceo_avaliacao.sql` — aplicada no remoto
+
+```bash
+supabase db push
+supabase functions deploy create-colaborador
+```
+
+---
+
+## 23. Testes manuais — entregas da tarde (28/05)
+
+### Alertas
+- [ ] Reiniciar app após fix Realtime
+- [ ] Badge no sino atualiza (Realtime ou polling ≤ 45s)
+- [ ] Toast ao receber nova notificação
+- [ ] CEO vê alerta ao registrar nova avaliação (mesmo sem RH online)
+
+### RH / papéis
+- [ ] Rh 1 → tabs corretas (Validações em primeiro)
+- [ ] RH valida avaliação → encaminha CEO
+- [ ] RH valida solicitação → encaminha CEO
+- [ ] RH devolve solicitação (`devolvida`) — CEO não vê como recusada
+
+### Histórico CEO
+- [ ] Histórico com accordion, resumo e filtros por tipo (quinzenal/semestral/anual)
+
+---
+
+## 24. Limpeza / pendências
+
+- [x] `npx tsc --noEmit` passando
+- [ ] Remover script temporário `scripts/check-notificacoes-triggers.mjs` (se não for manter)
+- [ ] Confirmar demais migrations aplicadas no remoto (seções 1–8, 14–15)
+- [ ] Commit das alterações (quando solicitado)

@@ -1,10 +1,6 @@
 import type { MainTabParamList, TabIconName } from '@/navigation/types';
-import {
-  isAdminDashboardRole,
-  isGerencialDashboardRole,
-  isGerenteRole,
-  type UserRole,
-} from '@/types/supabase';
+import { isCeoApprovalRole, isRhValidationRole } from '@/features/aprovacoes/approval-roles';
+import type { UserRole } from '@/types/supabase';
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   colaborador: 'Colaborador',
@@ -75,92 +71,113 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
   },
 };
 
+const { Perfil: PERFIL_TAB } = TAB_DEFINITIONS;
+
+/**
+ * Tabs por papel — alinhado ao fluxo RH valida → CEO aprova.
+ *
+ * | Papel        | Responsabilidade principal                          |
+ * |--------------|-----------------------------------------------------|
+ * | colaborador  | Dashboard, histórico próprio, autoavaliação         |
+ * | supervisor   | Avaliar equipe (quinzenal)                          |
+ * | gestor       | Avaliar equipe (semestral) + reajuste               |
+ * | gerente      | Reajuste, painel anual, avaliação, equipe           |
+ * | rh           | Validar solicitações/avaliações, cadastro, incidentes |
+ * | admin        | Como RH + dashboard gerencial + cadastros             |
+ * | ceo          | Aprovação final, visão executiva, gerar acessos     |
+ */
 export function getPrimaryTabForRole(role: UserRole): keyof MainTabParamList {
-  if (role === 'colaborador') {
-    return 'DashboardColaborador';
+  switch (role) {
+    case 'colaborador':
+      return 'DashboardColaborador';
+    case 'supervisor':
+    case 'gestor':
+      return 'PainelAvaliacao';
+    case 'gerente':
+      return 'PainelReajuste';
+    case 'rh':
+    case 'admin':
+      return 'Aprovacoes';
+    case 'ceo':
+      return 'DashboardsGerenciais';
+    default:
+      return 'DashboardColaborador';
   }
-
-  if (role === 'supervisor' || role === 'gestor') {
-    return 'PainelAvaliacao';
-  }
-
-  if (isGerenteRole(role)) {
-    return 'PainelReajuste';
-  }
-
-  if (role === 'ceo') {
-    return 'DashboardsGerenciais';
-  }
-
-  if (isAdminDashboardRole(role)) {
-    return 'AdminDashboard';
-  }
-
-  return 'DashboardColaborador';
 }
 
 export function getTabLabelForRole(tabName: keyof MainTabParamList, role: UserRole): string {
   if (tabName === 'Aprovacoes') {
-    return role === 'ceo' ? 'Aprovações' : 'Validações';
+    return isCeoApprovalRole(role) ? 'Aprovações' : 'Validações';
   }
 
   return TAB_DEFINITIONS[tabName].label;
 }
 
 export function getTabsForRole(role: UserRole): TabMenuItem[] {
-  if (role === 'colaborador') {
-    return [
-      TAB_DEFINITIONS.DashboardColaborador,
-      TAB_DEFINITIONS.MinhasAvaliacoes,
-      TAB_DEFINITIONS.Perfil,
-    ];
-  }
+  switch (role) {
+    case 'colaborador':
+      return [
+        TAB_DEFINITIONS.DashboardColaborador,
+        TAB_DEFINITIONS.MinhasAvaliacoes,
+        PERFIL_TAB,
+      ];
 
-  if (role === 'supervisor') {
-    return [TAB_DEFINITIONS.PainelAvaliacao, TAB_DEFINITIONS.MinhaEquipe, TAB_DEFINITIONS.Perfil];
-  }
+    case 'supervisor':
+      return [TAB_DEFINITIONS.PainelAvaliacao, TAB_DEFINITIONS.MinhaEquipe, PERFIL_TAB];
 
-  if (role === 'gestor') {
-    return [
-      TAB_DEFINITIONS.PainelAvaliacao,
-      TAB_DEFINITIONS.MinhaEquipe,
-      TAB_DEFINITIONS.PainelReajuste,
-      TAB_DEFINITIONS.Perfil,
-    ];
-  }
+    case 'gestor':
+      return [
+        TAB_DEFINITIONS.PainelAvaliacao,
+        TAB_DEFINITIONS.MinhaEquipe,
+        TAB_DEFINITIONS.PainelReajuste,
+        PERFIL_TAB,
+      ];
 
-  if (isGerenteRole(role)) {
-    return [
-      TAB_DEFINITIONS.PainelReajuste,
-      TAB_DEFINITIONS.PainelAnualEstrategico,
-      TAB_DEFINITIONS.PainelAvaliacao,
-      TAB_DEFINITIONS.MinhaEquipe,
-      TAB_DEFINITIONS.Perfil,
-    ];
-  }
+    case 'gerente':
+      return [
+        TAB_DEFINITIONS.PainelReajuste,
+        TAB_DEFINITIONS.PainelAnualEstrategico,
+        TAB_DEFINITIONS.PainelAvaliacao,
+        TAB_DEFINITIONS.MinhaEquipe,
+        PERFIL_TAB,
+      ];
 
-  if (isGerencialDashboardRole(role)) {
-    return [
-      TAB_DEFINITIONS.DashboardsGerenciais,
-      TAB_DEFINITIONS.PainelAnualEstrategico,
-      TAB_DEFINITIONS.PainelAvaliacao,
-      TAB_DEFINITIONS.AdminDashboard,
-      TAB_DEFINITIONS.Aprovacoes,
-      TAB_DEFINITIONS.Perfil,
-    ];
-  }
+    case 'rh':
+      return [
+        TAB_DEFINITIONS.Aprovacoes,
+        TAB_DEFINITIONS.AdminDashboard,
+        TAB_DEFINITIONS.PainelAnualEstrategico,
+        TAB_DEFINITIONS.PainelAvaliacao,
+        PERFIL_TAB,
+      ];
 
-  if (isAdminDashboardRole(role)) {
-    return [
-      TAB_DEFINITIONS.AdminDashboard,
-      TAB_DEFINITIONS.PainelAnualEstrategico,
-      TAB_DEFINITIONS.PainelAvaliacao,
-      TAB_DEFINITIONS.Aprovacoes,
-      TAB_DEFINITIONS.Perfil,
-    ];
-  }
+    case 'ceo':
+      return [
+        TAB_DEFINITIONS.DashboardsGerenciais,
+        TAB_DEFINITIONS.PainelAnualEstrategico,
+        TAB_DEFINITIONS.PainelAvaliacao,
+        TAB_DEFINITIONS.AdminDashboard,
+        TAB_DEFINITIONS.Aprovacoes,
+        PERFIL_TAB,
+      ];
 
-  return [TAB_DEFINITIONS.DashboardColaborador, TAB_DEFINITIONS.Perfil];
+    case 'admin':
+      return [
+        TAB_DEFINITIONS.Aprovacoes,
+        TAB_DEFINITIONS.AdminDashboard,
+        TAB_DEFINITIONS.DashboardsGerenciais,
+        TAB_DEFINITIONS.PainelAnualEstrategico,
+        TAB_DEFINITIONS.PainelAvaliacao,
+        PERFIL_TAB,
+      ];
+
+    default:
+      return [TAB_DEFINITIONS.DashboardColaborador, PERFIL_TAB];
+  }
+}
+
+export function canAccessTab(role: UserRole, tabName: keyof MainTabParamList): boolean {
+  return getTabsForRole(role).some((item) => item.name === tabName);
 }
 
 /** @deprecated Drawer removido — use getTabsForRole */
@@ -173,12 +190,17 @@ export function getInitialRouteForRole(role: UserRole) {
   return getPrimaryTabForRole(role);
 }
 
-/** @deprecated Drawer removido */
+/** @deprecated Drawer removido — use canAccessTab */
 export function canAccessRoute(role: UserRole, routeName: keyof MainTabParamList) {
-  return getTabsForRole(role).some((item) => item.name === routeName);
+  return canAccessTab(role, routeName);
 }
 
 /** @deprecated Drawer removido */
 export function getDrawerItemStyle() {
   return undefined;
+}
+
+/** Indica se o papel participa do fluxo de validação (RH ou CEO). */
+export function canAccessAprovacoesTab(role: UserRole | null | undefined): boolean {
+  return isRhValidationRole(role) || isCeoApprovalRole(role);
 }
