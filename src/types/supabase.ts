@@ -516,6 +516,18 @@ export function isPainelAnualEstrategicoRole(role?: UserRole | null): boolean {
   return role === "rh" || role === "ceo" || role === "gerente" || role === "admin";
 }
 
+/** Somente RH e CEO registram o veredito financeiro anual. */
+export function canRegistrarDecisaoAnualRole(role?: UserRole | null): boolean {
+  return isRhRole(role) || role === "ceo";
+}
+
+export const TIPO_BENEFICIO_ANUAL_OPTIONS: readonly TipoBeneficioAnual[] = [
+  "plr",
+  "bonificacao",
+  "reajuste",
+  "nenhum",
+] as const;
+
 export const TIPO_INCIDENTE_LABELS: Record<TipoIncidente, string> = {
   acidente_sms: "Acidente SMS",
   no_show: "Falta (No-show)",

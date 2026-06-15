@@ -13,6 +13,7 @@ import {
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
+import { getModalOverlayStyle, modalCenteredStyles } from '@/constants/modal';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -73,12 +74,13 @@ export function AutoavaliacaoModal({ visible, onClose, onSubmit }: Autoavaliacao
 
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={handleClose}>
-      <Pressable style={styles.overlay} onPress={handleClose}>
+      <Pressable style={[styles.overlay, getModalOverlayStyle(theme)]} onPress={handleClose}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.keyboardView}>
+          style={[modalCenteredStyles.keyboard, styles.keyboardView]}>
           <Pressable
             style={[
+              modalCenteredStyles.dialog,
               styles.dialog,
               {
                 backgroundColor: theme.background,
@@ -193,21 +195,14 @@ export function AutoavaliacaoModal({ visible, onClose, onSubmit }: Autoavaliacao
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(47, 52, 55, 0.45)',
     justifyContent: 'center',
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.five,
   },
   keyboardView: {
-    width: '100%',
     maxWidth: 420,
-    alignSelf: 'center',
   },
   dialog: {
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    maxHeight: '90%',
-    overflow: 'hidden',
     ...Platform.select({
       web: {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',

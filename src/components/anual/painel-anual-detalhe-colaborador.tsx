@@ -6,103 +6,35 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   View,
 } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ActionButton } from '@/components/ui/action-button';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { ColaboradorHistoricoPanel } from '@/components/anual/colaborador-historico-panel';
 import {
-  formatMediaAnual,
+  VereditoAnualForm,
+  VereditoAnualRegistrado,
+} from '@/components/anual/veredito-anual-form';
+import { ThemedText } from '@/components/themed-text';
+import { getModalOverlayStyle, modalSheetStyles } from '@/constants/modal';
+import { Spacing } from '@/constants/theme';
+import type { AvaliacaoHistoricoItem } from '@/features/avaliacao/historico-api';
+import {
   type ColaboradorConsolidado,
   type DecisaoAnualExistente,
   type MediasAnuaisColaborador,
-} from '@/features/anual/painel-anual-api';
+} from '@/features/estrategico/api';
 import { useTheme } from '@/hooks/use-theme';
-import {
-  TIPO_BENEFICIO_ANUAL_LABELS,
-  type TipoBeneficioAnual,
-} from '@/types/supabase';
-
-const TIPOS_BENEFICIO: TipoBeneficioAnual[] = ['reajuste', 'plr', 'bonificacao', 'nenhum'];
-
-function MediaCard({
-  titulo,
-  media,
-  detalhe,
-}: {
-  titulo: string;
-  media: number | null;
-  detalhe: string;
-}) {
-  const theme = useTheme();
-
-  return (
-    <View style={[styles.mediaCard, { borderColor: theme.border, backgroundColor: theme.background }]}>
-      <ThemedText themeColor="textSecondary" style={styles.mediaCardLabel}>
-        {titulo}
-      </ThemedText>
-      <ThemedText style={styles.mediaCardValue}>{formatMediaAnual(media)}</ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.mediaCardDetalhe}>
-        {detalhe}
-      </ThemedText>
-    </View>
-  );
-}
-
-function BeneficioPicker({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: TipoBeneficioAnual;
-  onChange: (value: TipoBeneficioAnual) => void;
-  disabled?: boolean;
-}) {
-  const theme = useTheme();
-
-  return (
-    <View style={styles.beneficioRow}>
-      {TIPOS_BENEFICIO.map((tipo) => {
-        const isSelected = value === tipo;
-
-        return (
-          <Pressable
-            key={tipo}
-            disabled={disabled}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSelected, disabled }}
-            onPress={() => onChange(tipo)}
-            style={[
-              styles.beneficioChip,
-              {
-                borderColor: isSelected ? theme.text : theme.border,
-                backgroundColor: isSelected ? theme.backgroundSelected : theme.background,
-                opacity: disabled ? 0.6 : 1,
-              },
-            ]}>
-            <ThemedText
-              style={[
-                styles.beneficioChipLabel,
-                isSelected && { fontFamily: Fonts.sansSemiBold },
-              ]}>
-              {TIPO_BENEFICIO_ANUAL_LABELS[tipo]}
-            </ThemedText>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
+import type { TipoBeneficioAnual } from '@/types/supabase';
 
 type PainelAnualDetalheColaboradorProps = {
   colaborador: ColaboradorConsolidado;
   anoReferencia: number;
   medias: MediasAnuaisColaborador | null;
+  historico: AvaliacaoHistoricoItem[];
   decisaoExistente: DecisaoAnualExistente | null;
   tipoBeneficio: TipoBeneficioAnual;
   justificativaFinanceira: string;
+  canRegistrarDecisao: boolean;
   isLoadingDetalhe: boolean;
   isSubmitting: boolean;
   onTipoBeneficioChange: (value: TipoBeneficioAnual) => void;
@@ -116,9 +48,11 @@ export function PainelAnualDetalheColaborador({
   colaborador,
   anoReferencia,
   medias,
+  historico,
   decisaoExistente,
   tipoBeneficio,
   justificativaFinanceira,
+  canRegistrarDecisao,
   isLoadingDetalhe,
   isSubmitting,
   onTipoBeneficioChange,
@@ -127,8 +61,6 @@ export function PainelAnualDetalheColaborador({
   onClose,
   showCloseAction = false,
 }: PainelAnualDetalheColaboradorProps) {
-  const theme = useTheme();
-
   return (
     <View style={styles.container}>
       <ThemedText type="subtitle">{colaborador.nome}</ThemedText>
@@ -140,66 +72,29 @@ export function PainelAnualDetalheColaborador({
         <ActivityIndicator style={styles.loaderDetalhe} />
       ) : medias ? (
         <>
-          <View style={styles.mediasRow}>
-            <MediaCard
-              titulo="Média quinzenal"
-              media={medias.mediaQuinzenal}
-              detalhe={`${medias.totalAvaliacoesQuinzenal} avaliações · ${medias.totalRespostasQuinzenal} notas`}
-            />
-            <MediaCard
-              titulo="Média semestral"
-              media={medias.mediaSemestral}
-              detalhe={`${medias.totalAvaliacoesSemestral} avaliações · ${medias.totalRespostasSemestral} notas`}
-            />
-          </View>
+          <ColaboradorHistoricoPanel anoReferencia={anoReferencia} historico={historico} />
 
           {decisaoExistente ? (
-            <View style={[styles.decisaoRegistrada, { borderColor: theme.border }]}>
-              <ThemedText style={styles.impactoTitulo}>
-                Decisão já registrada em {anoReferencia}
-              </ThemedText>
-              <ThemedText type="subtitle" style={styles.impactoValor}>
-                {TIPO_BENEFICIO_ANUAL_LABELS[decisaoExistente.tipoBeneficio]}
-              </ThemedText>
-              <ThemedText themeColor="textSecondary" style={styles.justificativaExistente}>
-                {decisaoExistente.justificativaFinanceira}
+            <VereditoAnualRegistrado
+              anoReferencia={anoReferencia}
+              justificativaFinanceira={decisaoExistente.justificativaFinanceira}
+              tipoBeneficio={decisaoExistente.tipoBeneficio}
+            />
+          ) : canRegistrarDecisao ? (
+            <VereditoAnualForm
+              isSubmitting={isSubmitting}
+              justificativaFinanceira={justificativaFinanceira}
+              tipoBeneficio={tipoBeneficio}
+              onJustificativaChange={onJustificativaChange}
+              onSubmit={onSubmit}
+              onTipoBeneficioChange={onTipoBeneficioChange}
+            />
+          ) : (
+            <View style={styles.readOnlyHint}>
+              <ThemedText themeColor="textSecondary" style={styles.readOnlyText}>
+                Apenas RH e CEO podem registrar o veredito financeiro anual.
               </ThemedText>
             </View>
-          ) : (
-            <>
-              <View style={styles.formGroup}>
-                <ThemedText style={styles.fieldLabel}>Tipo de benefício</ThemedText>
-                <BeneficioPicker value={tipoBeneficio} onChange={onTipoBeneficioChange} />
-              </View>
-
-              <View style={styles.formGroup}>
-                <ThemedText style={styles.fieldLabel}>
-                  Justificativa financeira / impacto no caixa
-                </ThemedText>
-                <TextInput
-                  multiline
-                  placeholder="Descreva o impacto financeiro, sustentabilidade do caixa e fundamentação da decisão..."
-                  placeholderTextColor={theme.placeholder}
-                  style={[
-                    styles.textInput,
-                    {
-                      color: theme.text,
-                      backgroundColor: theme.background,
-                      borderColor: theme.border,
-                    },
-                  ]}
-                  value={justificativaFinanceira}
-                  onChangeText={onJustificativaChange}
-                />
-              </View>
-
-              <ActionButton
-                label="Registrar decisão anual"
-                isLoading={isSubmitting}
-                disabled={justificativaFinanceira.trim().length < 10}
-                onPress={onSubmit}
-              />
-            </>
           )}
 
           {showCloseAction && onClose ? (
@@ -226,21 +121,22 @@ export function PainelAnualDetalheModal({
 
   return (
     <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
+      <Pressable style={[styles.modalOverlay, getModalOverlayStyle(theme)]} onPress={onClose}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.modalKeyboard}>
+          style={modalSheetStyles.keyboard}>
           <Pressable
             style={[
-              styles.modalSheet,
+              modalSheetStyles.sheet,
               { backgroundColor: theme.background, borderColor: theme.border },
             ]}
             onPress={(event) => event.stopPropagation()}>
+            <View style={[modalSheetStyles.handle, { backgroundColor: theme.border }]} />
             <ScrollView
               bounces={false}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.modalScrollContent}>
+              contentContainerStyle={modalSheetStyles.scrollContent}>
               <PainelAnualDetalheColaborador
                 {...detalheProps}
                 onClose={onClose}
@@ -265,84 +161,12 @@ const styles = StyleSheet.create({
   loaderDetalhe: {
     marginVertical: Spacing.two,
   },
-  mediasRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-  },
-  mediaCard: {
-    flexGrow: 1,
-    flexBasis: 140,
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    padding: Spacing.three,
-    gap: Spacing.one,
-  },
-  mediaCardLabel: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  mediaCardValue: {
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 28,
-    lineHeight: 34,
-  },
-  mediaCardDetalhe: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  formGroup: {
-    gap: Spacing.two,
-  },
-  fieldLabel: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  beneficioRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
-  },
-  beneficioChip: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.three,
+  readOnlyHint: {
     paddingVertical: Spacing.two,
   },
-  beneficioChipLabel: {
+  readOnlyText: {
     fontSize: 13,
     lineHeight: 18,
-  },
-  textInput: {
-    minHeight: 120,
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    fontFamily: Fonts.sans,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlignVertical: 'top',
-  },
-  decisaoRegistrada: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    padding: Spacing.three,
-    gap: Spacing.two,
-  },
-  impactoTitulo: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  impactoValor: {
-    fontSize: 18,
-    lineHeight: 24,
-  },
-  justificativaExistente: {
-    fontSize: 14,
-    lineHeight: 20,
   },
   cancelarPress: {
     alignSelf: 'flex-start',
@@ -351,20 +175,5 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(47, 52, 55, 0.4)',
-  },
-  modalKeyboard: {
-    width: '100%',
-  },
-  modalSheet: {
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
-    borderWidth: 1,
-    maxHeight: '92%',
-    overflow: 'hidden',
-  },
-  modalScrollContent: {
-    padding: Spacing.four,
-    paddingBottom: Spacing.six,
   },
 });

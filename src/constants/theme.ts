@@ -16,6 +16,7 @@ export const Colors = {
     dangerMuted: "#FDEBEC",
     inputBackground: "#FFFFFF",
     placeholder: "#9B9A97",
+    overlay: "rgba(47, 52, 55, 0.45)",
   },
   dark: {
     text: "#FFFFFF",
@@ -28,8 +29,9 @@ export const Colors = {
     accentMuted: "#1E2A36",
     danger: "#FF7369",
     dangerMuted: "#3D2624",
-    inputBackground: "#252525",
+    inputBackground: "#2F2F2F",
     placeholder: "#6F6E69",
+    overlay: "rgba(0, 0, 0, 0.72)",
   },
 } as const;
 

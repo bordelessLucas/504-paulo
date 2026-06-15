@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
+import { getModalOverlayStyle, modalSheetStyles } from '@/constants/modal';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import type { Notificacao } from '@/features/notificacoes/types';
 import { TIPO_NOTIFICACAO_ICON } from '@/features/notificacoes/types';
@@ -104,10 +105,11 @@ export function NotificationsPanel() {
       transparent
       visible={isPanelOpen}>
       <View style={[styles.overlay, { paddingTop: insets.top }]}>
-        <Pressable style={styles.backdrop} onPress={closePanel} />
+        <Pressable style={[styles.backdrop, getModalOverlayStyle(theme)]} onPress={closePanel} />
 
         <View
           style={[
+            modalSheetStyles.sheet,
             styles.sheet,
             {
               backgroundColor: theme.background,
@@ -115,6 +117,7 @@ export function NotificationsPanel() {
               paddingBottom: Math.max(insets.bottom, Spacing.four),
             },
           ]}>
+          <View style={[modalSheetStyles.handle, { backgroundColor: theme.border }]} />
           <View style={styles.header}>
             <View>
               <ThemedText type="heading">Alertas</ThemedText>
@@ -173,16 +176,12 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
   },
   sheet: {
-    maxHeight: '82%',
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
-    borderWidth: 1,
     paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
+    paddingTop: Spacing.two,
     gap: Spacing.three,
+    maxHeight: '82%',
   },
   header: {
     flexDirection: 'row',

@@ -19,40 +19,40 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/ui/toast';
 import { SPLIT_LAYOUT_MIN_WIDTH } from '@/constants/layout';
-import { Fonts, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import type { AvaliacaoHistoricoItem } from '@/features/avaliacao/historico-api';
+import { isCeoApprovalRole } from '@/features/aprovacoes/approval-roles';
+import { useAuth } from '@/features/auth/auth-context';
 import {
+  fetchColaboradorAnualDetalhe,
   fetchColaboradoresConsolidados,
-  fetchDecisaoAnualExistente,
-  fetchMediasAnuaisColaborador,
   salvarDecisaoAnualEstrategica,
   type ColaboradorConsolidado,
   type DecisaoAnualExistente,
   type MediasAnuaisColaborador,
-} from '@/features/anual/painel-anual-api';
-import { useAuth } from '@/features/auth/auth-context';
+} from '@/features/estrategico/api';
 import { useAuthRole } from '@/hooks/use-auth-role';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
-import {
-  isPainelAnualEstrategicoRole,
-  type TipoBeneficioAnual,
-} from '@/types/supabase';
+import { isPainelAnualEstrategicoRole, type TipoBeneficioAnual } from '@/types/supabase';
 
 export function PainelAnualEstrategicoScreen() {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const { user } = useAuth();
-  const { role, isLoading: isRoleLoading } = useAuthRole();
+  const { role, isRh, isLoading: isRoleLoading } = useAuthRole();
   const { showToast } = useToast();
 
   const anoReferencia = new Date().getFullYear();
   const canAccess = isPainelAnualEstrategicoRole(role);
+  const canRegistrarDecisao = isRh || isCeoApprovalRole(role);
   const { scrollPaddingBottom } = useTabScreenLayout();
   const isSplitLayout = width >= SPLIT_LAYOUT_MIN_WIDTH;
 
   const [colaboradores, setColaboradores] = useState<ColaboradorConsolidado[]>([]);
   const [selected, setSelected] = useState<ColaboradorConsolidado | null>(null);
   const [medias, setMedias] = useState<MediasAnuaisColaborador | null>(null);
+  const [historico, setHistorico] = useState<AvaliacaoHistoricoItem[]>([]);
   const [decisaoExistente, setDecisaoExistente] = useState<DecisaoAnualExistente | null>(null);
   const [tipoBeneficio, setTipoBeneficio] = useState<TipoBeneficioAnual>('nenhum');
   const [justificativaFinanceira, setJustificativaFinanceira] = useState('');
@@ -65,6 +65,7 @@ export function PainelAnualEstrategicoScreen() {
   const resetDetalhe = useCallback(() => {
     setSelected(null);
     setMedias(null);
+    setHistorico([]);
     setDecisaoExistente(null);
     setJustificativaFinanceira('');
     setTipoBeneficio('nenhum');
@@ -109,21 +110,20 @@ export function PainelAnualEstrategicoScreen() {
       setTipoBeneficio('nenhum');
       setJustificativaFinanceira('');
       setMedias(null);
+      setHistorico([]);
       setDecisaoExistente(null);
       setIsLoadingDetalhe(true);
 
       try {
-        const [mediasAno, decisao] = await Promise.all([
-          fetchMediasAnuaisColaborador(colaborador.id, anoReferencia),
-          fetchDecisaoAnualExistente(colaborador.id, anoReferencia),
-        ]);
+        const detalhe = await fetchColaboradorAnualDetalhe(colaborador.id, anoReferencia);
 
-        setMedias(mediasAno);
-        setDecisaoExistente(decisao);
+        setMedias(detalhe.medias);
+        setHistorico(detalhe.historico);
+        setDecisaoExistente(detalhe.decisaoExistente);
 
-        if (decisao) {
-          setTipoBeneficio(decisao.tipoBeneficio);
-          setJustificativaFinanceira(decisao.justificativaFinanceira);
+        if (detalhe.decisaoExistente) {
+          setTipoBeneficio(detalhe.decisaoExistente.tipoBeneficio);
+          setJustificativaFinanceira(detalhe.decisaoExistente.justificativaFinanceira);
         }
       } catch (loadError) {
         showToast(
@@ -139,7 +139,7 @@ export function PainelAnualEstrategicoScreen() {
   );
 
   const handleSubmit = useCallback(async () => {
-    if (!user || !selected || !medias || decisaoExistente) {
+    if (!user || !selected || !medias || decisaoExistente || !canRegistrarDecisao) {
       return;
     }
 
@@ -155,8 +155,9 @@ export function PainelAnualEstrategicoScreen() {
         medias,
       });
 
-      showToast(`Decisão anual ${anoReferencia} registrada — ${selected.nome}.`, 'success');
+      showToast(`Veredito anual ${anoReferencia} registrado — ${selected.nome}.`, 'success');
       resetDetalhe();
+      void loadColaboradores();
     } catch (submitError) {
       showToast(
         submitError instanceof Error ? submitError.message : 'Erro ao salvar decisão anual.',
@@ -167,8 +168,10 @@ export function PainelAnualEstrategicoScreen() {
     }
   }, [
     anoReferencia,
+    canRegistrarDecisao,
     decisaoExistente,
     justificativaFinanceira,
+    loadColaboradores,
     medias,
     resetDetalhe,
     selected,
@@ -182,9 +185,11 @@ export function PainelAnualEstrategicoScreen() {
         colaborador: selected,
         anoReferencia,
         medias,
+        historico,
         decisaoExistente,
         tipoBeneficio,
         justificativaFinanceira,
+        canRegistrarDecisao,
         isLoadingDetalhe,
         isSubmitting,
         onTipoBeneficioChange: setTipoBeneficio,
@@ -197,7 +202,7 @@ export function PainelAnualEstrategicoScreen() {
     <View style={styles.listaSection}>
       <ThemedText type="subtitle">Colaboradores</ThemedText>
       <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-        Selecione um colaborador para consolidar médias quinzenais e semestrais do ano.
+        Selecione um colaborador para revisar o histórico e registrar o veredito anual.
       </ThemedText>
 
       {colaboradores.map((colaborador) => (
@@ -238,8 +243,8 @@ export function PainelAnualEstrategicoScreen() {
           <View style={[styles.header, isSplitLayout && styles.headerSplit]}>
             <ThemedText type="heading">Análise Anual Estratégica</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-              Consolidação {anoReferencia} · decisões de PLR, bonificação e reajuste com visão de
-              caixa.
+              Consolidação {anoReferencia} · histórico, médias e veredito financeiro (PLR,
+              bonificação, reajuste).
             </ThemedText>
           </View>
 
@@ -287,8 +292,8 @@ export function PainelAnualEstrategicoScreen() {
                     <View style={styles.placeholderDetalhe}>
                       <ThemedText type="subtitle">Nenhum colaborador selecionado</ThemedText>
                       <ThemedText themeColor="textSecondary" style={styles.placeholderText}>
-                        Escolha um colaborador na lista ao lado para visualizar as médias anuais e
-                        registrar a decisão estratégica.
+                        Escolha um colaborador na lista ao lado para visualizar o histórico e
+                        registrar o veredito anual.
                       </ThemedText>
                     </View>
                   )}

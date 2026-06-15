@@ -14,6 +14,7 @@ import { BloqueioDeveresHint } from '@/components/colaborador/bloqueio-deveres-h
 import { TipoSolicitacaoSelect } from '@/components/reajuste/tipo-solicitacao-select';
 import { ThemedText } from '@/components/themed-text';
 import { ActionButton } from '@/components/ui/action-button';
+import { getModalOverlayStyle, modalSheetStyles } from '@/constants/modal';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { formatMediaGeral } from '@/features/aprovacoes/api';
 import type { ColaboradorReajusteResumo } from '@/features/reajuste/api';
@@ -186,21 +187,22 @@ export function PainelReajusteSolicitacaoModal({
 
   return (
     <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
+      <Pressable style={[styles.modalOverlay, getModalOverlayStyle(theme)]} onPress={onClose}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.modalKeyboard}>
+          style={modalSheetStyles.keyboard}>
           <Pressable
             style={[
-              styles.modalSheet,
+              modalSheetStyles.sheet,
               { backgroundColor: theme.background, borderColor: theme.border },
             ]}
             onPress={(event) => event.stopPropagation()}>
+            <View style={[modalSheetStyles.handle, { backgroundColor: theme.border }]} />
             <ScrollView
               bounces={false}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.modalScrollContent}>
+              contentContainerStyle={modalSheetStyles.scrollContent}>
               <PainelReajusteSolicitacao
                 {...solicitacaoProps}
                 onClose={onClose}
@@ -296,20 +298,5 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(47, 52, 55, 0.4)',
-  },
-  modalKeyboard: {
-    width: '100%',
-  },
-  modalSheet: {
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
-    borderWidth: 1,
-    maxHeight: '92%',
-    overflow: 'hidden',
-  },
-  modalScrollContent: {
-    padding: Spacing.four,
-    paddingBottom: Spacing.six,
   },
 });
