@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { FormSection } from '@/components/rh/form-section';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { createColaborador } from '@/features/rh/create-colaborador';
+import { fetchLideresOptions, type LiderOption } from '@/features/rh/lideres-api';
 import {
   NIVEL_IRATA_VALUES,
   PROFILE_STATUS_LABELS,
@@ -31,6 +32,7 @@ const INITIAL_FORM: CreateColaboradorInput = {
   nome: '',
   funcao: '',
   departamento: '',
+  lider_id: undefined,
   classificacao: '',
   nivel_irata: undefined,
   data_nascimento: '',
@@ -51,6 +53,8 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
   const [errors, setErrors] = useState<Partial<Record<keyof CreateColaboradorInput | 'general', string>>>({});
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lideres, setLideres] = useState<LiderOption[]>([]);
+  const [isLoadingLideres, setIsLoadingLideres] = useState(false);
 
   const canCreate = isAdminDashboardRole(role);
   const inputVariant = embedded ? 'soft' as const : 'default' as const;
@@ -62,6 +66,27 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
       setFeedback(null);
     },
     [],
+  );
+
+  useEffect(() => {
+    if (!canCreate) {
+      return;
+    }
+
+    setIsLoadingLideres(true);
+    void fetchLideresOptions()
+      .then(setLideres)
+      .catch(() => setLideres([]))
+      .finally(() => setIsLoadingLideres(false));
+  }, [canCreate]);
+
+  const liderOptions = ['', ...lideres.map((lider) => lider.id)];
+  const liderLabels = lideres.reduce<Record<string, string>>(
+    (accumulator, lider) => {
+      accumulator[lider.id] = lider.nome;
+      return accumulator;
+    },
+    { '': 'Nenhum' },
   );
 
   const handleSubmit = useCallback(async () => {
@@ -204,6 +229,21 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           value={form.departamento ?? ''}
           variant={inputVariant}
         />
+        <View style={styles.fieldGroup}>
+          <ThemedText style={styles.fieldLabel}>Líder direto (opcional)</ThemedText>
+          {isLoadingLideres ? (
+            <ThemedText themeColor="textSecondary" style={styles.hint}>
+              Carregando líderes...
+            </ThemedText>
+          ) : (
+            <OptionChips
+              options={liderOptions}
+              labels={liderLabels}
+              value={form.lider_id ?? ''}
+              onChange={(value) => updateField('lider_id', value || undefined)}
+            />
+          )}
+        </View>
         <Input
           error={errors.classificacao}
           label="Classificação"

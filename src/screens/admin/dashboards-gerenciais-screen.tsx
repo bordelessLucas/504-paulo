@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ColaboradorRankingList } from '@/components/gerencial/colaborador-ranking-list';
+import { ExportacaoFichaPanel } from '@/components/gerencial/exportacao-ficha-panel';
 import { ImaGaugeChart } from '@/components/gerencial/ima-gauge-chart';
 import { RadarDesempenhoChart } from '@/components/gerencial/radar-desempenho-chart';
 import { StatusPreenchimentoList } from '@/components/gerencial/status-preenchimento-list';
@@ -164,6 +165,19 @@ export function DashboardsGerenciaisScreen() {
           </View>
 
           <View style={[styles.cardsGrid, isDesktopLayout && styles.cardsGridDesktop]}>
+            <View style={isDesktopLayout ? styles.cardSlotDesktopWide : undefined}>
+          <DashboardCard
+            title="Exportação de fichas PDF"
+            description="Ficha offshore completa para qualquer colaborador ativo, com filtro por departamento e período.">
+            <ExportacaoFichaPanel
+              exportingId={exportingId}
+              onExportingChange={setExportingId}
+              onExported={(message) => showToast(message, 'success')}
+              onError={(message) => showToast(message, 'error')}
+            />
+          </DashboardCard>
+            </View>
+
             <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
           <DashboardCard
             title="Radar de desempenho"

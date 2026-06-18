@@ -15,6 +15,7 @@ export type CreateColaboradorInput = {
   nome: string;
   funcao?: string;
   departamento?: string;
+  lider_id?: string;
   classificacao?: string;
   nivel_irata?: NivelIrataValue;
   data_nascimento?: string;
@@ -131,6 +132,7 @@ export function normalizeCreateColaboradorInput(input: CreateColaboradorInput): 
     nome: input.nome.trim(),
     funcao: input.funcao?.trim() || undefined,
     departamento: input.departamento?.trim() || undefined,
+    lider_id: input.lider_id?.trim() || undefined,
     classificacao: input.classificacao?.trim() || undefined,
     nivel_irata: normalizeNivelIrata(input.nivel_irata),
     data_nascimento: parseDateField(input.data_nascimento),

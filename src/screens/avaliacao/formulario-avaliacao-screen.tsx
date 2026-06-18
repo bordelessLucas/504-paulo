@@ -28,6 +28,7 @@ import {
   type RespostaFormState,
 } from '@/features/avaliacao/validation';
 import { useAuth } from '@/features/auth/auth-context';
+import { confirmAction } from '@/utils/confirm-action';
 import { useAuthRole } from '@/hooks/use-auth-role';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 import type { PerguntaAvaliacao, PontoMelhoria } from '@/types/supabase';
@@ -133,6 +134,15 @@ export function FormularioAvaliacaoScreen() {
         setFeedback(validationMessage);
         return;
       }
+    }
+
+    const confirmed = await confirmAction(
+      'Confirmar envio',
+      'A avaliação será enviada para validação do RH. Deseja continuar?',
+    );
+
+    if (!confirmed) {
+      return;
     }
 
     setIsSubmitting(true);

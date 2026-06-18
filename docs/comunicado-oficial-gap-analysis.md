@@ -3,7 +3,7 @@
 Referência: **Comunicado de Lançamento** (escala 0–3, **3 perguntas universais**, ciclos quinzenal/semestral/anual).
 
 > Este documento **substitui** no planejamento o modelo antigo de 12 seções (GO1, SB1…).  
-> Ver também: `docs/backlog-implementacao-fase-2.md` para itens gerais (cadastro, PDF, alertas).
+> Ver também: `docs/backlog-implementacao-fase-2.md` para itens gerais.
 
 ---
 
@@ -38,85 +38,60 @@ Referência: **Comunicado de Lançamento** (escala 0–3, **3 perguntas universa
 
 | Código | Quem | Status no app |
 |--------|------|---------------|
-| 2.1 | Reajuste — **gestores** | Parcial (só **gerente** hoje) |
+| 2.1 | Reajuste — **gestores e gerente** | Implementado (gestor + gerente → RH → CEO) |
 | 2.2 | Autoavaliação — colaborador | Implementado |
 
 ### Deveres (elegibilidade)
 
-- Meta Zero Acidentes (SMS)
-- Evitar faltas / no-show em embarques
+- Meta Zero Acidentes (SMS) — bloqueio via incidentes recentes
+- Evitar faltas / no-show em embarques — bloqueio via incidentes recentes
 
 ---
 
-## ✅ Já implementado (aderente ou próximo)
+## ✅ Implementado no MVP (consolidado jun/2026)
 
 | Item | Detalhe técnico |
 |------|-----------------|
-| Login por papéis | supervisor, gestor, gerente, rh, ceo, colaborador |
-| Fluxo quinzenal básico | `avaliacoes.tipo = quinzenal`, equipe + formulário |
-| Formulário de avaliação | Notas, justificativa (2/3), pontos de melhoria anteriores |
-| Autoavaliação (2.2) | Modal colaborador → `melhorias_salariais` |
-| Reajuste com aprovação | Gerente → RH → CEO (`melhorias_salariais`) |
-| Validação parcial de notas | Bloqueio se justificativa vazia em 2/3 |
-| Elegibilidade tempo | 6 meses para autoavaliação (`eligibility.ts`) |
-| Dashboard CEO | Radar, semáforo, ranking (escala ainda 0–5 na UI) |
+| Login por 7 papéis | colaborador, supervisor, gestor, gerente, rh, ceo, admin |
+| Escala 0–3 | `score-picker`, validação, legenda no formulário |
+| 3 perguntas universais | `fetchPerguntasUniversais()`, seção `UNIVERSAL` |
+| Ciclos quinzenal / semestral / anual | Tipo por papel; filtros em histórico e equipe |
+| Fluxo RH → CEO | Avaliações e `melhorias_salariais` com `pendente_rh` → `pendente_ceo` → `aprovada` |
+| Colaborador vê só aprovadas | Views `avaliacoes_masked` / `respostas_masked` |
+| Avaliações em análise (colaborador) | Dashboard lista status sem notas (`pendente_rh`, `pendente_ceo`) |
+| Semáforo pessoal | Dashboard colaborador com `DesempenhoSemaforo` |
+| Minhas solicitações | Autoavaliação e reajuste com status no dashboard |
+| Escopo por departamento + `lider_id` | `colaborador-scope.ts` + migration `20260618120000` |
+| Cadastro RH completo | Ficha offshore + CSV com relatório de erros por linha |
+| Badge pendências | Tab/drawer em Validações/Aprovações (RH e CEO) |
+| Confirmação antes de enviar | Alert em avaliação e reajuste |
+| PDF ficha colaborador | Ficha offshore completa: cadastro, semáforo, radar, P1/P2/P3, melhorias, decisões anuais |
+| Exportação PDF em lote | Por departamento e período no dashboard gerencial |
+| Painel anual estratégico | Veredito anual; admin pode registrar; gerente em modo consulta |
+| Navegação responsiva | Sidebar desktop + bottom tabs mobile |
+| Deep link em notificações | Navega para aba contextual |
+| Incidentes / deveres | Bloqueio autoavaliação e reajuste |
 
 ---
 
-## 🟡 Parcial — precisa ajuste ao comunicado
+## 🟡 Parcial — melhorias futuras
 
-| Item | Hoje | Comunicado |
-|------|------|------------|
-| Escala de notas | 0, 1, 2, 3, **5** + evidência na nota 5 | Somente **0 a 3** |
-| Perguntas | Por `secao_departamento` do avaliador (N perguntas no banco) | **3 universais** fixas |
-| Semestral | Tipo existe no enum; UI sempre grava `quinzenal` | Ciclo 1.2 dedicado |
-| Reajuste (2.1) | Tab **Estratégico** só para **gerente** | **Gestores** (e critério de notas) |
-| Textos na UI | “Departamento”, escala 0–5 | Legenda 0–3 + nomes dos 3 eixos |
-| Médias / radar CEO | Calculado sobre escala antiga | Recalcular máx. 3 |
+| Item | Hoje | Próximo passo |
+|------|------|---------------|
+| Hierarquia `lider_id` | Campo no cadastro; escopo com fallback departamento | Popular dados em massa; validar cadeia multi-nível |
+| Comunicado in-app | Copy nos formulários | Tela “Metodologia” ou onboarding |
+| PDF ficha | Ficha offshore A4 com semáforo e radar em HTML | — |
+| CSV import | Erros por linha | Suporte a coluna `lider_id` no template |
 
 ---
 
-## ❌ Ainda não implementado
+## ❌ Backlog pós-MVP
 
 | Item | Prioridade |
 |------|------------|
-| Seed SQL das 3 perguntas universais (`P1`, `P2`, `P3`) | P0 |
-| Remover nota 5 e campo evidência (ou tornar opcional só legado) | P0 |
-| Legenda de notas 0–3 no formulário (tooltips/cards) | P1 |
-| UI ciclo **semestral** (lista, tipo, copy “Gestores de base”) | P0 |
-| UI ciclo **anual** (1.3) — painel decisão PLR/bonificação | P1 |
-| Tipo `anual` no banco (hoje só `quinzenal` \| `semestral`) | P1 |
-| Reajuste para papel **gestor** (e supervisor se aplicável) | P1 |
-| Critério “atingiu notas” antes de reajuste | P1 |
-| **Minhas avaliações** colaborador (placeholder) | P1 |
-| Deveres: meta zero acidentes / no-show (registro + elegibilidade) | P2 |
-| Comunicado in-app (tela “Metodologia” ou onboarding) | P2 |
-
----
-
-## Tarefas técnicas recomendadas (ordem)
-
-### Sprint A — Alinhar modelo de avaliação (P0)
-
-1. `sql/seed_perguntas_universais.sql` — 3 linhas em `perguntas` (`codigo`: `P1`, `P2`, `P3`; `secao_departamento`: `UNIVERSAL` ou null)
-2. Alterar `fetchPerguntasPorDepartamento` → `fetchPerguntasUniversais()` (ignorar dept. do avaliador)
-3. `validation.ts` + `score-picker.tsx`: `ALLOWED_SCORES = [0,1,2,3]`; remover `requiresEvidencia(5)`
-4. Constraint SQL `respostas.nota check (nota in (0,1,2,3))` + migration
-5. Atualizar copy do formulário e dashboards (máx. 3)
-
-### Sprint B — Ciclos (P0–P1)
-
-1. Parâmetro `tipo` na navegação: quinzenal vs semestral
-2. Supervisor → sempre quinzenal; gestor → semestral (Logística/Projetos/Integridade)
-3. Filtros em Minha Equipe / listas por ciclo
-4. Enum `tipo_avaliacao` + valor `anual` + tela Análise Estratégica (RH + gerentes)
-
-### Sprint C — Melhoria salarial e deveres (P1–P2)
-
-1. Tab ou fluxo **Reajuste** para `gestor`
-2. Validar média mínima / sem notas 0 recorrentes antes de solicitar reajuste
-3. Tabela `incidentes` ou flags em perfil para SMS / no-show
-4. Bloquear autoavaliação/reajuste se deveres violados
+| Notificações push nativas (além do painel in-app) | P2 |
+| Relatórios exportáveis em lote (RH) | P2 |
+| Auditoria de alterações em perfis | P3 |
 
 ---
 
@@ -124,9 +99,9 @@ Referência: **Comunicado de Lançamento** (escala 0–3, **3 perguntas universa
 
 1. Notas **0 e 1** exigem justificativa como 2 e 3? (comunicado não detalha; hoje só 2 e 3)
 2. Supervisor de bordo pode solicitar **reajuste** ou só gestores de base?
-3. Análise **anual** é formulário de notas ou só painel de decisão sobre dados agregados?
+3. Hierarquia `lider_id`: um único líder ou cadeia (supervisor → gestor → gerente)?
 4. Gestores “Integridade” = papel `gestor` com departamento fixo?
 
 ---
 
-*Atualizado: maio/2026*
+*Atualizado: junho/2026 — MVP consolidado*

@@ -19,7 +19,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useToast } from '@/components/ui/toast';
 import { SPLIT_LAYOUT_MIN_WIDTH } from '@/constants/layout';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { createSolicitacaoMelhoria } from '@/features/aprovacoes/api';
 import {
   fetchColaboradoresReajusteResumo,
@@ -29,15 +29,21 @@ import {
   isElegivelParaReajuste,
   MEDIA_MINIMA_REAJUSTE,
 } from '@/features/reajuste/eligibility';
-import { type TipoSolicitacaoReajuste } from '@/features/reajuste/types';
+import {
+  TIPO_SOLICITACAO_REAJUSTE_LABELS,
+  type TipoSolicitacaoReajuste,
+} from '@/features/reajuste/types';
 import { useAuth } from '@/features/auth/auth-context';
+import { useAuthRole } from '@/hooks/use-auth-role';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
+import { confirmAction } from '@/utils/confirm-action';
 
 export function PainelReajusteScreen() {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const { user } = useAuth();
+  const { role } = useAuthRole();
   const { showToast } = useToast();
   const { scrollPaddingBottom } = useTabScreenLayout();
   const isSplitLayout = width >= SPLIT_LAYOUT_MIN_WIDTH;
@@ -61,6 +67,10 @@ export function PainelReajusteScreen() {
   );
 
   const loadColaboradores = useCallback(async (options?: { refreshing?: boolean }) => {
+    if (!user) {
+      return;
+    }
+
     if (options?.refreshing) {
       setIsRefreshing(true);
     } else {
@@ -70,7 +80,7 @@ export function PainelReajusteScreen() {
     setError(null);
 
     try {
-      const lista = await fetchColaboradoresReajusteResumo();
+      const lista = await fetchColaboradoresReajusteResumo(user.id, role);
       setColaboradores(lista);
       setSelected((current) => {
         if (!current) {
@@ -90,7 +100,7 @@ export function PainelReajusteScreen() {
         setIsLoadingList(false);
       }
     }
-  }, []);
+  }, [role, user]);
 
   useFocusEffect(
     useCallback(() => {
@@ -112,6 +122,15 @@ export function PainelReajusteScreen() {
 
   const handleSubmit = useCallback(async () => {
     if (!user || !selected || !isElegivel) {
+      return;
+    }
+
+    const confirmed = await confirmAction(
+      'Confirmar solicitação',
+      `Enviar solicitação de ${TIPO_SOLICITACAO_REAJUSTE_LABELS[tipoSolicitacao].toLowerCase()} para ${selected.nome}? O RH será notificado.`,
+    );
+
+    if (!confirmed) {
       return;
     }
 
@@ -311,9 +330,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
     gap: Spacing.three,
-    maxWidth: MaxContentWidth + 520,
     width: '100%',
-    alignSelf: 'center',
   },
   header: {
     gap: Spacing.two,
@@ -331,9 +348,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.four,
     gap: Spacing.four,
-    maxWidth: MaxContentWidth + 360,
     width: '100%',
-    alignSelf: 'center',
   },
   splitRow: {
     flex: 1,

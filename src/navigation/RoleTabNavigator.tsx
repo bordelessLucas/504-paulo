@@ -1,9 +1,11 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppNavigationBridge } from '@/navigation/app-navigation-bridge';
 import { TAB_BAR_BASE_HEIGHT } from '@/constants/layout';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { usePendingApprovalCount } from '@/hooks/use-pending-approval-count';
 import { getPrimaryTabForRole, getTabLabelForRole, getTabsForRole } from '@/navigation/role-menus';
 import { TAB_SCREENS, TabIcon } from '@/navigation/tab-screens';
 import type { MainTabParamList } from '@/navigation/types';
@@ -21,10 +23,17 @@ export function RoleTabNavigator({ role }: RoleTabNavigatorProps) {
   const tabs = getTabsForRole(role);
   const initialRouteName = getPrimaryTabForRole(role);
   const tabBarHeight = TAB_BAR_BASE_HEIGHT + insets.bottom;
+  const pendingApprovalCount = usePendingApprovalCount();
 
   return (
     <Tab.Navigator
       initialRouteName={initialRouteName}
+      screenLayout={({ children }) => (
+        <>
+          <AppNavigationBridge />
+          {children}
+        </>
+      )}
       safeAreaInsets={{ bottom: insets.bottom }}
       screenOptions={{
         headerShown: false,
@@ -59,6 +68,10 @@ export function RoleTabNavigator({ role }: RoleTabNavigatorProps) {
           options={{
             title: getTabLabelForRole(tab.name, role),
             tabBarIcon: ({ color }) => <TabIcon color={color} name={tab.icon} />,
+            tabBarBadge:
+              tab.name === 'Aprovacoes' && pendingApprovalCount > 0
+                ? pendingApprovalCount
+                : undefined,
           }}
         />
       ))}

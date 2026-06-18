@@ -13,6 +13,7 @@ import { NotificationsProvider } from '@/features/notificacoes/notifications-con
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { RoleDrawerNavigator } from '@/navigation/RoleDrawerNavigator';
 import { RoleTabNavigator } from '@/navigation/RoleTabNavigator';
+import { AppNavigationProvider } from '@/navigation/app-navigation-context';
 import { NavigationLayoutProvider } from '@/navigation/navigation-layout-context';
 
 export function AppNavigator() {
@@ -58,14 +59,16 @@ export function AppNavigator() {
     <NavigationIndependentTree>
       <NotificationsProvider>
         <NavigationLayoutProvider hasBottomTabs={!isDesktopLayout}>
-          <View style={styles.appShell}>
-            {isDesktopLayout ? (
-              <RoleDrawerNavigator key={role} role={role} />
-            ) : (
-              <RoleTabNavigator key={role} role={role} />
-            )}
-            <NotificationBell />
-          </View>
+          <AppNavigationProvider>
+            <View style={styles.appShell}>
+              {isDesktopLayout ? (
+                <RoleDrawerNavigator key={role} role={role} />
+              ) : (
+                <RoleTabNavigator key={role} role={role} />
+              )}
+              <NotificationBell />
+            </View>
+          </AppNavigationProvider>
         </NavigationLayoutProvider>
       </NotificationsProvider>
     </NavigationIndependentTree>

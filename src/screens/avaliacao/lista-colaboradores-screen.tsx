@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -21,11 +22,13 @@ import {
   type ColaboradorResumo,
   type ColaboradoresAvaliacaoExecutive,
 } from '@/features/avaliacao/api';
+import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
 import { useAuth } from '@/features/auth/auth-context';
 import { useAuthRole } from '@/hooks/use-auth-role';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
-import { isAdminDashboardRole } from '@/types/supabase';
+import { useTheme } from '@/hooks/use-theme';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
+import { isAdminDashboardRole, type TipoAvaliacao } from '@/types/supabase';
 
 type NavigationProp = NativeStackNavigationProp<
   AvaliacaoStackParamList,
@@ -66,13 +69,58 @@ function ColaboradorSection({
   );
 }
 
+function CicloToggle({
+  tipo,
+  onChange,
+}: {
+  tipo: TipoAvaliacao;
+  onChange: (tipo: TipoAvaliacao) => void;
+}) {
+  const theme = useTheme();
+  const options: TipoAvaliacao[] = ['quinzenal', 'semestral'];
+
+  return (
+    <View style={styles.cicloToggle}>
+      {options.map((option) => {
+        const isActive = tipo === option;
+
+        return (
+          <Pressable
+            key={option}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isActive }}
+            onPress={() => onChange(option)}
+            style={[
+              styles.cicloOption,
+              {
+                backgroundColor: isActive ? theme.backgroundSelected : theme.backgroundElement,
+                borderColor: theme.border,
+              },
+            ]}>
+            <ThemedText
+              style={[
+                styles.cicloOptionLabel,
+                { color: isActive ? theme.text : theme.textSecondary },
+              ]}>
+              {TIPO_AVALIACAO_LABELS[option]}
+            </ThemedText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 function ListaColaboradoresExecutiveView({
   navigation,
   avaliadorId,
+  role,
 }: {
   navigation: NavigationProp;
   avaliadorId: string;
+  role: ReturnType<typeof useAuthRole>['role'];
 }) {
+  const [tipoCiclo, setTipoCiclo] = useState<TipoAvaliacao>('quinzenal');
   const [data, setData] = useState<ColaboradoresAvaliacaoExecutive | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -90,7 +138,7 @@ function ListaColaboradoresExecutiveView({
       setError(null);
 
       try {
-        const result = await fetchColaboradoresAvaliacaoExecutive(avaliadorId);
+        const result = await fetchColaboradoresAvaliacaoExecutive(avaliadorId, tipoCiclo, role);
         setData(result);
       } catch (loadError) {
         setError(
@@ -104,7 +152,7 @@ function ListaColaboradoresExecutiveView({
         }
       }
     },
-    [avaliadorId],
+    [avaliadorId, role, tipoCiclo],
   );
 
   useFocusEffect(
@@ -152,9 +200,11 @@ function ListaColaboradoresExecutiveView({
         <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadData({ refreshing: true })} />
       }
       showsVerticalScrollIndicator={false}>
+      <CicloToggle tipo={tipoCiclo} onChange={setTipoCiclo} />
+
       <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-        Visão da quinzena atual — toque em um colaborador para ver o histórico de avaliações (
-        {total} colaboradores).
+        Visão do ciclo {tipoCiclo === 'quinzenal' ? 'quinzenal' : 'semestral'} — toque em um
+        colaborador para ver o histórico de avaliações ({total} colaboradores).
       </ThemedText>
 
       <ColaboradorSection count={pendentes.length} title="Avaliações pendentes">
@@ -201,9 +251,11 @@ function ListaColaboradoresExecutiveView({
 function ListaColaboradoresGerenteView({
   navigation,
   avaliadorId,
+  role,
 }: {
   navigation: NavigationProp;
   avaliadorId: string;
+  role: ReturnType<typeof useAuthRole>['role'];
 }) {
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
@@ -226,7 +278,7 @@ function ListaColaboradoresGerenteView({
       setError(null);
 
       try {
-        const result = await fetchColaboradoresPage(avaliadorId, targetPage);
+        const result = await fetchColaboradoresPage(avaliadorId, targetPage, role);
         setItems(result.items);
         setTotal(result.total);
         setPage(result.page);
@@ -240,7 +292,7 @@ function ListaColaboradoresGerenteView({
         }
       }
     },
-    [avaliadorId],
+    [avaliadorId, role],
   );
 
   useEffect(() => {
@@ -253,6 +305,9 @@ function ListaColaboradoresGerenteView({
         <ThemedText type="heading">Colaboradores a avaliar</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.subtitle}>
           Selecione um colaborador para iniciar a avaliação ({total} no total).
+          {role === 'supervisor' || role === 'gestor' || role === 'gerente'
+            ? ' A lista considera colaboradores do seu departamento.'
+            : ''}
         </ThemedText>
       </View>
 
@@ -344,10 +399,18 @@ export function ListaColaboradoresScreen() {
             <View style={styles.header}>
               <ThemedText type="heading">Painel de avaliação</ThemedText>
             </View>
-            <ListaColaboradoresExecutiveView avaliadorId={user.id} navigation={navigation} />
+            <ListaColaboradoresExecutiveView
+              avaliadorId={user.id}
+              navigation={navigation}
+              role={role}
+            />
           </>
         ) : (
-          <ListaColaboradoresGerenteView avaliadorId={user.id} navigation={navigation} />
+          <ListaColaboradoresGerenteView
+            avaliadorId={user.id}
+            navigation={navigation}
+            role={role}
+          />
         )}
       </View>
     </ThemedView>
@@ -424,6 +487,22 @@ const styles = StyleSheet.create({
     borderTopColor: '#F0F0F0',
   },
   pageLabel: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  cicloToggle: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  cicloOption: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  cicloOptionLabel: {
     fontFamily: Fonts.sansMedium,
     fontSize: 13,
     lineHeight: 18,

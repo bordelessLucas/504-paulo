@@ -1,7 +1,13 @@
+import {
+  applyColaboradorScopeToQuery,
+  resolveColaboradorScope,
+  shouldListAllColaboradores,
+} from '@/features/avaliacao/colaborador-scope';
 import type { ColaboradorAtivo } from '@/features/aprovacoes/api';
 import { getDataLimiteIncidentes } from '@/features/colaborador/eligibility';
 import { isElegivelParaReajuste } from '@/features/reajuste/eligibility';
 import { supabase } from '@/lib/supabase';
+import type { UserRole } from '@/types/supabase';
 
 export type ColaboradorReajusteResumo = ColaboradorAtivo & {
   media: number | null;
@@ -40,13 +46,24 @@ async function fetchColaboradoresComIncidentesRecentes(
   return new Set((data ?? []).map((item) => item.colaborador_id));
 }
 
-export async function fetchColaboradoresReajusteResumo(): Promise<ColaboradorReajusteResumo[]> {
-  const { data: colaboradores, error: colaboradoresError } = await supabase
+export async function fetchColaboradoresReajusteResumo(
+  solicitanteId: string,
+  role?: UserRole | null,
+): Promise<ColaboradorReajusteResumo[]> {
+  const scope = shouldListAllColaboradores(role)
+    ? { departamento: null, liderId: null, restrictToDepartamento: false, restrictToLideranca: false }
+    : await resolveColaboradorScope(solicitanteId, role);
+
+  let colaboradoresQuery = supabase
     .from('profiles')
     .select('id, nome, departamento, funcao')
     .eq('role', 'colaborador')
     .eq('status', 'ativo')
     .order('nome', { ascending: true });
+
+  colaboradoresQuery = applyColaboradorScopeToQuery(colaboradoresQuery, scope);
+
+  const { data: colaboradores, error: colaboradoresError } = await colaboradoresQuery;
 
   if (colaboradoresError) {
     throw new Error(colaboradoresError.message);

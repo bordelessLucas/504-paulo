@@ -62,6 +62,7 @@ export type Database = {
           nivel_irata: string | null;
           data_admissao: string | null;
           departamento: string | null;
+          lider_id: string | null;
           ddd: string | null;
           telefone: string | null;
           expertise: string | null;
@@ -82,6 +83,7 @@ export type Database = {
           nivel_irata?: string | null;
           data_admissao?: string | null;
           departamento?: string | null;
+          lider_id?: string | null;
           ddd?: string | null;
           telefone?: string | null;
           expertise?: string | null;
@@ -102,6 +104,7 @@ export type Database = {
           nivel_irata?: string | null;
           data_admissao?: string | null;
           departamento?: string | null;
+          lider_id?: string | null;
           ddd?: string | null;
           telefone?: string | null;
           expertise?: string | null;
@@ -516,9 +519,9 @@ export function isPainelAnualEstrategicoRole(role?: UserRole | null): boolean {
   return role === "rh" || role === "ceo" || role === "gerente" || role === "admin";
 }
 
-/** Somente RH e CEO registram o veredito financeiro anual. */
+/** Somente RH, CEO e Admin registram o veredito financeiro anual. */
 export function canRegistrarDecisaoAnualRole(role?: UserRole | null): boolean {
-  return isRhRole(role) || role === "ceo";
+  return isRhRole(role) || role === "ceo" || role === "admin";
 }
 
 export const TIPO_BENEFICIO_ANUAL_OPTIONS: readonly TipoBeneficioAnual[] = [

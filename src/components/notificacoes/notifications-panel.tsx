@@ -15,8 +15,11 @@ import { Button } from '@/components/ui/button';
 import { getModalOverlayStyle, modalSheetStyles } from '@/constants/modal';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import type { Notificacao } from '@/features/notificacoes/types';
+import { resolveNotificationTab } from '@/features/notificacoes/resolve-notification-tab';
 import { TIPO_NOTIFICACAO_ICON } from '@/features/notificacoes/types';
 import { useNotifications } from '@/features/notificacoes/notifications-context';
+import { useAuthRole } from '@/hooks/use-auth-role';
+import { useAppNavigation } from '@/navigation/app-navigation-context';
 import { useTheme } from '@/hooks/use-theme';
 
 function formatNotificationDate(isoDate: string): string {
@@ -73,6 +76,8 @@ function NotificationItem({
 export function NotificationsPanel() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { role } = useAuthRole();
+  const { navigateToTab } = useAppNavigation();
   const {
     notifications,
     unreadCount,
@@ -93,8 +98,14 @@ export function NotificationsPanel() {
       if (!notification.lida) {
         await markAsRead(notification.id);
       }
+
+      const targetTab = resolveNotificationTab(notification.tipo, role);
+
+      if (targetTab && navigateToTab(targetTab)) {
+        closePanel();
+      }
     },
-    [markAsRead],
+    [closePanel, markAsRead, navigateToTab, role],
   );
 
   return (

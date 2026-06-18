@@ -1,12 +1,28 @@
+import { AVALIACAO_DATA_COLUMN } from '@/features/avaliacao/avaliacao-date';
 import { hasIncidentesRecentes } from '@/features/incidentes/api';
+import { fetchSolicitacoesColaborador, type SolicitacaoColaborador } from '@/features/colaborador/solicitacoes-api';
+import { calcularTempoEmpresa } from '@/features/colaborador/tempo-empresa';
+import { getSemaforoPorMedia, type SemaforoStatus } from '@/features/gerencial/semaforo';
 import { supabase } from '@/lib/supabase';
+import type { StatusValidacaoEnum, TipoAvaliacaoEnum } from '@/types/supabase';
+
+export type AvaliacaoEmAnalise = {
+  id: string;
+  tipo: TipoAvaliacaoEnum;
+  status: StatusValidacaoEnum;
+  createdAt: string;
+};
 
 export type ColaboradorDashboardData = {
   mediaGeral: number | null;
   totalRespostas: number;
+  semaforoStatus: SemaforoStatus;
   feedbacks: FeedbackColaborador[];
   dataAdmissao: string | null;
+  tempoEmpresaLabel: string | null;
   temIncidentesRecentes: boolean;
+  solicitacoes: SolicitacaoColaborador[];
+  avaliacoesEmAnalise: AvaliacaoEmAnalise[];
 };
 
 export type FeedbackColaborador = {
@@ -56,11 +72,20 @@ export async function fetchColaboradorDashboard(userId: string): Promise<Colabor
   const [
     { data: profile, error: profileError },
     { data: avaliacoes, error: avaliacoesError },
+    { data: avaliacoesPendentes, error: pendentesError },
     temIncidentesRecentes,
+    solicitacoes,
   ] = await Promise.all([
     supabase.from('profiles').select('data_admissao').eq('id', userId).single(),
     supabase.from('avaliacoes_masked').select('id').eq('avaliado_id', userId),
+    supabase
+      .from('avaliacoes')
+      .select(`id, tipo, status, ${AVALIACAO_DATA_COLUMN}`)
+      .eq('avaliado_id', userId)
+      .in('status', ['pendente_rh', 'pendente_ceo'])
+      .order(AVALIACAO_DATA_COLUMN, { ascending: false }),
     hasIncidentesRecentes(userId),
+    fetchSolicitacoesColaborador(userId),
   ]);
 
   if (profileError) {
@@ -71,15 +96,31 @@ export async function fetchColaboradorDashboard(userId: string): Promise<Colabor
     throw new Error(avaliacoesError.message);
   }
 
+  if (pendentesError) {
+    throw new Error(pendentesError.message);
+  }
+
+  const tempoEmpresa = calcularTempoEmpresa(profile.data_admissao);
+  const avaliacoesEmAnalise: AvaliacaoEmAnalise[] = (avaliacoesPendentes ?? []).map((row) => ({
+    id: row.id,
+    tipo: row.tipo,
+    status: row.status,
+    createdAt: row.created_at,
+  }));
+
   const avaliacaoIds = (avaliacoes ?? []).map((avaliacao) => avaliacao.id);
 
   if (avaliacaoIds.length === 0) {
     return {
       mediaGeral: null,
       totalRespostas: 0,
+      semaforoStatus: 'cinza',
       feedbacks: [],
       dataAdmissao: profile.data_admissao,
+      tempoEmpresaLabel: tempoEmpresa?.label ?? null,
       temIncidentesRecentes,
+      solicitacoes,
+      avaliacoesEmAnalise,
     };
   }
 
@@ -103,9 +144,13 @@ export async function fetchColaboradorDashboard(userId: string): Promise<Colabor
   return {
     mediaGeral,
     totalRespostas: notas.length,
+    semaforoStatus: getSemaforoPorMedia(mediaGeral),
     feedbacks: buildFeedbacksFromRespostas(listaRespostas),
     dataAdmissao: profile.data_admissao,
+    tempoEmpresaLabel: tempoEmpresa?.label ?? null,
     temIncidentesRecentes,
+    solicitacoes,
+    avaliacoesEmAnalise,
   };
 }
 

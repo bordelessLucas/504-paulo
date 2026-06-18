@@ -21,7 +21,6 @@ import { useToast } from '@/components/ui/toast';
 import { SPLIT_LAYOUT_MIN_WIDTH } from '@/constants/layout';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import type { AvaliacaoHistoricoItem } from '@/features/avaliacao/historico-api';
-import { isCeoApprovalRole } from '@/features/aprovacoes/approval-roles';
 import { useAuth } from '@/features/auth/auth-context';
 import {
   fetchColaboradorAnualDetalhe,
@@ -34,18 +33,19 @@ import {
 import { useAuthRole } from '@/hooks/use-auth-role';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
-import { isPainelAnualEstrategicoRole, type TipoBeneficioAnual } from '@/types/supabase';
+import { canRegistrarDecisaoAnualRole, isPainelAnualEstrategicoRole, isGerenteRole, type TipoBeneficioAnual } from '@/types/supabase';
 
 export function PainelAnualEstrategicoScreen() {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const { user } = useAuth();
-  const { role, isRh, isLoading: isRoleLoading } = useAuthRole();
+  const { role, isLoading: isRoleLoading } = useAuthRole();
   const { showToast } = useToast();
 
   const anoReferencia = new Date().getFullYear();
   const canAccess = isPainelAnualEstrategicoRole(role);
-  const canRegistrarDecisao = isRh || isCeoApprovalRole(role);
+  const canRegistrarDecisao = canRegistrarDecisaoAnualRole(role);
+  const isGerenteSomenteLeitura = isGerenteRole(role);
   const { scrollPaddingBottom } = useTabScreenLayout();
   const isSplitLayout = width >= SPLIT_LAYOUT_MIN_WIDTH;
 
@@ -246,6 +246,18 @@ export function PainelAnualEstrategicoScreen() {
               Consolidação {anoReferencia} · histórico, médias e veredito financeiro (PLR,
               bonificação, reajuste).
             </ThemedText>
+
+            {isGerenteSomenteLeitura ? (
+              <View
+                style={[
+                  styles.readOnlyBanner,
+                  { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+                ]}>
+                <ThemedText themeColor="textSecondary" style={styles.readOnlyText}>
+                  Modo consulta: o veredito financeiro anual é registrado pelo RH e pelo CEO.
+                </ThemedText>
+              </View>
+            ) : null}
           </View>
 
           {isLoadingList ? (
@@ -345,9 +357,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
     gap: Spacing.three,
-    maxWidth: MaxContentWidth + 520,
     width: '100%',
-    alignSelf: 'center',
   },
   header: {
     gap: Spacing.one,
@@ -362,12 +372,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  readOnlyBanner: {
+    borderWidth: 1,
+    borderRadius: Radius.sm,
+    padding: Spacing.three,
+    marginTop: Spacing.two,
+  },
+  readOnlyText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
   scrollContent: {
     paddingHorizontal: Spacing.four,
     gap: Spacing.four,
-    maxWidth: MaxContentWidth,
     width: '100%',
-    alignSelf: 'center',
   },
   splitRow: {
     flex: 1,

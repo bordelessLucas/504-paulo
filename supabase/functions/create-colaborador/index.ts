@@ -48,6 +48,7 @@ type CreateColaboradorBody = {
   nome?: string;
   funcao?: string;
   departamento?: string;
+  lider_id?: string;
   classificacao?: string;
   nivel_irata?: string;
   data_nascimento?: string;
@@ -271,6 +272,7 @@ Deno.serve(async (request) => {
         nome,
         funcao: body.funcao?.trim() || null,
         departamento: body.departamento?.trim() || null,
+        lider_id: body.lider_id?.trim() || null,
         classificacao: body.classificacao?.trim() || null,
         nivel_irata: nivelIrata,
         data_nascimento: body.data_nascimento?.trim() || null,

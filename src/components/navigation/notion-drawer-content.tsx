@@ -16,6 +16,7 @@ import { useTheme } from '@/hooks/use-theme';
 type NotionDrawerContentProps = DrawerContentComponentProps & {
   user: AuthUser;
   role: UserRole;
+  pendingApprovalCount?: number;
   onSignOut: () => void;
 };
 
@@ -24,6 +25,7 @@ export function NotionDrawerContent({
   navigation,
   user,
   role,
+  pendingApprovalCount = 0,
   onSignOut,
 }: NotionDrawerContentProps) {
   const theme = useTheme();
@@ -49,6 +51,7 @@ export function NotionDrawerContent({
         {menuItems.map((item) => {
           const isActive = activeRoute === item.name;
           const label = getTabLabelForRole(item.name, role);
+          const badgeCount = item.name === 'Aprovacoes' ? pendingApprovalCount : 0;
 
           return (
             <Pressable
@@ -74,6 +77,11 @@ export function NotionDrawerContent({
                 ]}>
                 {label}
               </ThemedText>
+              {badgeCount > 0 ? (
+                <View style={[styles.badge, { backgroundColor: theme.danger }]}>
+                  <ThemedText style={styles.badgeText}>{badgeCount}</ThemedText>
+                </View>
+              ) : null}
             </Pressable>
           );
         })}
@@ -124,6 +132,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two + 2,
     borderRadius: Radius.md,
+  },
+  badge: {
+    marginLeft: 'auto',
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 11,
+    lineHeight: 14,
   },
   menuLabel: {
     fontFamily: Fonts.sansMedium,

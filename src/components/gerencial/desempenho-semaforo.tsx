@@ -8,9 +8,14 @@ import { useTheme } from '@/hooks/use-theme';
 type DesempenhoSemaforoProps = {
   status: SemaforoStatus;
   mediaEmpresa: number | null;
+  scopeLabel?: string;
 };
 
-export function DesempenhoSemaforo({ status, mediaEmpresa }: DesempenhoSemaforoProps) {
+export function DesempenhoSemaforo({
+  status,
+  mediaEmpresa,
+  scopeLabel = 'Status atual da empresa',
+}: DesempenhoSemaforoProps) {
   const theme = useTheme();
   const ativo = getSemaforoItem(status);
 
@@ -51,7 +56,7 @@ export function DesempenhoSemaforo({ status, mediaEmpresa }: DesempenhoSemaforoP
           { backgroundColor: theme.background, borderColor: theme.border },
         ]}>
         <ThemedText themeColor="textSecondary" style={styles.summaryLabel}>
-          Status atual da empresa
+          {scopeLabel}
         </ThemedText>
         <ThemedText type="subtitle">{ativo.label}</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.summaryMeta}>

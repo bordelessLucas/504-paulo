@@ -4,6 +4,11 @@ import {
   type AvaliacaoComData,
 } from '@/features/avaliacao/avaliacao-date';
 import {
+  applyColaboradorScopeToQuery,
+  resolveColaboradorScope,
+  shouldListAllColaboradores,
+} from '@/features/avaliacao/colaborador-scope';
+import {
   getCicloInicioPorTipo,
   getQuinzenaStartDate,
   SECAO_PERGUNTAS_UNIVERSAIS,
@@ -79,18 +84,25 @@ export async function fetchPerguntasUniversais(): Promise<PerguntaAvaliacao[]> {
 export async function fetchColaboradoresPage(
   avaliadorId: string,
   page: number,
+  role?: UserRole | null,
 ): Promise<ColaboradoresPage> {
   const from = page * COLABORADORES_PAGE_SIZE;
   const to = from + COLABORADORES_PAGE_SIZE - 1;
+  const scope = shouldListAllColaboradores(role)
+    ? { departamento: null, liderId: null, restrictToDepartamento: false, restrictToLideranca: false }
+    : await resolveColaboradorScope(avaliadorId, role);
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('profiles')
     .select('id, nome, departamento, funcao', { count: 'exact' })
     .eq('role', 'colaborador')
     .eq('status', 'ativo')
     .neq('id', avaliadorId)
-    .order('nome', { ascending: true })
-    .range(from, to);
+    .order('nome', { ascending: true });
+
+  query = applyColaboradorScopeToQuery(query, scope);
+
+  const { data, error, count } = await query.range(from, to);
 
   if (error) {
     throw new Error(error.message);
@@ -107,16 +119,24 @@ export async function fetchColaboradoresPage(
 export async function fetchColaboradoresAvaliacaoExecutive(
   avaliadorId: string,
   tipo: TipoAvaliacao = 'quinzenal',
+  role?: UserRole | null,
 ): Promise<ColaboradoresAvaliacaoExecutive> {
   const cicloInicio = getCicloInicioPorTipo(tipo);
+  const scope = shouldListAllColaboradores(role)
+    ? { departamento: null, liderId: null, restrictToDepartamento: false, restrictToLideranca: false }
+    : await resolveColaboradorScope(avaliadorId, role);
 
-  const { data: colaboradores, error: colaboradoresError } = await supabase
+  let colaboradoresQuery = supabase
     .from('profiles')
     .select('id, nome, departamento, funcao')
     .eq('role', 'colaborador')
     .eq('status', 'ativo')
     .neq('id', avaliadorId)
     .order('nome', { ascending: true });
+
+  colaboradoresQuery = applyColaboradorScopeToQuery(colaboradoresQuery, scope);
+
+  const { data: colaboradores, error: colaboradoresError } = await colaboradoresQuery;
 
   if (colaboradoresError) {
     throw new Error(colaboradoresError.message);
@@ -176,7 +196,7 @@ export async function fetchEquipeStatusCiclo(
   role: UserRole | null | undefined,
 ): Promise<EquipeQuinzenaData> {
   const tipo: TipoAvaliacao = role === 'gestor' || role === 'gerente' ? 'semestral' : 'quinzenal';
-  const executive = await fetchColaboradoresAvaliacaoExecutive(avaliadorId, tipo);
+  const executive = await fetchColaboradoresAvaliacaoExecutive(avaliadorId, tipo, role);
 
   const colaboradores: ColaboradorEquipeStatus[] = [
     ...executive.concluidas.map((colaborador) => ({

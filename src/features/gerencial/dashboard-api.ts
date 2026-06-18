@@ -9,6 +9,19 @@ import { getSemaforoPorMedia, type SemaforoStatus } from '@/features/gerencial/s
 import { supabase } from '@/lib/supabase';
 import type { Profile, TipoAvaliacao, UserRole } from '@/types/supabase';
 
+export {
+  buildPeriodoAnoCorrente,
+  buildPeriodoUltimosMeses,
+  fetchColaboradorFicha,
+  fetchColaboradoresAtivosExportacao,
+  fetchDepartamentosAtivos,
+  fetchFichasLote,
+  type ColaboradorExportacaoResumo,
+  type ColaboradorFichaData,
+  type FichaExportOptions,
+  type MelhoriaSalarialHistorico,
+} from '@/features/gerencial/ficha-colaborador-api';
+
 export type ColaboradorRanking = {
   id: string;
   nome: string;
@@ -342,77 +355,3 @@ export async function fetchGerencialDashboard(): Promise<GerencialDashboardData>
     bottom5: [...rankings].reverse().slice(0, 5),
   };
 }
-
-export async function fetchColaboradorFicha(colaboradorId: string) {
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, nome, departamento, funcao, data_admissao, classificacao, nivel_irata, status')
-    .eq('id', colaboradorId)
-    .single();
-
-  if (profileError) {
-    throw new Error(profileError.message);
-  }
-
-  const { data: avaliacoes, error: avaliacoesError } = await supabase
-    .from('avaliacoes')
-    .select(`id, tipo, ${AVALIACAO_DATA_COLUMN}`)
-    .eq('avaliado_id', colaboradorId)
-    .eq('status', 'aprovada')
-    .order(AVALIACAO_DATA_COLUMN, { ascending: false });
-
-  if (avaliacoesError) {
-    throw new Error(avaliacoesError.message);
-  }
-
-  const avaliacaoIds = (avaliacoes ?? []).map((avaliacao) => avaliacao.id);
-  let respostas: Array<{
-    nota: number | null;
-    justificativa: string | null;
-    evidencia: string | null;
-    created_at: string;
-  }> = [];
-
-  if (avaliacaoIds.length > 0) {
-    const { data, error } = await supabase
-      .from('respostas')
-      .select('nota, justificativa, evidencia, created_at')
-      .in('avaliacao_id', avaliacaoIds);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    respostas = data ?? [];
-  }
-
-  const notas = respostas
-    .map((resposta) => resposta.nota)
-    .filter((nota): nota is number => typeof nota === 'number');
-
-  return {
-    profile,
-    mediaGeral: calcularMedia(notas),
-    totalRespostas: notas.length,
-    feedbacks: respostas
-      .flatMap((resposta) => {
-        const items: string[] = [];
-        const justificativa = resposta.justificativa?.trim();
-        const evidencia = resposta.evidencia?.trim();
-
-        if (justificativa) {
-          items.push(justificativa);
-        }
-
-        if (evidencia && evidencia !== '[Melhorou na avaliação seguinte]') {
-          items.push(evidencia);
-        }
-
-        return items;
-      })
-      .slice(0, 8),
-    avaliacoes: avaliacoes ?? [],
-  };
-}
-
-export type ColaboradorFichaData = Awaited<ReturnType<typeof fetchColaboradorFicha>>;
