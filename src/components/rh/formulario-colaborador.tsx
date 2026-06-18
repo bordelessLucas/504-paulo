@@ -53,6 +53,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canCreate = isAdminDashboardRole(role);
+  const inputVariant = embedded ? 'soft' as const : 'default' as const;
 
   const updateField = useCallback(
     <K extends keyof CreateColaboradorInput>(field: K, value: CreateColaboradorInput[K]) => {
@@ -109,7 +110,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
       style={
         embedded
           ? styles.embedded
-          : [styles.container, { backgroundColor: theme.background, borderColor: '#F0F0F0' }]
+          : [styles.container, { backgroundColor: theme.background, borderColor: theme.border }]
       }>
       {!embedded ? (
         <View style={styles.header}>
@@ -120,7 +121,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
         </View>
       ) : null}
 
-      <FormSection title="Dados pessoais">
+      <FormSection embedded={embedded} title="Dados pessoais">
         <Input
           autoCapitalize="none"
           autoComplete="email"
@@ -130,6 +131,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           onChangeText={(value) => updateField('email', value)}
           placeholder="nome@empresa.com"
           value={form.email}
+          variant={inputVariant}
         />
         <Input
           autoComplete="name"
@@ -138,6 +140,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           onChangeText={(value) => updateField('nome', value)}
           placeholder="Nome do colaborador"
           value={form.nome}
+          variant={inputVariant}
         />
         <Input
           error={errors.data_nascimento}
@@ -145,6 +148,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           onChangeText={(value) => updateField('data_nascimento', value)}
           placeholder="DD/MM/AAAA"
           value={form.data_nascimento ?? ''}
+          variant={inputVariant}
         />
         <View style={styles.row}>
           <View style={styles.half}>
@@ -156,6 +160,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
               onChangeText={(value) => updateField('ddd', value)}
               placeholder="21"
               value={form.ddd ?? ''}
+              variant={inputVariant}
             />
           </View>
           <View style={styles.half}>
@@ -166,6 +171,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
               onChangeText={(value) => updateField('telefone', value)}
               placeholder="999999999"
               value={form.telefone ?? ''}
+              variant={inputVariant}
             />
           </View>
         </View>
@@ -177,16 +183,18 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           placeholder="Gerada automaticamente se vazio"
           secureTextEntry
           value={form.senha_temporaria ?? ''}
+          variant={inputVariant}
         />
       </FormSection>
 
-      <FormSection title="Dados contratuais">
+      <FormSection embedded={embedded} title="Dados contratuais">
         <Input
           error={errors.funcao}
           label="Função / cargo"
           onChangeText={(value) => updateField('funcao', value)}
           placeholder="Ex.: Operador de Rope Access"
           value={form.funcao ?? ''}
+          variant={inputVariant}
         />
         <Input
           error={errors.departamento}
@@ -194,6 +202,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           onChangeText={(value) => updateField('departamento', value)}
           placeholder="Ex.: Operações Bordo"
           value={form.departamento ?? ''}
+          variant={inputVariant}
         />
         <Input
           error={errors.classificacao}
@@ -201,6 +210,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           onChangeText={(value) => updateField('classificacao', value)}
           placeholder="Ex.: Offshore Pleno"
           value={form.classificacao ?? ''}
+          variant={inputVariant}
         />
         <Input
           error={errors.data_admissao}
@@ -208,6 +218,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           onChangeText={(value) => updateField('data_admissao', value)}
           placeholder="DD/MM/AAAA"
           value={form.data_admissao ?? ''}
+          variant={inputVariant}
         />
         <View style={styles.fieldGroup}>
           <ThemedText style={styles.fieldLabel}>Status</ThemedText>
@@ -225,7 +236,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
         </View>
       </FormSection>
 
-      <FormSection title="Certificações e competências">
+      <FormSection embedded={embedded} title="Certificações e competências">
         <View style={styles.fieldGroup}>
           <ThemedText style={styles.fieldLabel}>Nível IRATA</ThemedText>
           <OptionChips
@@ -245,6 +256,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           onChangeText={(value) => updateField('expertise', value)}
           placeholder="Ex.: Trabalho em altura, resgate"
           value={form.expertise ?? ''}
+          variant={inputVariant}
         />
         <Input
           error={errors.formacao_tecnica}
@@ -252,6 +264,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           onChangeText={(value) => updateField('formacao_tecnica', value)}
           placeholder="Ex.: Técnico em Segurança do Trabalho"
           value={form.formacao_tecnica ?? ''}
+          variant={inputVariant}
         />
         <NotionCheckbox
           checked={Boolean(form.certificacao_edn)}

@@ -11,3 +11,6 @@ export const TAB_FOOTER_EXTRA_PADDING = Spacing.two;
 
 /** Largura mínima para painéis master-detail (lista + detalhe lado a lado). */
 export const SPLIT_LAYOUT_MIN_WIDTH = 768;
+
+/** Largura da sidebar fixa no layout desktop. */
+export const DESKTOP_SIDEBAR_WIDTH = 260;

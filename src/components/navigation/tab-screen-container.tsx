@@ -11,6 +11,7 @@ import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 
 type TabScreenContainerProps = {
@@ -30,17 +31,20 @@ export function TabScreenContainer({
   scrollable = false,
   keyboardShouldPersistTaps = 'handled',
   contentContainerStyle,
-  maxContentWidth = MaxContentWidth + 360,
+  maxContentWidth,
   withHorizontalPadding = true,
   refreshControl,
 }: TabScreenContainerProps) {
   const { scrollPaddingBottom } = useTabScreenLayout();
+  const isDesktopLayout = useIsDesktopLayout();
+  const resolvedMaxWidth =
+    maxContentWidth ?? (isDesktopLayout ? 0 : MaxContentWidth + 360);
 
   const paddedContentStyle = [
     withHorizontalPadding && styles.horizontalPadding,
     scrollable && { paddingBottom: scrollPaddingBottom },
-    maxContentWidth > 0 && styles.centeredContent,
-    maxContentWidth > 0 && { maxWidth: maxContentWidth },
+    resolvedMaxWidth > 0 && styles.centeredContent,
+    resolvedMaxWidth > 0 && { maxWidth: resolvedMaxWidth },
     contentContainerStyle,
   ];
 

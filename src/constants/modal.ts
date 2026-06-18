@@ -1,11 +1,15 @@
 import { StyleSheet } from 'react-native';
 
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 
-type Theme = (typeof Colors)['light'] | (typeof Colors)['dark'];
+export const MODAL_BACKDROP = 'rgba(0, 0, 0, 0.65)';
+export const MODAL_SURFACE_LIGHT = '#FFFFFF';
+export const MODAL_SURFACE_DARK = '#1E1E1E';
+export const MODAL_SHEET_RADIUS = 16;
 
-export function getModalOverlayStyle(theme: Theme) {
-  return { backgroundColor: theme.overlay };
+/** @deprecated Use BaseModal — mantido para NotificationsPanel até migração completa */
+export function getModalOverlayStyle() {
+  return { backgroundColor: MODAL_BACKDROP };
 }
 
 export const modalSheetStyles = StyleSheet.create({
@@ -13,8 +17,8 @@ export const modalSheetStyles = StyleSheet.create({
     width: '100%',
   },
   sheet: {
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     borderWidth: 1,
     maxHeight: '92%',
     overflow: 'hidden',

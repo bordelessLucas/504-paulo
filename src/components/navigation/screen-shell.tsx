@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { ThemedText } from '@/components/themed-text';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type ScreenShellProps = {
@@ -15,7 +15,7 @@ export function ScreenShell({ title, description, children }: ScreenShellProps) 
   const theme = useTheme();
 
   return (
-    <TabScreenContainer maxContentWidth={MaxContentWidth + 360}>
+    <TabScreenContainer>
       <View style={styles.content}>
         <View style={styles.header}>
           <ThemedText type="heading">{title}</ThemedText>

@@ -17,7 +17,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
-import { Fonts, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Fonts, Radius, Spacing } from '@/constants/theme';
 import {
   fetchColaboradorFicha,
   fetchGerencialDashboard,
@@ -25,6 +25,7 @@ import {
   type GerencialDashboardData,
 } from '@/features/gerencial/dashboard-api';
 import { exportColaboradorFichaPdf } from '@/features/gerencial/export-ficha-pdf';
+import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -60,6 +61,7 @@ function DashboardCard({
 
 export function DashboardsGerenciaisScreen() {
   const { showToast } = useToast();
+  const isDesktopLayout = useIsDesktopLayout();
   const [data, setData] = useState<GerencialDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -141,7 +143,11 @@ export function DashboardsGerenciaisScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: scrollPaddingBottom }]}
+          contentContainerStyle={[
+            styles.content,
+            isDesktopLayout && styles.contentDesktop,
+            { paddingBottom: scrollPaddingBottom },
+          ]}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -157,6 +163,8 @@ export function DashboardsGerenciaisScreen() {
             </ThemedText>
           </View>
 
+          <View style={[styles.cardsGrid, isDesktopLayout && styles.cardsGridDesktop]}>
+            <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
           <DashboardCard
             title="Radar de desempenho"
             description="Média geral da empresa nas 3 perguntas universais da metodologia 360°.">
@@ -165,19 +173,25 @@ export function DashboardsGerenciaisScreen() {
               valores={data?.radarUniversal.valores ?? []}
             />
           </DashboardCard>
+            </View>
 
+            <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
           <DashboardCard
             title="Velocímetro IMA"
             description="Média global de performance dos colaboradores ativos, com faixas do semáforo na escala 0 a 3.">
             <ImaGaugeChart ima={data?.ima ?? null} />
           </DashboardCard>
+            </View>
 
+            <View style={isDesktopLayout ? styles.cardSlotDesktopWide : undefined}>
           <DashboardCard
             title="Status de preenchimento"
             description="Acompanhamento das avaliações pendentes por supervisor (quinzena) e gestor (semestre), por departamento.">
             <StatusPreenchimentoList items={data?.statusPreenchimento ?? []} />
           </DashboardCard>
+            </View>
 
+            <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
           <DashboardCard
             title="Top 5 colaboradores"
             description="Colaboradores com melhor média geral no período.">
@@ -188,7 +202,9 @@ export function DashboardsGerenciaisScreen() {
               onExport={(colaborador) => void handleExportFicha(colaborador)}
             />
           </DashboardCard>
+            </View>
 
+            <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
           <DashboardCard
             title="Bottom 5 colaboradores"
             description="Colaboradores com menor média geral — útil para planos de melhoria.">
@@ -199,6 +215,8 @@ export function DashboardsGerenciaisScreen() {
               onExport={(colaborador) => void handleExportFicha(colaborador)}
             />
           </DashboardCard>
+            </View>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -216,9 +234,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.four,
     gap: Spacing.four,
-    maxWidth: MaxContentWidth + 200,
     width: '100%',
-    alignSelf: 'center',
+  },
+  contentDesktop: {
+    alignSelf: 'stretch',
+  },
+  cardsGrid: {
+    gap: Spacing.four,
+  },
+  cardsGridDesktop: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'stretch',
   },
   header: {
     gap: Spacing.two,
@@ -232,6 +259,17 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
     padding: Spacing.four,
     gap: Spacing.three,
+    flex: 1,
+  },
+  cardSlotDesktop: {
+    flexGrow: 1,
+    flexBasis: '48%',
+    minWidth: 360,
+  },
+  cardSlotDesktopWide: {
+    flexGrow: 1,
+    flexBasis: '100%',
+    minWidth: 360,
   },
   cardHeader: {
     gap: Spacing.one,

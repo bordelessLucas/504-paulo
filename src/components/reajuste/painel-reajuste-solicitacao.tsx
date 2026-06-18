@@ -1,20 +1,10 @@
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { BloqueioDeveresHint } from '@/components/colaborador/bloqueio-deveres-hint';
 import { TipoSolicitacaoSelect } from '@/components/reajuste/tipo-solicitacao-select';
 import { ThemedText } from '@/components/themed-text';
 import { ActionButton } from '@/components/ui/action-button';
-import { getModalOverlayStyle, modalSheetStyles } from '@/constants/modal';
+import { BaseModal, getModalTextAreaStyle } from '@/components/ui/BaseModal';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { formatMediaGeral } from '@/features/aprovacoes/api';
 import type { ColaboradorReajusteResumo } from '@/features/reajuste/api';
@@ -134,15 +124,7 @@ export function PainelReajusteSolicitacao({
                   multiline
                   placeholder="Descreva os motivos, resultados e benefícios esperados..."
                   placeholderTextColor={theme.placeholder}
-                  style={[
-                    styles.textArea,
-                    {
-                      color: theme.text,
-                      backgroundColor: theme.inputBackground,
-                      borderColor: theme.border,
-                    },
-                  ]}
-                  textAlignVertical="top"
+                  style={getModalTextAreaStyle(theme)}
                   value={justificativa}
                   onChangeText={onJustificativaChange}
                 />
@@ -174,8 +156,9 @@ export function PainelReajusteSolicitacao({
   );
 }
 
-type PainelReajusteSolicitacaoModalProps = PainelReajusteSolicitacaoProps & {
+type PainelReajusteSolicitacaoModalProps = Omit<PainelReajusteSolicitacaoProps, 'onClose'> & {
   visible: boolean;
+  onClose: () => void;
 };
 
 export function PainelReajusteSolicitacaoModal({
@@ -183,36 +166,10 @@ export function PainelReajusteSolicitacaoModal({
   onClose,
   ...solicitacaoProps
 }: PainelReajusteSolicitacaoModalProps) {
-  const theme = useTheme();
-
   return (
-    <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
-      <Pressable style={[styles.modalOverlay, getModalOverlayStyle(theme)]} onPress={onClose}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={modalSheetStyles.keyboard}>
-          <Pressable
-            style={[
-              modalSheetStyles.sheet,
-              { backgroundColor: theme.background, borderColor: theme.border },
-            ]}
-            onPress={(event) => event.stopPropagation()}>
-            <View style={[modalSheetStyles.handle, { backgroundColor: theme.border }]} />
-            <ScrollView
-              bounces={false}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={modalSheetStyles.scrollContent}>
-              <PainelReajusteSolicitacao
-                {...solicitacaoProps}
-                onClose={onClose}
-                showCloseAction
-              />
-            </ScrollView>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </Pressable>
-    </Modal>
+    <BaseModal variant="sheet" visible={visible} onClose={onClose}>
+      <PainelReajusteSolicitacao {...solicitacaoProps} onClose={onClose} showCloseAction />
+    </BaseModal>
   );
 }
 
@@ -276,16 +233,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  textArea: {
-    minHeight: 140,
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontFamily: Fonts.sans,
-    fontSize: 15,
-    lineHeight: 22,
-  },
   charHint: {
     fontSize: 12,
     lineHeight: 16,
@@ -294,9 +241,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
   },
 });

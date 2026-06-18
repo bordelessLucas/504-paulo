@@ -8,41 +8,50 @@ import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useNotifications } from '@/features/notificacoes/notifications-context';
 import { useTheme } from '@/hooks/use-theme';
 
-export function NotificationBell() {
+type NotificationBellButtonProps = {
+  compact?: boolean;
+};
+
+export function NotificationBellButton({ compact = false }: NotificationBellButtonProps) {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const { unreadCount, openPanel } = useNotifications();
 
   const badgeLabel = unreadCount > 99 ? '99+' : String(unreadCount);
 
   return (
+    <Pressable
+      accessibilityLabel={
+        unreadCount > 0 ? `Abrir alertas, ${unreadCount} não lidos` : 'Abrir alertas'
+      }
+      accessibilityRole="button"
+      onPress={openPanel}
+      style={({ pressed }) => [
+        compact ? styles.compactButton : styles.button,
+        {
+          backgroundColor: theme.background,
+          borderColor: theme.border,
+          shadowColor: theme.text,
+        },
+        pressed && styles.pressed,
+      ]}>
+      <Ionicons color={theme.text} name="notifications-outline" size={compact ? 18 : 22} />
+
+      {unreadCount > 0 ? (
+        <View style={[styles.badge, { backgroundColor: theme.danger }]}>
+          <ThemedText style={styles.badgeText}>{badgeLabel}</ThemedText>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
+export function NotificationBell() {
+  const insets = useSafeAreaInsets();
+
+  return (
     <>
       <View pointerEvents="box-none" style={[styles.container, { top: insets.top + Spacing.two }]}>
-        <Pressable
-          accessibilityLabel={
-            unreadCount > 0
-              ? `Abrir alertas, ${unreadCount} não lidos`
-              : 'Abrir alertas'
-          }
-          accessibilityRole="button"
-          onPress={openPanel}
-          style={({ pressed }) => [
-            styles.button,
-            {
-              backgroundColor: theme.background,
-              borderColor: theme.border,
-              shadowColor: theme.text,
-            },
-            pressed && styles.pressed,
-          ]}>
-          <Ionicons color={theme.text} name="notifications-outline" size={22} />
-
-          {unreadCount > 0 ? (
-            <View style={[styles.badge, { backgroundColor: theme.danger }]}>
-              <ThemedText style={styles.badgeText}>{badgeLabel}</ThemedText>
-            </View>
-          ) : null}
-        </Pressable>
+        <NotificationBellButton />
       </View>
 
       <NotificationsPanel />
@@ -67,6 +76,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+  },
+  compactButton: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   badge: {
     position: 'absolute',

@@ -1,13 +1,4 @@
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ColaboradorHistoricoPanel } from '@/components/anual/colaborador-historico-panel';
 import {
@@ -15,7 +6,7 @@ import {
   VereditoAnualRegistrado,
 } from '@/components/anual/veredito-anual-form';
 import { ThemedText } from '@/components/themed-text';
-import { getModalOverlayStyle, modalSheetStyles } from '@/constants/modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Spacing } from '@/constants/theme';
 import type { AvaliacaoHistoricoItem } from '@/features/avaliacao/historico-api';
 import {
@@ -23,7 +14,6 @@ import {
   type DecisaoAnualExistente,
   type MediasAnuaisColaborador,
 } from '@/features/estrategico/api';
-import { useTheme } from '@/hooks/use-theme';
 import type { TipoBeneficioAnual } from '@/types/supabase';
 
 type PainelAnualDetalheColaboradorProps = {
@@ -108,8 +98,9 @@ export function PainelAnualDetalheColaborador({
   );
 }
 
-type PainelAnualDetalheModalProps = PainelAnualDetalheColaboradorProps & {
+type PainelAnualDetalheModalProps = Omit<PainelAnualDetalheColaboradorProps, 'onClose'> & {
   visible: boolean;
+  onClose: () => void;
 };
 
 export function PainelAnualDetalheModal({
@@ -117,36 +108,10 @@ export function PainelAnualDetalheModal({
   onClose,
   ...detalheProps
 }: PainelAnualDetalheModalProps) {
-  const theme = useTheme();
-
   return (
-    <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
-      <Pressable style={[styles.modalOverlay, getModalOverlayStyle(theme)]} onPress={onClose}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={modalSheetStyles.keyboard}>
-          <Pressable
-            style={[
-              modalSheetStyles.sheet,
-              { backgroundColor: theme.background, borderColor: theme.border },
-            ]}
-            onPress={(event) => event.stopPropagation()}>
-            <View style={[modalSheetStyles.handle, { backgroundColor: theme.border }]} />
-            <ScrollView
-              bounces={false}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={modalSheetStyles.scrollContent}>
-              <PainelAnualDetalheColaborador
-                {...detalheProps}
-                onClose={onClose}
-                showCloseAction
-              />
-            </ScrollView>
-          </Pressable>
-        </KeyboardAvoidingView>
-      </Pressable>
-    </Modal>
+    <BaseModal variant="sheet" visible={visible} onClose={onClose}>
+      <PainelAnualDetalheColaborador {...detalheProps} onClose={onClose} showCloseAction />
+    </BaseModal>
   );
 }
 
@@ -171,9 +136,5 @@ const styles = StyleSheet.create({
   cancelarPress: {
     alignSelf: 'flex-start',
     paddingVertical: Spacing.one,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
   },
 });

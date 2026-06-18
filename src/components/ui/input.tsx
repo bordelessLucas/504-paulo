@@ -6,10 +6,12 @@ import { useTheme } from '@/hooks/use-theme';
 type InputProps = TextInputProps & {
   label: string;
   error?: string;
+  variant?: 'default' | 'soft';
 };
 
-export function Input({ label, error, style, ...rest }: InputProps) {
+export function Input({ label, error, variant = 'default', style, ...rest }: InputProps) {
   const theme = useTheme();
+  const isSoft = variant === 'soft';
 
   return (
     <View style={styles.wrapper}>
@@ -18,10 +20,11 @@ export function Input({ label, error, style, ...rest }: InputProps) {
         placeholderTextColor={theme.placeholder}
         style={[
           styles.input,
+          isSoft ? styles.inputSoft : styles.inputDefault,
           {
             color: theme.text,
-            backgroundColor: theme.inputBackground,
-            borderColor: error ? theme.danger : theme.border,
+            backgroundColor: isSoft ? theme.backgroundElement : theme.inputBackground,
+            borderColor: error ? theme.danger : isSoft ? 'transparent' : theme.border,
           },
           style,
         ]}
@@ -43,13 +46,19 @@ const styles = StyleSheet.create({
   },
   input: {
     minHeight: 44,
-    borderWidth: 1,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two + 2,
     fontFamily: Fonts.sans,
     fontSize: 15,
     lineHeight: 20,
+  },
+  inputDefault: {
+    borderWidth: 1,
+  },
+  inputSoft: {
+    borderWidth: 0,
+    paddingVertical: Spacing.three,
   },
   error: {
     fontFamily: Fonts.sans,

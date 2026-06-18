@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ActionButton } from '@/components/ui/action-button';
+import { getModalTextAreaStyle } from '@/components/ui/BaseModal';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -124,14 +125,7 @@ export function VereditoAnualForm({
           multiline
           placeholder="Descreva o impacto financeiro, sustentabilidade do caixa e fundamentação da decisão..."
           placeholderTextColor={theme.placeholder}
-          style={[
-            styles.textInput,
-            {
-              color: theme.text,
-              backgroundColor: theme.inputBackground,
-              borderColor: theme.border,
-            },
-          ]}
+          style={getModalTextAreaStyle(theme)}
           value={justificativaFinanceira}
           onChangeText={onJustificativaChange}
         />
@@ -241,17 +235,6 @@ const styles = StyleSheet.create({
   },
   selectOptionLabelSelected: {
     fontFamily: Fonts.sansSemiBold,
-  },
-  textInput: {
-    minHeight: 120,
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    fontFamily: Fonts.sans,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlignVertical: 'top',
   },
   submitButton: {
     alignSelf: 'flex-start',

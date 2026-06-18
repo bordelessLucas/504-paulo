@@ -135,6 +135,7 @@ export function FormularioAcessoPlataforma({ onCreated }: FormularioAcessoPlataf
         onChangeText={(value) => updateField('email', value)}
         placeholder="nome@empresa.com"
         value={form.email}
+        variant="soft"
       />
 
       <Input
@@ -144,6 +145,7 @@ export function FormularioAcessoPlataforma({ onCreated }: FormularioAcessoPlataf
         onChangeText={(value) => updateField('nome', value)}
         placeholder="Nome do usuário"
         value={form.nome}
+        variant="soft"
       />
 
       <View style={styles.fieldGroup}>
@@ -167,6 +169,7 @@ export function FormularioAcessoPlataforma({ onCreated }: FormularioAcessoPlataf
         onChangeText={(value) => updateField('funcao', value)}
         placeholder="Ex.: Analista de RH"
         value={form.funcao}
+        variant="soft"
       />
 
       <Input
@@ -175,6 +178,7 @@ export function FormularioAcessoPlataforma({ onCreated }: FormularioAcessoPlataf
         onChangeText={(value) => updateField('departamento', value)}
         placeholder="Ex.: Recursos Humanos"
         value={form.departamento}
+        variant="soft"
       />
 
       <Input
@@ -185,6 +189,7 @@ export function FormularioAcessoPlataforma({ onCreated }: FormularioAcessoPlataf
         placeholder="Gerada automaticamente se vazio"
         secureTextEntry
         value={form.senha_temporaria}
+        variant="soft"
       />
 
       {errors.general ? (

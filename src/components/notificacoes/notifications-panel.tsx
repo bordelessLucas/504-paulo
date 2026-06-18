@@ -105,7 +105,7 @@ export function NotificationsPanel() {
       transparent
       visible={isPanelOpen}>
       <View style={[styles.overlay, { paddingTop: insets.top }]}>
-        <Pressable style={[styles.backdrop, getModalOverlayStyle(theme)]} onPress={closePanel} />
+        <Pressable style={[styles.backdrop, getModalOverlayStyle()]} onPress={closePanel} />
 
         <View
           style={[

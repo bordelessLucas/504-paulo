@@ -1,43 +1,15 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import type { ComponentType } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TAB_BAR_BASE_HEIGHT } from '@/constants/layout';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getPrimaryTabForRole, getTabLabelForRole, getTabsForRole } from '@/navigation/role-menus';
-import type { MainTabParamList, TabIconName } from '@/navigation/types';
-import { AdminDashboardScreen } from '@/screens/admin/admin-dashboard-screen';
-import { DashboardsGerenciaisScreen } from '@/screens/admin/dashboards-gerenciais-screen';
-import { AprovacoesScreen } from '@/screens/admin/aprovacoes-screen';
-import { PainelAnualEstrategicoScreen } from '@/screens/admin/painel-anual-estrategico';
-import { PainelAvaliacaoScreen } from '@/screens/avaliacao/painel-screen';
-import { MinhaEquipeTabScreen } from '@/screens/avaliacao/minha-equipe-tab-screen';
-import { DashboardColaboradorScreen } from '@/screens/colaborador/dashboard-screen';
-import { MinhasAvaliacoesScreen } from '@/screens/colaborador/minhas-avaliacoes-screen';
-import { PainelReajusteScreen } from '@/screens/gerente/painel-reajuste-screen';
-import { PerfilScreen } from '@/screens/shared/perfil-screen';
+import { TAB_SCREENS, TabIcon } from '@/navigation/tab-screens';
+import type { MainTabParamList } from '@/navigation/types';
 import type { UserRole } from '@/types/supabase';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
-
-const TAB_SCREENS: Record<keyof MainTabParamList, ComponentType> = {
-  DashboardColaborador: DashboardColaboradorScreen,
-  MinhasAvaliacoes: MinhasAvaliacoesScreen,
-  PainelAvaliacao: PainelAvaliacaoScreen,
-  MinhaEquipe: MinhaEquipeTabScreen,
-  PainelReajuste: PainelReajusteScreen,
-  AdminDashboard: AdminDashboardScreen,
-  DashboardsGerenciais: DashboardsGerenciaisScreen,
-  Aprovacoes: AprovacoesScreen,
-  PainelAnualEstrategico: PainelAnualEstrategicoScreen,
-  Perfil: PerfilScreen,
-};
-
-function TabIcon({ name, color }: { name: TabIconName; color: string }) {
-  return <Ionicons color={color} name={name} size={20} />;
-}
 
 type RoleTabNavigatorProps = {
   role: UserRole;

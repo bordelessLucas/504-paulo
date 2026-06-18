@@ -10,11 +10,15 @@ import { Button } from '@/components/ui/button';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
 import { NotificationsProvider } from '@/features/notificacoes/notifications-context';
+import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
+import { RoleDrawerNavigator } from '@/navigation/RoleDrawerNavigator';
 import { RoleTabNavigator } from '@/navigation/RoleTabNavigator';
+import { NavigationLayoutProvider } from '@/navigation/navigation-layout-context';
 
 export function AppNavigator() {
   const { user, isLoading, isProfileReady, refetchProfile, signOut } = useAuth();
   const role = user?.role ?? null;
+  const isDesktopLayout = useIsDesktopLayout();
 
   useEffect(() => {
     if (user && isProfileReady && !role) {
@@ -53,10 +57,16 @@ export function AppNavigator() {
   return (
     <NavigationIndependentTree>
       <NotificationsProvider>
-        <View style={styles.appShell}>
-          <RoleTabNavigator key={role} role={role} />
-          <NotificationBell />
-        </View>
+        <NavigationLayoutProvider hasBottomTabs={!isDesktopLayout}>
+          <View style={styles.appShell}>
+            {isDesktopLayout ? (
+              <RoleDrawerNavigator key={role} role={role} />
+            ) : (
+              <RoleTabNavigator key={role} role={role} />
+            )}
+            <NotificationBell />
+          </View>
+        </NavigationLayoutProvider>
       </NotificationsProvider>
     </NavigationIndependentTree>
   );

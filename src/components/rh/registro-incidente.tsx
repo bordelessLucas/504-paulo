@@ -5,6 +5,7 @@ import { ColaboradorRow } from '@/components/avaliacao/colaborador-row';
 import { OptionChips } from '@/components/rh/option-chips';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
+import { getModalTextAreaStyle } from '@/components/ui/BaseModal';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/toast';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
@@ -198,6 +199,7 @@ export function RegistroIncidente({ embedded = false }: RegistroIncidenteProps) 
         label="Data da ocorrência"
         placeholder="DD/MM/AAAA"
         value={form.dataOcorrencia}
+        variant={embedded ? 'soft' : 'default'}
         onChangeText={(value) => setForm((current) => ({ ...current, dataOcorrencia: value }))}
       />
 
@@ -209,15 +211,7 @@ export function RegistroIncidente({ embedded = false }: RegistroIncidenteProps) 
           multiline
           placeholder="Descreva o ocorrido e o impacto operacional..."
           placeholderTextColor={theme.placeholder}
-          style={[
-            styles.textArea,
-            {
-              color: theme.text,
-              backgroundColor: theme.inputBackground,
-              borderColor: theme.border,
-            },
-          ]}
-          textAlignVertical="top"
+          style={getModalTextAreaStyle(theme)}
           value={form.descricao}
           onChangeText={(value) => setForm((current) => ({ ...current, descricao: value }))}
         />
@@ -269,16 +263,6 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: Spacing.two,
-  },
-  textArea: {
-    minHeight: 120,
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontFamily: Fonts.sans,
-    fontSize: 15,
-    lineHeight: 22,
   },
   cancel: {
     fontSize: 14,

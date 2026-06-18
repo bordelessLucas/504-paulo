@@ -9,27 +9,43 @@ type FormSectionProps = {
   title: string;
   children: ReactNode;
   defaultExpanded?: boolean;
+  embedded?: boolean;
 };
 
-export function FormSection({ title, children, defaultExpanded = true }: FormSectionProps) {
+export function FormSection({
+  title,
+  children,
+  defaultExpanded = true,
+  embedded = false,
+}: FormSectionProps) {
   const theme = useTheme();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
     <View
       style={[
-        styles.section,
-        {
-          backgroundColor: theme.background,
-          borderColor: '#F0F0F0',
-        },
+        embedded ? styles.sectionEmbedded : styles.section,
+        embedded
+          ? { backgroundColor: theme.backgroundElement }
+          : {
+              backgroundColor: theme.background,
+              borderColor: theme.border,
+            },
       ]}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: isExpanded }}
         onPress={() => setIsExpanded((current) => !current)}
-        style={styles.header}>
-        <ThemedText type="subtitle" style={styles.title}>
+        style={[
+          styles.header,
+          embedded
+            ? { borderBottomColor: theme.border }
+            : { borderBottomColor: theme.border },
+          !isExpanded && embedded ? styles.headerCollapsedEmbedded : null,
+        ]}>
+        <ThemedText
+          style={[styles.title, embedded ? styles.titleEmbedded : null]}
+          type={embedded ? undefined : 'subtitle'}>
           {title}
         </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.chevron}>
@@ -48,17 +64,28 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
     overflow: 'hidden',
   },
+  sectionEmbedded: {
+    borderRadius: Radius.md,
+    overflow: 'hidden',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  headerCollapsedEmbedded: {
+    borderBottomWidth: 0,
   },
   title: {
     fontSize: 15,
+  },
+  titleEmbedded: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 14,
+    lineHeight: 20,
   },
   chevron: {
     fontFamily: Fonts.sansSemiBold,
@@ -68,6 +95,5 @@ const styles = StyleSheet.create({
   body: {
     padding: Spacing.three,
     gap: Spacing.three,
-    borderTopWidth: 0,
   },
 });

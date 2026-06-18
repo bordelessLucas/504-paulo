@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
-import { getMenuItemsForRole, ROLE_LABELS } from '@/navigation/role-menus';
+import { getMenuItemsForRole, getTabLabelForRole, ROLE_LABELS } from '@/navigation/role-menus';
 import type { AuthUser } from '@/types/auth';
 import type { UserRole } from '@/types/supabase';
 import { useTheme } from '@/hooks/use-theme';
@@ -48,6 +48,7 @@ export function NotionDrawerContent({
         showsVerticalScrollIndicator={false}>
         {menuItems.map((item) => {
           const isActive = activeRoute === item.name;
+          const label = getTabLabelForRole(item.name, role);
 
           return (
             <Pressable
@@ -71,7 +72,7 @@ export function NotionDrawerContent({
                   styles.menuLabel,
                   { color: isActive ? theme.text : theme.textSecondary },
                 ]}>
-                {item.label}
+                {label}
               </ThemedText>
             </Pressable>
           );
