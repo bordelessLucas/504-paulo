@@ -6,7 +6,12 @@ export type TipoNotificacao =
   | 'solicitacao_aprovada'
   | 'solicitacao_recusada'
   | 'incidente_registrado'
-  | 'decisao_anual_registrada';
+  | 'decisao_anual_registrada'
+  | 'pdi_criado'
+  | 'pdi_atualizado'
+  | 'pdi_vencendo'
+  | 'pdi_vencido'
+  | 'pdi_concluido';
 
 export type Notificacao = {
   id: string;
@@ -28,4 +33,9 @@ export const TIPO_NOTIFICACAO_ICON: Record<TipoNotificacao, string> = {
   solicitacao_recusada: 'close-circle-outline',
   incidente_registrado: 'warning-outline',
   decisao_anual_registrada: 'calendar-outline',
+  pdi_criado: 'bulb-outline',
+  pdi_atualizado: 'sync-outline',
+  pdi_vencendo: 'time-outline',
+  pdi_vencido: 'alert-circle-outline',
+  pdi_concluido: 'trophy-outline',
 };

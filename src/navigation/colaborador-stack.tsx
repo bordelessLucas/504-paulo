@@ -1,25 +1,20 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Fonts } from '@/constants/theme';
-import { FormularioAvaliacaoScreen } from '@/screens/avaliacao/formulario-avaliacao-screen';
-import { MinhaEquipeScreen } from '@/screens/avaliacao/minha-equipe-screen';
+import { DashboardColaboradorScreen } from '@/screens/colaborador/dashboard-screen';
 import { PDIDetailScreen } from '@/screens/pdi/PDIDetailScreen';
-import { PDIEquipeScreen } from '@/screens/pdi/PDIEquipeScreen';
+import { PDIListColaboradorScreen } from '@/screens/pdi/PDIListColaboradorScreen';
 import { useTheme } from '@/hooks/use-theme';
 
-export type MinhaEquipeStackParamList = {
-  MinhaEquipeLista: undefined;
-  FormularioAvaliacao: {
-    avaliadoId: string;
-    avaliadoNome: string;
-  };
-  PDIEquipe: undefined;
+export type ColaboradorStackParamList = {
+  Dashboard: undefined;
+  PDIList: undefined;
   PDIDetail: { pdiId: string };
 };
 
-const Stack = createNativeStackNavigator<MinhaEquipeStackParamList>();
+const Stack = createNativeStackNavigator<ColaboradorStackParamList>();
 
-export function MinhaEquipeStackNavigator() {
+export function ColaboradorStackNavigator() {
   const theme = useTheme();
 
   return (
@@ -36,22 +31,14 @@ export function MinhaEquipeStackNavigator() {
         contentStyle: { backgroundColor: theme.background },
       }}>
       <Stack.Screen
-        name="MinhaEquipeLista"
-        component={MinhaEquipeScreen}
-        options={{ title: 'Minha equipe' }}
+        name="Dashboard"
+        component={DashboardColaboradorScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="FormularioAvaliacao"
-        component={FormularioAvaliacaoScreen}
-        options={{
-          title: 'Avaliação',
-          headerBackTitle: 'Voltar',
-        }}
-      />
-      <Stack.Screen
-        name="PDIEquipe"
-        component={PDIEquipeScreen}
-        options={{ title: 'PDI da equipe', headerBackTitle: 'Voltar' }}
+        name="PDIList"
+        component={PDIListColaboradorScreen}
+        options={{ title: 'Meus PDIs', headerBackTitle: 'Voltar' }}
       />
       <Stack.Screen
         name="PDIDetail"

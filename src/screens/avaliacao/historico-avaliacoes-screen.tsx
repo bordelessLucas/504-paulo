@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { AvaliacaoHistoricoCard } from '@/components/avaliacao/avaliacao-historico-card';
+import { CriarPDIModal } from '@/components/pdi/CriarPDIModal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
@@ -27,9 +28,14 @@ import {
   type TipoAvaliacaoFiltro,
 } from '@/features/avaliacao/historico-labels';
 import { getSemaforoItem, getSemaforoPorMedia } from '@/features/gerencial/semaforo';
+import { resolveEixoMaisBaixo } from '@/features/pdi/labels';
+import type { PdiEixo } from '@/features/pdi/types';
+import { useAuth } from '@/features/auth/auth-context';
+import { useAuthRole } from '@/hooks/use-auth-role';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
+import { isAdminDashboardRole } from '@/types/supabase';
 
 type HistoricoRoute = RouteProp<AvaliacaoStackParamList, 'HistoricoAvaliacoes'>;
 
@@ -129,6 +135,8 @@ function HistoricoFiltroTipos({
 export function HistoricoAvaliacoesScreen() {
   const theme = useTheme();
   const route = useRoute<HistoricoRoute>();
+  const { user } = useAuth();
+  const { role } = useAuthRole();
   const { avaliadoId, avaliadoNome, revealAvaliador } = route.params;
 
   const [items, setItems] = useState<AvaliacaoHistoricoItem[]>([]);
@@ -137,7 +145,19 @@ export function HistoricoAvaliacoesScreen() {
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filtroTipo, setFiltroTipo] = useState<TipoAvaliacaoFiltro>('todas');
+  const [pdiModalVisible, setPdiModalVisible] = useState(false);
+  const [pdiContext, setPdiContext] = useState<{
+    avaliacaoId: string;
+    eixo: PdiEixo;
+  } | null>(null);
   const { scrollPaddingBottom } = useTabScreenLayout();
+
+  const canCreatePdi =
+    revealAvaliador &&
+    (role === 'supervisor' ||
+      role === 'gestor' ||
+      role === 'gerente' ||
+      isAdminDashboardRole(role));
 
   const loadHistorico = useCallback(
     async (options?: { refreshing?: boolean }) => {
@@ -263,6 +283,19 @@ export function HistoricoAvaliacoesScreen() {
                             showAvaliador={revealAvaliador}
                             onToggle={() => handleToggle(item.id)}
                           />
+                          {canCreatePdi && item.status === 'aprovada' ? (
+                            <Button
+                              label="Criar PDI"
+                              variant="secondary"
+                              onPress={() => {
+                                setPdiContext({
+                                  avaliacaoId: item.id,
+                                  eixo: resolveEixoMaisBaixo(item.respostas),
+                                });
+                                setPdiModalVisible(true);
+                              }}
+                            />
+                          ) : null}
                         </View>
                       </View>
                     ))}
@@ -273,6 +306,19 @@ export function HistoricoAvaliacoesScreen() {
           </ScrollView>
         )}
       </View>
+
+      {user && pdiContext ? (
+        <CriarPDIModal
+          visible={pdiModalVisible}
+          avaliacaoOrigemId={pdiContext.avaliacaoId}
+          colaboradorId={avaliadoId}
+          colaboradorNome={avaliadoNome}
+          criadoPorId={user.id}
+          eixoInicial={pdiContext.eixo}
+          onClose={() => setPdiModalVisible(false)}
+          onCreated={() => setPdiModalVisible(false)}
+        />
+      ) : null}
     </ThemedView>
   );
 }
@@ -367,6 +413,7 @@ const styles = StyleSheet.create({
   },
   timelineCard: {
     flex: 1,
+    gap: Spacing.two,
   },
   empty: {
     fontSize: 14,

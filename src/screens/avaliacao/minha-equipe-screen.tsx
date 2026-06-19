@@ -9,6 +9,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { SyncStatusBar } from '@/components/SyncStatusBar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
@@ -18,14 +19,38 @@ import {
   type ColaboradorEquipeStatus,
 } from '@/features/avaliacao/api';
 import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
+import {
+  formatCacheDate,
+  mergeEquipeComOffline,
+  type ColaboradorEquipeStatusOffline,
+} from '@/features/offline/equipe-offline';
 import { useAuth } from '@/features/auth/auth-context';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useAuthRole } from '@/hooks/use-auth-role';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import {
+  getCachedEquipe,
+  getOfflineAvaliadoIdsForAvaliador,
+} from '@/services/offlineStorage';
 import type { MinhaEquipeStackParamList } from '@/navigation/minha-equipe-stack';
 
 type NavigationProp = NativeStackNavigationProp<MinhaEquipeStackParamList, 'MinhaEquipeLista'>;
 
-function StatusBadge({ avaliadoNaQuinzena }: { avaliadoNaQuinzena: boolean }) {
+function StatusBadge({
+  avaliadoNaQuinzena,
+  avaliadoLocalmente,
+}: {
+  avaliadoNaQuinzena: boolean;
+  avaliadoLocalmente?: boolean;
+}) {
+  if (avaliadoLocalmente) {
+    return (
+      <View style={[styles.badge, styles.badgeLocal]}>
+        <ThemedText style={styles.badgeTextLocal}>🕐 Local</ThemedText>
+      </View>
+    );
+  }
+
   if (avaliadoNaQuinzena) {
     return (
       <View style={[styles.badge, styles.badgeAvaliado]}>
@@ -45,7 +70,7 @@ function EquipeRow({
   colaborador,
   onPress,
 }: {
-  colaborador: ColaboradorEquipeStatus;
+  colaborador: ColaboradorEquipeStatusOffline;
   onPress: () => void;
 }) {
   const isPendente = !colaborador.avaliadoNaQuinzena;
@@ -65,7 +90,10 @@ function EquipeRow({
           {colaborador.departamento?.trim() || 'Sem departamento'}
         </ThemedText>
       </View>
-      <StatusBadge avaliadoNaQuinzena={colaborador.avaliadoNaQuinzena} />
+      <StatusBadge
+        avaliadoNaQuinzena={colaborador.avaliadoNaQuinzena}
+        avaliadoLocalmente={colaborador.avaliadoLocalmente}
+      />
     </Pressable>
   );
 }
@@ -74,13 +102,15 @@ export function MinhaEquipeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
   const { role } = useAuthRole();
+  const { isOnline } = useNetworkStatus();
   const cicloLabel =
     role === 'gestor' || role === 'gerente'
       ? TIPO_AVALIACAO_LABELS.semestral
       : TIPO_AVALIACAO_LABELS.quinzenal;
 
-  const [colaboradores, setColaboradores] = useState<ColaboradorEquipeStatus[]>([]);
+  const [colaboradores, setColaboradores] = useState<ColaboradorEquipeStatusOffline[]>([]);
   const [cicloInicio, setCicloInicio] = useState<string | null>(null);
+  const [cacheLabel, setCacheLabel] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,9 +130,28 @@ export function MinhaEquipeScreen() {
       setError(null);
 
       try {
-        const data = await fetchEquipeStatusCiclo(user.id, role);
-        setColaboradores(data.colaboradores);
-        setCicloInicio(data.cicloInicio);
+        const offlineIds = await getOfflineAvaliadoIdsForAvaliador(user.id);
+
+        if (isOnline) {
+          const data = await fetchEquipeStatusCiclo(user.id, role);
+          setColaboradores(mergeEquipeComOffline(data.colaboradores, offlineIds));
+          setCicloInicio(data.cicloInicio);
+          setCacheLabel(null);
+        } else {
+          const cached = await getCachedEquipe(user.id);
+
+          if (!cached) {
+            throw new Error(
+              'Sem dados em cache. Conecte-se à internet para carregar a equipe.',
+            );
+          }
+
+          setColaboradores(
+            mergeEquipeComOffline(cached.data.data.colaboradores, offlineIds),
+          );
+          setCicloInicio(cached.data.data.cicloInicio);
+          setCacheLabel(formatCacheDate(cached.atualizadoEm));
+        }
       } catch (loadError) {
         setError(
           loadError instanceof Error ? loadError.message : 'Erro ao carregar a equipe.',
@@ -115,7 +164,7 @@ export function MinhaEquipeScreen() {
         }
       }
     },
-    [user, role],
+    [isOnline, user, role],
   );
 
   useFocusEffect(
@@ -125,7 +174,7 @@ export function MinhaEquipeScreen() {
   );
 
   const handleColaboradorPress = useCallback(
-    (colaborador: ColaboradorEquipeStatus) => {
+    (colaborador: ColaboradorEquipeStatusOffline) => {
       if (colaborador.avaliadoNaQuinzena) {
         return;
       }
@@ -162,13 +211,24 @@ export function MinhaEquipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <SyncStatusBar />
       <View style={styles.safeArea}>
         <View style={styles.header}>
+          {cacheLabel ? (
+            <ThemedText themeColor="textSecondary" style={styles.cacheBanner}>
+              Visualizando dados em cache de {cacheLabel}
+            </ThemedText>
+          ) : null}
           <ThemedText themeColor="textSecondary" style={styles.subtitle}>
             {cicloLabel} · ciclo desde{' '}
             {cicloInicio ? cicloInicio.split('-').reverse().join('/') : '—'} ·{' '}
             {pendentesCount} pendente{pendentesCount === 1 ? '' : 's'}
           </ThemedText>
+          <Button
+            label="PDI da equipe"
+            variant="secondary"
+            onPress={() => navigation.navigate('PDIEquipe')}
+          />
         </View>
 
         <FlatList
@@ -214,6 +274,11 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  cacheBanner: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: Spacing.one,
   },
   listContent: {
     maxWidth: MaxContentWidth + 360,
@@ -262,6 +327,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     color: '#1B5E20',
+  },
+  badgeLocal: {
+    backgroundColor: '#E3F2FD',
+  },
+  badgeTextLocal: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#1565C0',
   },
   badgeTextPendente: {
     fontFamily: Fonts.sansMedium,

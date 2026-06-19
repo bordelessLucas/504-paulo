@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ColaboradorRankingList } from '@/components/gerencial/colaborador-ranking-list';
+import { PdiExecutivoCard } from '@/components/pdi/PdiExecutivoCard';
 import { ExportacaoFichaPanel } from '@/components/gerencial/exportacao-ficha-panel';
 import { ImaGaugeChart } from '@/components/gerencial/ima-gauge-chart';
 import { RadarDesempenhoChart } from '@/components/gerencial/radar-desempenho-chart';
@@ -26,6 +27,8 @@ import {
   type GerencialDashboardData,
 } from '@/features/gerencial/dashboard-api';
 import { exportColaboradorFichaPdf } from '@/features/gerencial/export-ficha-pdf';
+import type { PdiEstatisticas } from '@/features/pdi/types';
+import { buscarEstatisticasPDI } from '@/services/pdiService';
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
@@ -64,6 +67,7 @@ export function DashboardsGerenciaisScreen() {
   const { showToast } = useToast();
   const isDesktopLayout = useIsDesktopLayout();
   const [data, setData] = useState<GerencialDashboardData | null>(null);
+  const [pdiStats, setPdiStats] = useState<PdiEstatisticas | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [exportingId, setExportingId] = useState<string | null>(null);
@@ -80,8 +84,12 @@ export function DashboardsGerenciaisScreen() {
     setError(null);
 
     try {
-      const dashboard = await fetchGerencialDashboard();
+      const [dashboard, stats] = await Promise.all([
+        fetchGerencialDashboard(),
+        buscarEstatisticasPDI().catch(() => null),
+      ]);
       setData(dashboard);
+      setPdiStats(stats);
     } catch (loadError) {
       setError(
         loadError instanceof Error ? loadError.message : 'Erro ao carregar dashboards gerenciais.',
@@ -194,6 +202,14 @@ export function DashboardsGerenciaisScreen() {
             title="Velocímetro IMA"
             description="Média global de performance dos colaboradores ativos, com faixas do semáforo na escala 0 a 3.">
             <ImaGaugeChart ima={data?.ima ?? null} />
+          </DashboardCard>
+            </View>
+
+            <View style={isDesktopLayout ? styles.cardSlotDesktopWide : undefined}>
+          <DashboardCard
+            title="Saúde dos PDIs"
+            description="Planos de desenvolvimento ativos, taxa de conclusão e alertas de vencimento.">
+            {pdiStats ? <PdiExecutivoCard stats={pdiStats} /> : null}
           </DashboardCard>
             </View>
 

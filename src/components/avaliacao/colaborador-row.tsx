@@ -11,6 +11,8 @@ type ColaboradorRowProps = {
   onPress: () => void;
   detail?: string;
   isSelected?: boolean;
+  avaliadoLocalmente?: boolean;
+  disabled?: boolean;
 };
 
 export function ColaboradorRow({
@@ -18,12 +20,15 @@ export function ColaboradorRow({
   onPress,
   detail,
   isSelected = false,
+  avaliadoLocalmente = false,
+  disabled = false,
 }: ColaboradorRowProps) {
   const theme = useTheme();
 
   return (
     <Pressable
       accessibilityRole="button"
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,
@@ -31,11 +36,17 @@ export function ColaboradorRow({
           backgroundColor: isSelected ? theme.backgroundSelected : theme.backgroundElement,
           borderColor: isSelected ? theme.text : theme.border,
           borderWidth: isSelected ? 1 : 0,
+          opacity: disabled ? 0.55 : 1,
         },
-        pressed && styles.pressed,
+        pressed && !disabled && styles.pressed,
       ]}>
       <View style={styles.info}>
-        <ThemedText style={styles.name}>{colaborador.nome}</ThemedText>
+        <View style={styles.nameRow}>
+          <ThemedText style={styles.name}>{colaborador.nome}</ThemedText>
+          {avaliadoLocalmente ? (
+            <ThemedText style={styles.localBadge}>🕐</ThemedText>
+          ) : null}
+        </View>
         <ThemedText themeColor="textSecondary" style={styles.meta}>
           {detail ||
             [colaborador.departamento, colaborador.funcao].filter(Boolean).join(' · ') ||
@@ -64,10 +75,20 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.one,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
   name: {
     fontFamily: Fonts.sansMedium,
     fontSize: 15,
     lineHeight: 20,
+    flex: 1,
+  },
+  localBadge: {
+    fontSize: 14,
+    lineHeight: 18,
   },
   meta: {
     fontSize: 13,

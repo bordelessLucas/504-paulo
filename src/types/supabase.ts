@@ -47,7 +47,21 @@ export type TipoNotificacaoEnum =
   | "solicitacao_aprovada"
   | "solicitacao_recusada"
   | "incidente_registrado"
-  | "decisao_anual_registrada";
+  | "decisao_anual_registrada"
+  | "pdi_criado"
+  | "pdi_atualizado"
+  | "pdi_vencendo"
+  | "pdi_vencido"
+  | "pdi_concluido";
+
+export type PdiEixoEnum = "P1" | "P2" | "P3" | "geral";
+
+export type PdiStatusEnum =
+  | "aberto"
+  | "em_andamento"
+  | "concluido"
+  | "vencido"
+  | "cancelado";
 
 export type Database = {
   public: {
@@ -426,6 +440,133 @@ export type Database = {
           },
         ];
       };
+
+      planos_desenvolvimento: {
+        Row: {
+          id: string;
+          colaborador_id: string;
+          avaliacao_origem_id: string | null;
+          criado_por_id: string;
+          eixo: PdiEixoEnum;
+          titulo: string;
+          descricao: string | null;
+          indicador_sucesso: string;
+          prazo: string;
+          status: PdiStatusEnum;
+          progresso_pct: number;
+          observacoes_responsavel: string | null;
+          observacoes_colaborador: string | null;
+          concluido_em: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          colaborador_id: string;
+          avaliacao_origem_id?: string | null;
+          criado_por_id: string;
+          eixo: PdiEixoEnum;
+          titulo: string;
+          descricao?: string | null;
+          indicador_sucesso: string;
+          prazo: string;
+          status?: PdiStatusEnum;
+          progresso_pct?: number;
+          observacoes_responsavel?: string | null;
+          observacoes_colaborador?: string | null;
+          concluido_em?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          colaborador_id?: string;
+          avaliacao_origem_id?: string | null;
+          criado_por_id?: string;
+          eixo?: PdiEixoEnum;
+          titulo?: string;
+          descricao?: string | null;
+          indicador_sucesso?: string;
+          prazo?: string;
+          status?: PdiStatusEnum;
+          progresso_pct?: number;
+          observacoes_responsavel?: string | null;
+          observacoes_colaborador?: string | null;
+          concluido_em?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "planos_desenvolvimento_colaborador_id_fkey";
+            columns: ["colaborador_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "planos_desenvolvimento_avaliacao_origem_id_fkey";
+            columns: ["avaliacao_origem_id"];
+            referencedRelation: "avaliacoes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "planos_desenvolvimento_criado_por_id_fkey";
+            columns: ["criado_por_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      pdi_atualizacoes: {
+        Row: {
+          id: string;
+          pdi_id: string;
+          autor_id: string;
+          status_anterior: string | null;
+          status_novo: string | null;
+          progresso_anterior: number | null;
+          progresso_novo: number | null;
+          comentario: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          pdi_id: string;
+          autor_id: string;
+          status_anterior?: string | null;
+          status_novo?: string | null;
+          progresso_anterior?: number | null;
+          progresso_novo?: number | null;
+          comentario?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          pdi_id?: string;
+          autor_id?: string;
+          status_anterior?: string | null;
+          status_novo?: string | null;
+          progresso_anterior?: number | null;
+          progresso_novo?: number | null;
+          comentario?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "pdi_atualizacoes_pdi_id_fkey";
+            columns: ["pdi_id"];
+            referencedRelation: "planos_desenvolvimento";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pdi_atualizacoes_autor_id_fkey";
+            columns: ["autor_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       avaliacoes_masked: {
@@ -456,6 +597,16 @@ export type Database = {
           p_email: string;
         };
         Returns: string | null;
+      };
+      processar_pdis_vencidos: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      processar_alertas_pdi_vencendo: {
+        Args: {
+          p_dias?: number;
+        };
+        Returns: number;
       };
     };
     Enums: {

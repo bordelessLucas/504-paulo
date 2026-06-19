@@ -1,4 +1,5 @@
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -7,6 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { PDICard } from '@/components/pdi/PDICard';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -37,7 +39,12 @@ import {
   resolveMotivoBloqueioAutoavaliacao,
 } from '@/features/colaborador/eligibility';
 import { useAuth } from '@/features/auth/auth-context';
+import { buscarPDIsAtivosColaborador } from '@/services/pdiService';
+import type { PlanoDesenvolvimento } from '@/features/pdi/types';
+import type { ColaboradorStackParamList } from '@/navigation/colaborador-stack';
 import { useTheme } from '@/hooks/use-theme';
+
+type DashboardNavigation = NativeStackNavigationProp<ColaboradorStackParamList, 'Dashboard'>;
 
 function DashboardCard({
   title,
@@ -110,9 +117,11 @@ function SolicitacaoStatusItem({ solicitacao }: { solicitacao: SolicitacaoColabo
 
 export function DashboardColaboradorScreen() {
   const theme = useTheme();
+  const navigation = useNavigation<DashboardNavigation>();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [data, setData] = useState<ColaboradorDashboardData | null>(null);
+  const [pdisAtivos, setPdisAtivos] = useState<PlanoDesenvolvimento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,8 +142,12 @@ export function DashboardColaboradorScreen() {
       setError(null);
 
       try {
-        const dashboard = await fetchColaboradorDashboard(user.id);
+        const [dashboard, pdis] = await Promise.all([
+          fetchColaboradorDashboard(user.id),
+          buscarPDIsAtivosColaborador(user.id).catch(() => [] as PlanoDesenvolvimento[]),
+        ]);
         setData(dashboard);
+        setPdisAtivos(pdis);
       } catch (loadError) {
         setError(
           loadError instanceof Error ? loadError.message : 'Erro ao carregar o dashboard.',
@@ -268,6 +281,32 @@ export function DashboardColaboradorScreen() {
               <ThemedText themeColor="textSecondary" style={styles.emptyText}>
                 Nenhuma avaliação em análise no momento.
               </ThemedText>
+            )}
+          </DashboardCard>
+
+          <DashboardCard title="Meus Planos de Desenvolvimento">
+            {pdisAtivos.length === 0 ? (
+              <ThemedText themeColor="textSecondary" style={styles.emptyText}>
+                Nenhum plano ativo no momento. Quando seu líder criar um PDI para você, ele
+                aparecerá aqui com prazo e progresso.
+              </ThemedText>
+            ) : (
+              <>
+                {pdisAtivos.slice(0, 3).map((pdi) => (
+                  <PDICard
+                    key={pdi.id}
+                    compact
+                    hideCriador
+                    pdi={pdi}
+                    onPress={() => navigation.navigate('PDIDetail', { pdiId: pdi.id })}
+                  />
+                ))}
+                <Button
+                  label="Ver todos"
+                  variant="secondary"
+                  onPress={() => navigation.navigate('PDIList')}
+                />
+              </>
             )}
           </DashboardCard>
 

@@ -44,34 +44,48 @@ type ProfileRow = {
 async function fetchProfileByUserId(userId: string): Promise<ProfileRow | null> {
   const baseSelect = 'nome, role, created_at, departamento, funcao';
 
-  const { data: baseData, error: baseError } = await supabase
-    .from('profiles')
-    .select(baseSelect)
-    .eq('id', userId)
-    .maybeSingle();
+  const fetchProfile = async (): Promise<ProfileRow | null> => {
+    const { data: baseData, error: baseError } = await supabase
+      .from('profiles')
+      .select(baseSelect)
+      .eq('id', userId)
+      .maybeSingle();
 
-  if (baseError) {
-    console.warn('[Auth] Falha ao carregar profile:', baseError.message);
-    return null;
-  }
+    if (baseError) {
+      console.warn('[Auth] Falha ao carregar profile:', baseError.message);
+      return null;
+    }
 
-  if (!baseData) {
-    return null;
-  }
+    if (!baseData) {
+      return null;
+    }
 
-  const profile: ProfileRow = { ...(baseData as ProfileRow), avatar_url: null };
+    const profile: ProfileRow = { ...(baseData as ProfileRow), avatar_url: null };
 
-  const { data: avatarData, error: avatarError } = await supabase
-    .from('profiles')
-    .select('avatar_url')
-    .eq('id', userId)
-    .maybeSingle();
+    const { data: avatarData, error: avatarError } = await supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', userId)
+      .maybeSingle();
 
-  if (!avatarError && avatarData && 'avatar_url' in avatarData) {
-    profile.avatar_url = (avatarData as { avatar_url: string | null }).avatar_url;
-  }
+    if (!avatarError && avatarData && 'avatar_url' in avatarData) {
+      profile.avatar_url = (avatarData as { avatar_url: string | null }).avatar_url;
+    }
 
-  return profile;
+    return profile;
+  };
+
+  const timeoutMs = 12_000;
+
+  return Promise.race([
+    fetchProfile(),
+    new Promise<null>((resolve) => {
+      setTimeout(() => {
+        console.warn('[Auth] Timeout ao carregar profile — seguindo sem dados remotos.');
+        resolve(null);
+      }, timeoutMs);
+    }),
+  ]);
 }
 
 async function buildAuthUser(session: Session): Promise<AuthUser> {
@@ -115,8 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refetchProfile = useCallback(async () => {
-    setIsProfileReady(false);
-
     const session = await getSafeSession();
     await syncSession(session);
   }, [syncSession]);
@@ -126,7 +138,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function bootstrapSession() {
       try {
-        const session = await getSafeSession();
+        const session = await Promise.race([
+          getSafeSession(),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 15_000)),
+        ]);
 
         if (isMounted) {
           await syncSession(session);

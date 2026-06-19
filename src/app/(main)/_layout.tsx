@@ -3,12 +3,22 @@ import { Redirect } from 'expo-router';
 import { AppNavigator } from '@/navigation/AppNavigator';
 import { useAuth } from '@/features/auth/auth-context';
 
+import { OfflineBootstrap } from '@/features/offline/offline-bootstrap';
+
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
 
-  if (!isLoading && !user) {
+  if (isLoading) {
+    return null;
+  }
+
+  if (!user) {
     return <Redirect href="/(auth)/login" />;
   }
 
-  return <AppNavigator />;
+  return (
+    <OfflineBootstrap>
+      <AppNavigator />
+    </OfflineBootstrap>
+  );
 }

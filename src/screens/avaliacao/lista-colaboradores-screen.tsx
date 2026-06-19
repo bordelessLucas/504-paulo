@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { ColaboradorRow } from '@/components/avaliacao/colaborador-row';
+import { SyncStatusBar } from '@/components/SyncStatusBar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
@@ -20,13 +21,23 @@ import {
   fetchColaboradoresAvaliacaoExecutive,
   fetchColaboradoresPage,
   type ColaboradorResumo,
-  type ColaboradoresAvaliacaoExecutive,
 } from '@/features/avaliacao/api';
 import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
+import {
+  formatCacheDate,
+  mergeEquipeComOffline,
+  splitEquipeOffline,
+  type ColaboradorEquipeStatusOffline,
+} from '@/features/offline/equipe-offline';
 import { useAuth } from '@/features/auth/auth-context';
 import { useAuthRole } from '@/hooks/use-auth-role';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
+import {
+  getCachedEquipe,
+  getOfflineAvaliadoIdsForAvaliador,
+} from '@/services/offlineStorage';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 import { isAdminDashboardRole, type TipoAvaliacao } from '@/types/supabase';
 
@@ -72,9 +83,11 @@ function ColaboradorSection({
 function CicloToggle({
   tipo,
   onChange,
+  disabled = false,
 }: {
   tipo: TipoAvaliacao;
   onChange: (tipo: TipoAvaliacao) => void;
+  disabled?: boolean;
 }) {
   const theme = useTheme();
   const options: TipoAvaliacao[] = ['quinzenal', 'semestral'];
@@ -88,7 +101,8 @@ function CicloToggle({
           <Pressable
             key={option}
             accessibilityRole="button"
-            accessibilityState={{ selected: isActive }}
+            accessibilityState={{ selected: isActive, disabled }}
+            disabled={disabled}
             onPress={() => onChange(option)}
             style={[
               styles.cicloOption,
@@ -115,13 +129,17 @@ function ListaColaboradoresExecutiveView({
   navigation,
   avaliadorId,
   role,
+  isOnline,
 }: {
   navigation: NavigationProp;
   avaliadorId: string;
   role: ReturnType<typeof useAuthRole>['role'];
+  isOnline: boolean;
 }) {
   const [tipoCiclo, setTipoCiclo] = useState<TipoAvaliacao>('quinzenal');
-  const [data, setData] = useState<ColaboradoresAvaliacaoExecutive | null>(null);
+  const [pendentes, setPendentes] = useState<ColaboradorEquipeStatusOffline[]>([]);
+  const [concluidas, setConcluidas] = useState<ColaboradorEquipeStatusOffline[]>([]);
+  const [cacheLabel, setCacheLabel] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,8 +156,47 @@ function ListaColaboradoresExecutiveView({
       setError(null);
 
       try {
-        const result = await fetchColaboradoresAvaliacaoExecutive(avaliadorId, tipoCiclo, role);
-        setData(result);
+        const offlineIds = await getOfflineAvaliadoIdsForAvaliador(avaliadorId);
+
+        if (isOnline) {
+          const result = await fetchColaboradoresAvaliacaoExecutive(avaliadorId, tipoCiclo, role);
+          const colaboradores = mergeEquipeComOffline(
+            [
+              ...result.concluidas.map((colaborador) => ({
+                ...colaborador,
+                avaliadoNaQuinzena: true,
+              })),
+              ...result.pendentes.map((colaborador) => ({
+                ...colaborador,
+                avaliadoNaQuinzena: false,
+              })),
+            ],
+            offlineIds,
+          );
+          const split = splitEquipeOffline(colaboradores);
+
+          setPendentes(split.pendentes);
+          setConcluidas(split.concluidas);
+          setCacheLabel(null);
+        } else {
+          const cached = await getCachedEquipe(avaliadorId);
+
+          if (!cached) {
+            throw new Error(
+              'Sem dados em cache. Conecte-se à internet para carregar colaboradores.',
+            );
+          }
+
+          const colaboradores = mergeEquipeComOffline(
+            cached.data.data.colaboradores,
+            offlineIds,
+          );
+          const split = splitEquipeOffline(colaboradores);
+
+          setPendentes(split.pendentes);
+          setConcluidas(split.concluidas);
+          setCacheLabel(formatCacheDate(cached.atualizadoEm));
+        }
       } catch (loadError) {
         setError(
           loadError instanceof Error ? loadError.message : 'Erro ao carregar colaboradores.',
@@ -152,7 +209,7 @@ function ListaColaboradoresExecutiveView({
         }
       }
     },
-    [avaliadorId, role, tipoCiclo],
+    [avaliadorId, isOnline, role, tipoCiclo],
   );
 
   useFocusEffect(
@@ -162,14 +219,18 @@ function ListaColaboradoresExecutiveView({
   );
 
   const navigateToHistorico = useCallback(
-    (colaborador: ColaboradorResumo) => {
+    (colaborador: ColaboradorEquipeStatusOffline) => {
+      if (!isOnline) {
+        return;
+      }
+
       navigation.navigate('HistoricoAvaliacoes', {
         avaliadoId: colaborador.id,
         avaliadoNome: colaborador.nome,
         revealAvaliador: true,
       });
     },
-    [navigation],
+    [isOnline, navigation],
   );
 
   if (isLoading) {
@@ -189,18 +250,26 @@ function ListaColaboradoresExecutiveView({
     );
   }
 
-  const pendentes = data?.pendentes ?? [];
-  const concluidas = data?.concluidas ?? [];
   const total = pendentes.length + concluidas.length;
 
   return (
     <ScrollView
       contentContainerStyle={[styles.executiveContent, { paddingBottom: scrollPaddingBottom }]}
       refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadData({ refreshing: true })} />
+        <RefreshControl
+          refreshing={isRefreshing}
+          enabled={isOnline}
+          onRefresh={() => void loadData({ refreshing: true })}
+        />
       }
       showsVerticalScrollIndicator={false}>
-      <CicloToggle tipo={tipoCiclo} onChange={setTipoCiclo} />
+      {cacheLabel ? (
+        <ThemedText themeColor="textSecondary" style={styles.cacheBanner}>
+          Visualizando dados em cache de {cacheLabel}
+        </ThemedText>
+      ) : null}
+
+      <CicloToggle disabled={!isOnline} tipo={tipoCiclo} onChange={setTipoCiclo} />
 
       <ThemedText themeColor="textSecondary" style={styles.subtitle}>
         Visão do ciclo {tipoCiclo === 'quinzenal' ? 'quinzenal' : 'semestral'} — toque em um
@@ -218,6 +287,7 @@ function ListaColaboradoresExecutiveView({
               key={colaborador.id}
               colaborador={colaborador}
               detail={formatMetaColaborador(colaborador)}
+              disabled={!isOnline}
               onPress={() => navigateToHistorico(colaborador)}
             />
           ))
@@ -233,12 +303,16 @@ function ListaColaboradoresExecutiveView({
           concluidas.map((colaborador) => (
             <ColaboradorRow
               key={colaborador.id}
+              avaliadoLocalmente={colaborador.avaliadoLocalmente}
               colaborador={colaborador}
               detail={
-                colaborador.ultimaAvaliacaoData
-                  ? `Avaliado em ${formatDataBr(colaborador.ultimaAvaliacaoData)} · ${formatMetaColaborador(colaborador)}`
-                  : formatMetaColaborador(colaborador)
+                colaborador.avaliadoLocalmente
+                  ? `Avaliado localmente · ${formatMetaColaborador(colaborador)}`
+                  : colaborador.ultimaAvaliacaoData
+                    ? `Avaliado em ${formatDataBr(colaborador.ultimaAvaliacaoData)} · ${formatMetaColaborador(colaborador)}`
+                    : formatMetaColaborador(colaborador)
               }
+              disabled={!isOnline}
               onPress={() => navigateToHistorico(colaborador)}
             />
           ))
@@ -252,14 +326,17 @@ function ListaColaboradoresGerenteView({
   navigation,
   avaliadorId,
   role,
+  isOnline,
 }: {
   navigation: NavigationProp;
   avaliadorId: string;
   role: ReturnType<typeof useAuthRole>['role'];
+  isOnline: boolean;
 }) {
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
-  const [items, setItems] = useState<ColaboradorResumo[]>([]);
+  const [items, setItems] = useState<ColaboradorEquipeStatusOffline[]>([]);
+  const [cacheLabel, setCacheLabel] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -278,10 +355,44 @@ function ListaColaboradoresGerenteView({
       setError(null);
 
       try {
-        const result = await fetchColaboradoresPage(avaliadorId, targetPage, role);
-        setItems(result.items);
-        setTotal(result.total);
-        setPage(result.page);
+        const offlineIds = await getOfflineAvaliadoIdsForAvaliador(avaliadorId);
+
+        if (isOnline) {
+          const result = await fetchColaboradoresPage(avaliadorId, targetPage, role);
+          const colaboradores = mergeEquipeComOffline(
+            result.items.map((colaborador) => ({
+              ...colaborador,
+              avaliadoNaQuinzena: false,
+            })),
+            offlineIds,
+          );
+
+          setItems(colaboradores);
+          setTotal(result.total);
+          setPage(result.page);
+          setCacheLabel(null);
+        } else {
+          const cached = await getCachedEquipe(avaliadorId);
+
+          if (!cached) {
+            throw new Error(
+              'Sem dados em cache. Conecte-se à internet para carregar colaboradores.',
+            );
+          }
+
+          const colaboradores = mergeEquipeComOffline(
+            cached.data.data.colaboradores,
+            offlineIds,
+          );
+          const pageSize = COLABORADORES_PAGE_SIZE;
+          const from = targetPage * pageSize;
+          const pageItems = colaboradores.slice(from, from + pageSize);
+
+          setItems(pageItems);
+          setTotal(colaboradores.length);
+          setPage(targetPage);
+          setCacheLabel(formatCacheDate(cached.atualizadoEm));
+        }
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Erro ao carregar colaboradores.');
       } finally {
@@ -292,7 +403,7 @@ function ListaColaboradoresGerenteView({
         }
       }
     },
-    [avaliadorId, role],
+    [avaliadorId, isOnline, role],
   );
 
   useEffect(() => {
@@ -302,6 +413,11 @@ function ListaColaboradoresGerenteView({
   return (
     <View style={styles.body}>
       <View style={styles.header}>
+        {cacheLabel ? (
+          <ThemedText themeColor="textSecondary" style={styles.cacheBanner}>
+            Visualizando dados em cache de {cacheLabel}
+          </ThemedText>
+        ) : null}
         <ThemedText type="heading">Colaboradores a avaliar</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.subtitle}>
           Selecione um colaborador para iniciar a avaliação ({total} no total).
@@ -329,6 +445,7 @@ function ListaColaboradoresGerenteView({
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
+              enabled={isOnline}
               onRefresh={() => void loadPage(page, { refreshing: true })}
             />
           }
@@ -339,7 +456,16 @@ function ListaColaboradoresGerenteView({
           }
           renderItem={({ item }) => (
             <ColaboradorRow
+              avaliadoLocalmente={item.avaliadoLocalmente}
               colaborador={item}
+              detail={
+                item.avaliadoLocalmente
+                  ? 'Avaliado localmente — aguardando sincronização'
+                  : item.avaliadoNaQuinzena
+                    ? 'Avaliado neste ciclo'
+                    : undefined
+              }
+              disabled={item.avaliadoNaQuinzena}
               onPress={() =>
                 navigation.navigate('FormularioAvaliacao', {
                   avaliadoId: item.id,
@@ -379,6 +505,7 @@ export function ListaColaboradoresScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
   const { role, isLoading: isRoleLoading } = useAuthRole();
+  const { isOnline } = useNetworkStatus();
   const isExecutiveView = isAdminDashboardRole(role);
 
   if (!user || isRoleLoading) {
@@ -393,6 +520,7 @@ export function ListaColaboradoresScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <SyncStatusBar />
       <View style={styles.safeArea}>
         {isExecutiveView ? (
           <>
@@ -401,6 +529,7 @@ export function ListaColaboradoresScreen() {
             </View>
             <ListaColaboradoresExecutiveView
               avaliadorId={user.id}
+              isOnline={isOnline}
               navigation={navigation}
               role={role}
             />
@@ -408,6 +537,7 @@ export function ListaColaboradoresScreen() {
         ) : (
           <ListaColaboradoresGerenteView
             avaliadorId={user.id}
+            isOnline={isOnline}
             navigation={navigation}
             role={role}
           />
@@ -439,6 +569,11 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  cacheBanner: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: Spacing.one,
   },
   executiveContent: {
     gap: Spacing.four,

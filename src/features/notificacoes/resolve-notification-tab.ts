@@ -42,6 +42,21 @@ export function resolveNotificationTab(
 
       return isAdminDashboardRole(role) ? 'AdminDashboard' : null;
 
+    case 'pdi_criado':
+    case 'pdi_atualizado':
+    case 'pdi_vencendo':
+    case 'pdi_vencido':
+    case 'pdi_concluido':
+      if (role === 'colaborador') {
+        return 'DashboardColaborador';
+      }
+
+      if (role === 'supervisor' || role === 'gestor' || role === 'gerente') {
+        return 'MinhaEquipe';
+      }
+
+      return isAdminDashboardRole(role) ? 'DashboardsGerenciais' : null;
+
     default:
       return null;
   }

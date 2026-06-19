@@ -1,6 +1,5 @@
 import { NavigationIndependentTree } from '@react-navigation/native';
 import { Redirect } from 'expo-router';
-import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { NotificationBell } from '@/components/notificacoes/notification-bell';
@@ -20,12 +19,6 @@ export function AppNavigator() {
   const { user, isLoading, isProfileReady, refetchProfile, signOut } = useAuth();
   const role = user?.role ?? null;
   const isDesktopLayout = useIsDesktopLayout();
-
-  useEffect(() => {
-    if (user && isProfileReady && !role) {
-      void refetchProfile();
-    }
-  }, [user?.id, isProfileReady, role, refetchProfile]);
 
   if (isLoading || (user && !isProfileReady)) {
     return (

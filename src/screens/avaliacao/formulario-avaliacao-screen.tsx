@@ -7,6 +7,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { PDIsAbertoSection } from '@/components/pdi/PDIsAbertoSection';
+import { SyncStatusBar } from '@/components/SyncStatusBar';
 import { EscalaLegenda } from '@/components/avaliacao/escala-legenda';
 import { PontoMelhoriaAvaliacaoModal } from '@/components/avaliacao/ponto-melhoria-avaliacao-modal';
 import { NotionCheckbox } from '@/components/avaliacao/notion-checkbox';
@@ -28,12 +30,16 @@ import {
   type RespostaFormState,
 } from '@/features/avaliacao/validation';
 import { useAuth } from '@/features/auth/auth-context';
+import { useOfflineSync } from '@/features/offline/offline-sync-context';
 import { confirmAction } from '@/utils/confirm-action';
 import { useAuthRole } from '@/hooks/use-auth-role';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import type { AvaliacaoStackParamList } from '@/navigation/avaliacao-stack';
 import type { PerguntaAvaliacao, PontoMelhoria } from '@/types/supabase';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
+import { getCachedPerguntas, saveAvaliacaoOffline } from '@/services/offlineStorage';
+import { useToast } from '@/components/ui/toast';
 
 type FormularioRoute = RouteProp<AvaliacaoStackParamList, 'FormularioAvaliacao'>;
 
@@ -49,6 +55,9 @@ export function FormularioAvaliacaoScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { role } = useAuthRole();
+  const { isOnline } = useNetworkStatus();
+  const { refreshPendingCount } = useOfflineSync();
+  const { showToast } = useToast();
   const route = useRoute<FormularioRoute>();
   const { avaliadoId, avaliadoNome } = route.params;
 
@@ -79,10 +88,23 @@ export function FormularioAvaliacaoScreen() {
     setError(null);
 
     try {
-      const [perguntasLista, pontos] = await Promise.all([
-        fetchPerguntasUniversais(),
-        fetchPontosMelhoriaAnteriores(avaliadoId),
-      ]);
+      const cachedPerguntas = !isOnline ? await getCachedPerguntas() : null;
+
+      const perguntasPromise = isOnline
+        ? fetchPerguntasUniversais()
+        : Promise.resolve(cachedPerguntas?.perguntas ?? []);
+
+      const pontosPromise = isOnline
+        ? fetchPontosMelhoriaAnteriores(avaliadoId)
+        : Promise.resolve([]);
+
+      const [perguntasLista, pontos] = await Promise.all([perguntasPromise, pontosPromise]);
+
+      if (perguntasLista.length === 0 && !isOnline) {
+        throw new Error(
+          'Perguntas não disponíveis offline. Conecte-se à internet pelo menos uma vez.',
+        );
+      }
 
       setPerguntas(perguntasLista);
       setPontosMelhoria(pontos);
@@ -103,7 +125,7 @@ export function FormularioAvaliacaoScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [avaliadoId]);
+  }, [avaliadoId, isOnline]);
 
   useEffect(() => {
     void loadForm();
@@ -138,7 +160,9 @@ export function FormularioAvaliacaoScreen() {
 
     const confirmed = await confirmAction(
       'Confirmar envio',
-      'A avaliação será enviada para validação do RH. Deseja continuar?',
+      isOnline
+        ? 'A avaliação será enviada para validação do RH. Deseja continuar?'
+        : 'A avaliação será salva no dispositivo e enviada ao reconectar. Deseja continuar?',
     );
 
     if (!confirmed) {
@@ -148,25 +172,45 @@ export function FormularioAvaliacaoScreen() {
     setIsSubmitting(true);
     setFeedback(null);
 
+    const respostasPayload = perguntas.map((pergunta) => {
+      const resposta = respostas[pergunta.id];
+
+      return {
+        perguntaId: pergunta.id,
+        nota: resposta.nota as number,
+        justificativa: resposta.justificativa,
+        evidencia: resposta.evidencia,
+      };
+    });
+
+    const melhoriasPayload = pontosMelhoria.map((ponto) => ({
+      pontoId: ponto.id,
+      melhorou: melhorias[ponto.id] ?? false,
+    }));
+
     try {
+      if (!isOnline) {
+        await saveAvaliacaoOffline({
+          avaliadorId: user.id,
+          avaliadoId,
+          avaliadoNome,
+          tipo: tipoAvaliacao,
+          respostas: respostasPayload,
+          melhorias: melhoriasPayload,
+        });
+
+        await refreshPendingCount();
+        showToast('Avaliação salva localmente. Será enviada ao reconectar.', 'success');
+        navigation.goBack();
+        return;
+      }
+
       const { avaliacaoId } = await submitAvaliacao({
         avaliadorId: user.id,
         avaliadoId,
         tipo: tipoAvaliacao,
-        respostas: perguntas.map((pergunta) => {
-          const resposta = respostas[pergunta.id];
-
-          return {
-            perguntaId: pergunta.id,
-            nota: resposta.nota as number,
-            justificativa: resposta.justificativa,
-            evidencia: resposta.evidencia,
-          };
-        }),
-        melhorias: pontosMelhoria.map((ponto) => ({
-          pontoId: ponto.id,
-          melhorou: melhorias[ponto.id] ?? false,
-        })),
+        respostas: respostasPayload,
+        melhorias: melhoriasPayload,
       });
 
       setLastAvaliacaoId(avaliacaoId);
@@ -225,6 +269,7 @@ export function FormularioAvaliacaoScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <SyncStatusBar />
       <View style={styles.safeArea}>
         <ScrollView
           contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}
@@ -238,6 +283,8 @@ export function FormularioAvaliacaoScreen() {
           </View>
 
           <EscalaLegenda />
+
+          <PDIsAbertoSection colaboradorId={avaliadoId} />
 
           {pontosMelhoria.length > 0 ? (
             <View style={[styles.section, styles.card, { backgroundColor: theme.backgroundElement }]}>
