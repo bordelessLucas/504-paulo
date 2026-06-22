@@ -54,6 +54,21 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
     label: 'Gerencial',
     icon: 'stats-chart-outline',
   },
+  VisaoEstrategica: {
+    name: 'VisaoEstrategica',
+    label: 'Estratégico',
+    icon: 'grid-outline',
+  },
+  Compliance: {
+    name: 'Compliance',
+    label: 'Compliance',
+    icon: 'shield-checkmark-outline',
+  },
+  Metodologia: {
+    name: 'Metodologia',
+    label: 'Metodologia',
+    icon: 'book-outline',
+  },
   Aprovacoes: {
     name: 'Aprovacoes',
     label: 'Aprovações',
@@ -123,13 +138,19 @@ export function getTabsForRole(role: UserRole): TabMenuItem[] {
       ];
 
     case 'supervisor':
-      return [TAB_DEFINITIONS.PainelAvaliacao, TAB_DEFINITIONS.MinhaEquipe, PERFIL_TAB];
+      return [
+        TAB_DEFINITIONS.PainelAvaliacao,
+        TAB_DEFINITIONS.MinhaEquipe,
+        TAB_DEFINITIONS.Metodologia,
+        PERFIL_TAB,
+      ];
 
     case 'gestor':
       return [
         TAB_DEFINITIONS.PainelAvaliacao,
         TAB_DEFINITIONS.MinhaEquipe,
         TAB_DEFINITIONS.PainelReajuste,
+        TAB_DEFINITIONS.Metodologia,
         PERFIL_TAB,
       ];
 
@@ -139,6 +160,7 @@ export function getTabsForRole(role: UserRole): TabMenuItem[] {
         TAB_DEFINITIONS.PainelAnualEstrategico,
         TAB_DEFINITIONS.PainelAvaliacao,
         TAB_DEFINITIONS.MinhaEquipe,
+        TAB_DEFINITIONS.Metodologia,
         PERFIL_TAB,
       ];
 
@@ -146,18 +168,23 @@ export function getTabsForRole(role: UserRole): TabMenuItem[] {
       return [
         TAB_DEFINITIONS.Aprovacoes,
         TAB_DEFINITIONS.AdminDashboard,
+        TAB_DEFINITIONS.Compliance,
         TAB_DEFINITIONS.PainelAnualEstrategico,
         TAB_DEFINITIONS.PainelAvaliacao,
+        TAB_DEFINITIONS.Metodologia,
         PERFIL_TAB,
       ];
 
     case 'ceo':
       return [
         TAB_DEFINITIONS.DashboardsGerenciais,
+        TAB_DEFINITIONS.VisaoEstrategica,
         TAB_DEFINITIONS.PainelAnualEstrategico,
+        TAB_DEFINITIONS.Compliance,
         TAB_DEFINITIONS.PainelAvaliacao,
         TAB_DEFINITIONS.AdminDashboard,
         TAB_DEFINITIONS.Aprovacoes,
+        TAB_DEFINITIONS.Metodologia,
         PERFIL_TAB,
       ];
 
@@ -166,8 +193,11 @@ export function getTabsForRole(role: UserRole): TabMenuItem[] {
         TAB_DEFINITIONS.Aprovacoes,
         TAB_DEFINITIONS.AdminDashboard,
         TAB_DEFINITIONS.DashboardsGerenciais,
+        TAB_DEFINITIONS.VisaoEstrategica,
+        TAB_DEFINITIONS.Compliance,
         TAB_DEFINITIONS.PainelAnualEstrategico,
         TAB_DEFINITIONS.PainelAvaliacao,
+        TAB_DEFINITIONS.Metodologia,
         PERFIL_TAB,
       ];
 

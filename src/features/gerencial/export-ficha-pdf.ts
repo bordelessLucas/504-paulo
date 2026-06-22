@@ -64,11 +64,11 @@ function buildSemaforoHtml(ficha: ColaboradorFichaData): string {
   `;
 }
 
-function buildRadarHtml(ficha: ColaboradorFichaData): string {
+function buildRadarHtml(radar: ColaboradorFichaData['radar']): string {
   const maxValor = 3;
 
-  const bars = ficha.radar.labels.map((label, index) => {
-    const valor = ficha.radar.valores[index] ?? 0;
+  const bars = radar.labels.map((label, index) => {
+    const valor = radar.valores[index] ?? 0;
     const width = Math.max(4, Math.round((valor / maxValor) * 100));
 
     return `
@@ -81,6 +81,10 @@ function buildRadarHtml(ficha: ColaboradorFichaData): string {
   }).join('');
 
   return `<div class="radar-wrap">${bars}</div>`;
+}
+
+function hasRadarData(radar: ColaboradorFichaData['radar']): boolean {
+  return radar.valores.some((valor) => valor > 0);
 }
 
 function buildAvaliacoesHtml(ficha: ColaboradorFichaData): string {
@@ -245,7 +249,7 @@ function buildFichaBody(ficha: ColaboradorFichaData, options?: { showPageBreak?:
     ${options?.showPageBreak ? '<div class="page-break"></div>' : ''}
     <div class="doc-header">
       <div class="doc-title">Painel de Avaliação de Performance — Offshore</div>
-      <div class="doc-subtitle">Metodologia 360° · Escala 0 a 3 · 3 perguntas universais</div>
+      <div class="doc-subtitle">Metodologia offshore · Escala 0 a 3 · IMA ponderado</div>
       <div class="doc-meta">Período: ${escapeHtml(ficha.periodoLabel)} · Gerado em ${new Date().toLocaleString('pt-BR')}</div>
     </div>
 
@@ -268,6 +272,10 @@ function buildFichaBody(ficha: ColaboradorFichaData, options?: { showPageBreak?:
       <div><div class="label">Classificação</div><div class="value">${escapeHtml(profile.classificacao ?? '—')}</div></div>
       <div><div class="label">Nível IRATA</div><div class="value">${escapeHtml(profile.nivelIrata ?? '—')}</div></div>
       <div><div class="label">Expertise</div><div class="value">${escapeHtml(profile.expertise ?? '—')}</div></div>
+      <div><div class="label">Código interno</div><div class="value">${escapeHtml(profile.codigoInterno ?? '—')}</div></div>
+      <div><div class="label">Plataforma</div><div class="value">${escapeHtml(profile.plataforma ?? '—')}</div></div>
+      <div><div class="label">Formação acadêmica</div><div class="value">${escapeHtml(profile.formacaoAcademica ?? '—')}</div></div>
+      <div><div class="label">Certificações</div><div class="value">${escapeHtml(profile.certificacoes ?? '—')}</div></div>
       <div><div class="label">Formação técnica</div><div class="value">${escapeHtml(profile.formacaoTecnica ?? '—')}</div></div>
       <div><div class="label">Certificação EDN</div><div class="value">${profile.certificacaoEdn ? 'Sim' : 'Não'}</div></div>
     </div>
@@ -275,8 +283,12 @@ function buildFichaBody(ficha: ColaboradorFichaData, options?: { showPageBreak?:
     <h2>Desempenho consolidado</h2>
     ${buildSemaforoHtml(ficha)}
 
-    <h2>Radar — 3 eixos universais</h2>
-    ${buildRadarHtml(ficha)}
+    ${hasRadarData(ficha.radarOffshore)
+      ? `<h2>Radar — 12 eixos offshore</h2>${buildRadarHtml(ficha.radarOffshore)}`
+      : ''}
+    ${hasRadarData(ficha.radar)
+      ? `<h2>Radar — 3 eixos universais</h2>${buildRadarHtml(ficha.radar)}`
+      : '<p class="empty">Sem dados de radar no período.</p>'}
 
     <h2>Histórico de avaliações aprovadas</h2>
     ${buildAvaliacoesHtml(ficha)}

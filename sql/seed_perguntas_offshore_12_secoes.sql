@@ -1,0 +1,2 @@
+-- Referência: use a migration supabase/migrations/20260622120000_erp_offshore_completo.sql
+-- ou execute o conteúdo dela no SQL Editor do Supabase.

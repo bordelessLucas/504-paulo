@@ -29,6 +29,10 @@ export type CsvProfileRow = {
   telefone?: string;
   expertise?: string;
   formacao_tecnica?: string;
+  codigo_interno?: string;
+  plataforma?: string;
+  formacao_academica?: string;
+  certificacoes?: string;
   certificacao_edn?: boolean;
   status?: ProfileStatusValue;
   role?: UserRole;
@@ -76,6 +80,16 @@ const HEADER_ALIASES: Record<string, keyof Omit<CsvProfileRow, 'rowNumber'>> = {
   formacao_tecnica: 'formacao_tecnica',
   formacaotecnica: 'formacao_tecnica',
   'formacao tecnica': 'formacao_tecnica',
+  codigo_interno: 'codigo_interno',
+  codigointerno: 'codigo_interno',
+  'codigo interno': 'codigo_interno',
+  plataforma: 'plataforma',
+  unidade: 'plataforma',
+  formacao_academica: 'formacao_academica',
+  formacaoacademica: 'formacao_academica',
+  'formacao academica': 'formacao_academica',
+  certificacoes: 'certificacoes',
+  certificacao: 'certificacoes',
   certificacao_edn: 'certificacao_edn',
   certificacaoedn: 'certificacao_edn',
   'certificacao edn': 'certificacao_edn',
@@ -205,6 +219,10 @@ function mapRawRow(
       telefone: mapped.telefone,
       expertise: mapped.expertise,
       formacao_tecnica: mapped.formacao_tecnica,
+      codigo_interno: mapped.codigo_interno,
+      plataforma: mapped.plataforma,
+      formacao_academica: mapped.formacao_academica,
+      certificacoes: mapped.certificacoes,
       certificacao_edn: mapped.certificacao_edn,
       status: mapped.status,
       role: mapped.role,
@@ -264,6 +282,10 @@ export function csvRowToCreateInput(row: CsvProfileRow) {
     telefone: row.telefone,
     expertise: row.expertise,
     formacao_tecnica: row.formacao_tecnica,
+    codigo_interno: row.codigo_interno,
+    plataforma: row.plataforma,
+    formacao_academica: row.formacao_academica,
+    certificacoes: row.certificacoes,
     certificacao_edn: row.certificacao_edn ?? false,
     role: row.role ?? 'colaborador',
     status: row.status ?? 'ativo',
@@ -284,6 +306,10 @@ export function toProfileInsert(row: CsvProfileRow, resolvedId: string): Profile
     telefone: row.telefone ?? null,
     expertise: row.expertise ?? null,
     formacao_tecnica: row.formacao_tecnica ?? null,
+    codigo_interno: row.codigo_interno ?? null,
+    plataforma: row.plataforma ?? null,
+    formacao_academica: row.formacao_academica ?? null,
+    certificacoes: row.certificacoes ?? null,
     certificacao_edn: row.certificacao_edn ?? false,
     status: row.status ?? 'ativo',
     role: row.role ?? 'colaborador',

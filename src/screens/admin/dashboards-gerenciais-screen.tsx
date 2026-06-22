@@ -167,8 +167,8 @@ export function DashboardsGerenciaisScreen() {
           <View style={styles.header}>
             <ThemedText type="heading">Dashboard executivo</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-              Visão consolidada da metodologia 360° com as 3 perguntas universais e o Índice Médio
-              de Avaliação (IMA).
+              Visão consolidada offshore: 12 áreas de avaliação, IMA ponderado e ranking completo
+              da equipe.
             </ThemedText>
           </View>
 
@@ -188,8 +188,19 @@ export function DashboardsGerenciaisScreen() {
 
             <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
           <DashboardCard
-            title="Radar de desempenho"
-            description="Média geral da empresa nas 3 perguntas universais da metodologia 360°.">
+            title="Radar offshore (12 eixos)"
+            description="Média geral da empresa por área avaliadora do modelo Excel.">
+            <RadarDesempenhoChart
+              labels={data?.radarOffshore.labels ?? []}
+              valores={data?.radarOffshore.valores ?? []}
+            />
+          </DashboardCard>
+            </View>
+
+            <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
+          <DashboardCard
+            title="Radar legado (3 eixos)"
+            description="Média nas perguntas universais — exibido quando o seed offshore ainda não está ativo.">
             <RadarDesempenhoChart
               labels={data?.radarUniversal.labels ?? []}
               valores={data?.radarUniversal.valores ?? []}
@@ -242,6 +253,19 @@ export function DashboardsGerenciaisScreen() {
               exportingId={exportingId}
               items={data?.bottom5 ?? []}
               title="Menor desempenho"
+              onExport={(colaborador) => void handleExportFicha(colaborador)}
+            />
+          </DashboardCard>
+            </View>
+
+            <View style={isDesktopLayout ? styles.cardSlotDesktopWide : undefined}>
+          <DashboardCard
+            title="Ranking completo"
+            description="Todos os colaboradores ativos ordenados por média/IMA no período.">
+            <ColaboradorRankingList
+              exportingId={exportingId}
+              items={data?.rankingCompleto ?? []}
+              title="Ranking geral"
               onExport={(colaborador) => void handleExportFicha(colaborador)}
             />
           </DashboardCard>

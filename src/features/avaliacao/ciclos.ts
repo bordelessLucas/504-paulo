@@ -1,7 +1,8 @@
 import type { TipoAvaliacao, UserRole } from '@/types/supabase';
 
-export const SECAO_PERGUNTAS_UNIVERSAIS = 'UNIVERSAL';
+import { SECAO_PERGUNTAS_UNIVERSAIS } from '@/features/avaliacao/secoes-offshore';
 
+export const SECAO_PERGUNTAS_UNIVERSAIS_LEGACY = SECAO_PERGUNTAS_UNIVERSAIS;
 export function getQuinzenaStartDate(referenceDate = new Date()): string {
   const day = referenceDate.getDate();
   const start = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), day <= 15 ? 1 : 16);

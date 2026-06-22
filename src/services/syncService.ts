@@ -1,6 +1,7 @@
 import {
   addPontoMelhoriaAvaliacao,
   fetchEquipeStatusCiclo,
+  fetchPerguntasOffshore,
   fetchPerguntasUniversais,
   submitAvaliacao,
 } from '@/features/avaliacao/api';
@@ -116,10 +117,16 @@ export async function downloadEquipeParaCache(
   avaliadorId: string,
   role: UserRole | null | undefined,
 ): Promise<void> {
-  const [equipe, perguntas] = await Promise.all([
+  const [equipe, offshore, universais] = await Promise.all([
     fetchEquipeStatusCiclo(avaliadorId, role),
+    fetchPerguntasOffshore(),
     fetchPerguntasUniversais(),
   ]);
+
+  const perguntasPorId = new Map<string, (typeof offshore)[number]>();
+  for (const pergunta of [...universais, ...offshore]) {
+    perguntasPorId.set(pergunta.id, pergunta);
+  }
 
   await Promise.all([
     cacheEquipe({
@@ -127,6 +134,6 @@ export async function downloadEquipeParaCache(
       role: role ?? 'supervisor',
       data: equipe,
     }),
-    cachePerguntas(perguntas),
+    cachePerguntas([...perguntasPorId.values()]),
   ]);
 }

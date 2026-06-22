@@ -6,6 +6,11 @@ import {
   PERGUNTAS_UNIVERSAIS_RADAR,
 } from '@/features/gerencial/perguntas-universais';
 import {
+  CODIGOS_SECOES_OFFSHORE,
+  PERGUNTAS_OFFSHORE_RADAR,
+} from '@/features/gerencial/perguntas-offshore';
+import { SECOES_OFFSHORE } from '@/features/avaliacao/secoes-offshore';
+import {
   getSemaforoItem,
   getSemaforoPorMedia,
   type SemaforoStatus,
@@ -72,6 +77,10 @@ export type ColaboradorFichaProfile = {
   expertise: string | null;
   formacaoTecnica: string | null;
   certificacaoEdn: boolean;
+  codigoInterno: string | null;
+  plataforma: string | null;
+  formacaoAcademica: string | null;
+  certificacoes: string | null;
   liderNome: string | null;
   tempoEmpresaLabel: string | null;
 };
@@ -88,6 +97,7 @@ export type ColaboradorFichaData = {
   semaforoStatus: SemaforoStatus;
   semaforoLabel: string;
   radar: RadarUniversalData;
+  radarOffshore: RadarUniversalData;
   avaliacoes: FichaAvaliacaoDetalhe[];
   melhoriasSalariais: MelhoriaSalarialHistorico[];
   decisoesAnuais: FichaDecisaoAnual[];
@@ -162,6 +172,16 @@ function buildRadarColaborador(notasPorCodigo: Map<string, number[]>): RadarUniv
   };
 }
 
+function buildRadarOffshoreColaborador(notasPorSecao: Map<string, number[]>): RadarUniversalData {
+  return {
+    labels: PERGUNTAS_OFFSHORE_RADAR.map((item) => item.label),
+    valores: CODIGOS_SECOES_OFFSHORE.map((codigo) => {
+      const media = calcularMedia(notasPorSecao.get(codigo) ?? []);
+      return media ?? 0;
+    }),
+  };
+}
+
 type PerguntaMeta = {
   id: string;
   codigo: string;
@@ -174,9 +194,8 @@ async function fetchPerguntasUniversaisMeta(): Promise<{
 }> {
   const { data, error } = await supabase
     .from('perguntas')
-    .select('id, codigo, descricao')
-    .eq('secao_departamento', 'UNIVERSAL')
-    .in('codigo', [...CODIGOS_PERGUNTAS_UNIVERSAIS]);
+    .select('id, codigo, descricao, secao_departamento')
+    .or(`secao_departamento.eq.UNIVERSAL,secao_departamento.in.(${SECOES_OFFSHORE.join(',')})`);
 
   if (error) {
     throw new Error(error.message);
@@ -190,11 +209,17 @@ async function fetchPerguntasUniversaisMeta(): Promise<{
       continue;
     }
 
-    const radarItem = PERGUNTAS_UNIVERSAIS_RADAR.find((item) => item.codigo === pergunta.codigo);
+    const radarUniversal = PERGUNTAS_UNIVERSAIS_RADAR.find((item) => item.codigo === pergunta.codigo);
+    const radarOffshore = PERGUNTAS_OFFSHORE_RADAR.find((item) => item.codigo === pergunta.codigo);
+    const label =
+      radarUniversal?.label ??
+      radarOffshore?.label ??
+      pergunta.codigo;
+
     porId.set(pergunta.id, {
       id: pergunta.id,
       codigo: pergunta.codigo,
-      label: radarItem?.label ?? pergunta.codigo,
+      label,
     });
     porCodigo.set(pergunta.codigo, pergunta.id);
   }
@@ -282,7 +307,7 @@ export async function fetchColaboradorFicha(
   const { data: profileRow, error: profileError } = await supabase
     .from('profiles')
     .select(
-      'nome, departamento, funcao, data_admissao, data_nascimento, classificacao, nivel_irata, status, ddd, telefone, expertise, formacao_tecnica, certificacao_edn, lider_id',
+      'nome, departamento, funcao, data_admissao, data_nascimento, classificacao, nivel_irata, status, ddd, telefone, expertise, formacao_tecnica, certificacao_edn, codigo_interno, plataforma, formacao_academica, certificacoes, lider_id',
     )
     .eq('id', colaboradorId)
     .single();
@@ -397,6 +422,9 @@ export async function fetchColaboradorFicha(
   const notasPorCodigo = new Map<string, number[]>(
     CODIGOS_PERGUNTAS_UNIVERSAIS.map((codigo) => [codigo, []]),
   );
+  const notasPorSecao = new Map<string, number[]>(
+    CODIGOS_SECOES_OFFSHORE.map((codigo) => [codigo, []]),
+  );
   const todasNotas: number[] = [];
 
   const respostasPorAvaliacao = new Map<string, typeof respostasLista>();
@@ -415,6 +443,13 @@ export async function fetchColaboradorFicha(
           const atual = notasPorCodigo.get(meta.codigo) ?? [];
           atual.push(resposta.nota);
           notasPorCodigo.set(meta.codigo, atual);
+
+          const secao = meta.codigo.replace(/\d+$/, '');
+          if ((CODIGOS_SECOES_OFFSHORE as readonly string[]).includes(secao)) {
+            const secaoNotas = notasPorSecao.get(secao) ?? [];
+            secaoNotas.push(resposta.nota);
+            notasPorSecao.set(secao, secaoNotas);
+          }
         }
       }
     }
@@ -472,6 +507,10 @@ export async function fetchColaboradorFicha(
       expertise: profileRow.expertise,
       formacaoTecnica: profileRow.formacao_tecnica,
       certificacaoEdn: profileRow.certificacao_edn ?? false,
+      codigoInterno: profileRow.codigo_interno,
+      plataforma: profileRow.plataforma,
+      formacaoAcademica: profileRow.formacao_academica,
+      certificacoes: profileRow.certificacoes,
       liderNome,
       tempoEmpresaLabel: tempoEmpresa?.label ?? null,
     },
@@ -480,6 +519,7 @@ export async function fetchColaboradorFicha(
     semaforoStatus,
     semaforoLabel: getSemaforoItem(semaforoStatus).label,
     radar: buildRadarColaborador(notasPorCodigo),
+    radarOffshore: buildRadarOffshoreColaborador(notasPorSecao),
     avaliacoes: avaliacoesDetalhadas,
     melhoriasSalariais: (melhorias ?? []).map((item) => ({
       id: item.id,

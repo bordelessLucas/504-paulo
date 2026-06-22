@@ -82,6 +82,10 @@ export type Database = {
           expertise: string | null;
           formacao_tecnica: string | null;
           certificacao_edn: boolean;
+          codigo_interno: string | null;
+          plataforma: string | null;
+          formacao_academica: string | null;
+          certificacoes: string | null;
           status: string | null;
           avatar_url: string | null;
           role: UserRoleEnum;
@@ -103,6 +107,10 @@ export type Database = {
           expertise?: string | null;
           formacao_tecnica?: string | null;
           certificacao_edn?: boolean;
+          codigo_interno?: string | null;
+          plataforma?: string | null;
+          formacao_academica?: string | null;
+          certificacoes?: string | null;
           status?: string | null;
           avatar_url?: string | null;
           role?: UserRoleEnum;
@@ -124,6 +132,10 @@ export type Database = {
           expertise?: string | null;
           formacao_tecnica?: string | null;
           certificacao_edn?: boolean;
+          codigo_interno?: string | null;
+          plataforma?: string | null;
+          formacao_academica?: string | null;
+          certificacoes?: string | null;
           status?: string | null;
           avatar_url?: string | null;
           role?: UserRoleEnum;
@@ -566,6 +578,318 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+
+      colaborador_potencial: {
+        Row: {
+          colaborador_id: string;
+          potencial: "baixo" | "medio" | "alto";
+          avaliado_por_id: string | null;
+          observacao: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          colaborador_id: string;
+          potencial?: "baixo" | "medio" | "alto";
+          avaliado_por_id?: string | null;
+          observacao?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          colaborador_id?: string;
+          potencial?: "baixo" | "medio" | "alto";
+          avaliado_por_id?: string | null;
+          observacao?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      plano_sucessao: {
+        Row: {
+          id: string;
+          posicao_chave: string;
+          titular_id: string | null;
+          sucessor_1_id: string | null;
+          prontidao_s1: string | null;
+          sucessor_2_id: string | null;
+          prontidao_s2: string | null;
+          gap_identificado: string | null;
+          acao_desenvolvimento: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          posicao_chave: string;
+          titular_id?: string | null;
+          sucessor_1_id?: string | null;
+          prontidao_s1?: string | null;
+          sucessor_2_id?: string | null;
+          prontidao_s2?: string | null;
+          gap_identificado?: string | null;
+          acao_desenvolvimento?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          posicao_chave?: string;
+          titular_id?: string | null;
+          sucessor_1_id?: string | null;
+          prontidao_s1?: string | null;
+          sucessor_2_id?: string | null;
+          prontidao_s2?: string | null;
+          gap_identificado?: string | null;
+          acao_desenvolvimento?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      denuncias: {
+        Row: {
+          id: string;
+          id_relato: string;
+          data_abertura: string;
+          cliente_plataforma: string | null;
+          unidade: string | null;
+          anonimo: boolean;
+          nome_relatante: string | null;
+          funcao_relatante: string | null;
+          nome_denunciado: string | null;
+          funcao_denunciado: string | null;
+          tipo_denuncia:
+            | "assedio_moral"
+            | "assedio_sexual"
+            | "desvio_conduta"
+            | "risco_vida"
+            | "fraude"
+            | "discriminacao"
+            | "outros"
+            | null;
+          risco_ocupacional: boolean;
+          gravidade: "baixa" | "media" | "alta" | "critica" | null;
+          reincidencia: boolean;
+          status: "aberto" | "em_analise" | "concluido" | "arquivado";
+          prazo_sla: string | null;
+          data_fechamento: string | null;
+          descricao: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          id_relato: string;
+          data_abertura?: string;
+          cliente_plataforma?: string | null;
+          unidade?: string | null;
+          anonimo?: boolean;
+          nome_relatante?: string | null;
+          funcao_relatante?: string | null;
+          nome_denunciado?: string | null;
+          funcao_denunciado?: string | null;
+          tipo_denuncia?:
+            | "assedio_moral"
+            | "assedio_sexual"
+            | "desvio_conduta"
+            | "risco_vida"
+            | "fraude"
+            | "discriminacao"
+            | "outros"
+            | null;
+          risco_ocupacional?: boolean;
+          gravidade?: "baixa" | "media" | "alta" | "critica" | null;
+          reincidencia?: boolean;
+          status?: "aberto" | "em_analise" | "concluido" | "arquivado";
+          prazo_sla?: string | null;
+          data_fechamento?: string | null;
+          descricao?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          id_relato?: string;
+          data_abertura?: string;
+          cliente_plataforma?: string | null;
+          unidade?: string | null;
+          anonimo?: boolean;
+          nome_relatante?: string | null;
+          funcao_relatante?: string | null;
+          nome_denunciado?: string | null;
+          funcao_denunciado?: string | null;
+          tipo_denuncia?:
+            | "assedio_moral"
+            | "assedio_sexual"
+            | "desvio_conduta"
+            | "risco_vida"
+            | "fraude"
+            | "discriminacao"
+            | "outros"
+            | null;
+          risco_ocupacional?: boolean;
+          gravidade?: "baixa" | "media" | "alta" | "critica" | null;
+          reincidencia?: boolean;
+          status?: "aberto" | "em_analise" | "concluido" | "arquivado";
+          prazo_sla?: string | null;
+          data_fechamento?: string | null;
+          descricao?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      riscos_nr1: {
+        Row: {
+          id: string;
+          id_risco: string;
+          data_identificacao: string;
+          area_setor: string | null;
+          tipo_risco: string | null;
+          descricao: string;
+          probabilidade: number;
+          severidade: number;
+          nivel_risco: string | null;
+          medida_controle: string | null;
+          responsavel_id: string | null;
+          prazo: string | null;
+          status: "identificado" | "em_tratamento" | "controlado" | "encerrado";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          id_risco: string;
+          data_identificacao?: string;
+          area_setor?: string | null;
+          tipo_risco?: string | null;
+          descricao: string;
+          probabilidade: number;
+          severidade: number;
+          nivel_risco?: string | null;
+          medida_controle?: string | null;
+          responsavel_id?: string | null;
+          prazo?: string | null;
+          status?: "identificado" | "em_tratamento" | "controlado" | "encerrado";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          id_risco?: string;
+          data_identificacao?: string;
+          area_setor?: string | null;
+          tipo_risco?: string | null;
+          descricao?: string;
+          probabilidade?: number;
+          severidade?: number;
+          nivel_risco?: string | null;
+          medida_controle?: string | null;
+          responsavel_id?: string | null;
+          prazo?: string | null;
+          status?: "identificado" | "em_tratamento" | "controlado" | "encerrado";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      planos_acao_compliance: {
+        Row: {
+          id: string;
+          id_acao: string;
+          origem_tipo: string;
+          origem_id: string | null;
+          descricao_acao: string;
+          responsavel_id: string | null;
+          data_inicio: string | null;
+          prazo: string | null;
+          status: "nao_iniciado" | "em_andamento" | "concluido" | "cancelado";
+          conclusao_pct: number;
+          evidencia: string | null;
+          observacoes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          id_acao: string;
+          origem_tipo: string;
+          origem_id?: string | null;
+          descricao_acao: string;
+          responsavel_id?: string | null;
+          data_inicio?: string | null;
+          prazo?: string | null;
+          status?: "nao_iniciado" | "em_andamento" | "concluido" | "cancelado";
+          conclusao_pct?: number;
+          evidencia?: string | null;
+          observacoes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          id_acao?: string;
+          origem_tipo?: string;
+          origem_id?: string | null;
+          descricao_acao?: string;
+          responsavel_id?: string | null;
+          data_inicio?: string | null;
+          prazo?: string | null;
+          status?: "nao_iniciado" | "em_andamento" | "concluido" | "cancelado";
+          conclusao_pct?: number;
+          evidencia?: string | null;
+          observacoes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      audit_log: {
+        Row: {
+          id: string;
+          usuario_id: string | null;
+          acao: string;
+          tabela: string;
+          registro_id: string | null;
+          campo_alterado: string | null;
+          valor_anterior: string | null;
+          valor_novo: string | null;
+          ip_address: string | null;
+          observacao: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          usuario_id?: string | null;
+          acao: string;
+          tabela: string;
+          registro_id?: string | null;
+          campo_alterado?: string | null;
+          valor_anterior?: string | null;
+          valor_novo?: string | null;
+          ip_address?: string | null;
+          observacao?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          usuario_id?: string | null;
+          acao?: string;
+          tabela?: string;
+          registro_id?: string | null;
+          campo_alterado?: string | null;
+          valor_anterior?: string | null;
+          valor_novo?: string | null;
+          ip_address?: string | null;
+          observacao?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: {

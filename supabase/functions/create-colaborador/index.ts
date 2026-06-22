@@ -57,6 +57,10 @@ type CreateColaboradorBody = {
   telefone?: string;
   expertise?: string;
   formacao_tecnica?: string;
+  codigo_interno?: string;
+  plataforma?: string;
+  formacao_academica?: string;
+  certificacoes?: string;
   certificacao_edn?: boolean;
   senha_temporaria?: string;
   role?: string;
@@ -281,6 +285,10 @@ Deno.serve(async (request) => {
         telefone: body.telefone?.trim() || null,
         expertise: body.expertise?.trim() || null,
         formacao_tecnica: body.formacao_tecnica?.trim() || null,
+        codigo_interno: body.codigo_interno?.trim() || null,
+        plataforma: body.plataforma?.trim() || null,
+        formacao_academica: body.formacao_academica?.trim() || null,
+        certificacoes: body.certificacoes?.trim() || null,
         certificacao_edn: body.certificacao_edn ?? false,
         status,
         role,

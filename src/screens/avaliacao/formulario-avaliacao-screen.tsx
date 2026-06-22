@@ -19,10 +19,12 @@ import { Button } from '@/components/ui/button';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import {
   addPontoMelhoriaAvaliacao,
-  fetchPerguntasUniversais,
+  fetchPerguntasPorAvaliador,
+  filterPerguntasPorAvaliador,
   fetchPontosMelhoriaAnteriores,
   submitAvaliacao,
 } from '@/features/avaliacao/api';
+import { SECAO_OFFSHORE_LABELS, type SecaoOffshore } from '@/features/avaliacao/secoes-offshore';
 import { resolveTipoAvaliacaoPorRole, TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
 import {
   getRespostaValidationMessage,
@@ -91,8 +93,18 @@ export function FormularioAvaliacaoScreen() {
       const cachedPerguntas = !isOnline ? await getCachedPerguntas() : null;
 
       const perguntasPromise = isOnline
-        ? fetchPerguntasUniversais()
-        : Promise.resolve(cachedPerguntas?.perguntas ?? []);
+        ? fetchPerguntasPorAvaliador({
+            role,
+            tipo: tipoAvaliacao,
+            departamentoAvaliador: user?.departamento,
+          })
+        : Promise.resolve(
+            filterPerguntasPorAvaliador(cachedPerguntas?.perguntas ?? [], {
+              role,
+              tipo: tipoAvaliacao,
+              departamentoAvaliador: user?.departamento,
+            }),
+          );
 
       const pontosPromise = isOnline
         ? fetchPontosMelhoriaAnteriores(avaliadoId)
@@ -125,7 +137,7 @@ export function FormularioAvaliacaoScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [avaliadoId, isOnline]);
+  }, [avaliadoId, isOnline, role, tipoAvaliacao, user?.departamento]);
 
   useEffect(() => {
     void loadForm();
@@ -141,6 +153,27 @@ export function FormularioAvaliacaoScreen() {
     }));
     setFeedback(null);
   }
+
+  const perguntasPorSecao = useMemo(() => {
+    const grupos = new Map<string, PerguntaAvaliacao[]>();
+
+    for (const pergunta of perguntas) {
+      const secao = pergunta.secao_departamento ?? 'GERAL';
+      const lista = grupos.get(secao) ?? [];
+      lista.push(pergunta);
+      grupos.set(secao, lista);
+    }
+
+    return [...grupos.entries()];
+  }, [perguntas]);
+
+  const subtituloFormulario = useMemo(() => {
+    const total = perguntas.length;
+    if (total <= 3) {
+      return `${TIPO_AVALIACAO_LABELS[tipoAvaliacao]} · ${total} critério(s) · escala 0 a 3`;
+    }
+    return `${TIPO_AVALIACAO_LABELS[tipoAvaliacao]} · ${total} critérios offshore · escala 0 a 3`;
+  }, [perguntas.length, tipoAvaliacao]);
 
   async function handleSubmit() {
     if (!user || !canSubmit) {
@@ -278,7 +311,7 @@ export function FormularioAvaliacaoScreen() {
           <View style={styles.header}>
             <ThemedText type="heading">{avaliadoNome}</ThemedText>
             <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-              {TIPO_AVALIACAO_LABELS[tipoAvaliacao]} · 3 critérios universais · escala 0 a 3
+              {subtituloFormulario}
             </ThemedText>
           </View>
 
@@ -316,63 +349,77 @@ export function FormularioAvaliacaoScreen() {
 
             {perguntas.length === 0 ? (
               <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-                Perguntas universais não encontradas. Execute o script sql/seed_perguntas_universais.sql
-                no Supabase.
+                Nenhuma pergunta encontrada para seu papel. Execute a migration offshore no Supabase
+                ou verifique o seed de perguntas.
               </ThemedText>
             ) : (
-              perguntas.map((pergunta, index) => {
-                const resposta = respostas[pergunta.id] ?? createEmptyResposta();
-                const validationMessage = getRespostaValidationMessage(resposta);
-                const showValidation =
-                  resposta.nota !== null &&
-                  validationMessage !== null &&
-                  !isRespostaCompleta(resposta);
+              perguntasPorSecao.map(([secao, perguntasSecao]) => {
+                const secaoLabel =
+                  secao in SECAO_OFFSHORE_LABELS
+                    ? SECAO_OFFSHORE_LABELS[secao as SecaoOffshore]
+                    : secao;
 
                 return (
-                  <View
-                    key={pergunta.id}
-                    style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-                    <ThemedText style={styles.perguntaIndex}>Pergunta {index + 1}</ThemedText>
-                    <ThemedText style={styles.perguntaTexto}>{pergunta.descricao}</ThemedText>
+                  <View key={secao} style={styles.section}>
+                    <ThemedText type="subtitle">{secaoLabel}</ThemedText>
+                    {perguntasSecao.map((pergunta, index) => {
+                      const resposta = respostas[pergunta.id] ?? createEmptyResposta();
+                      const validationMessage = getRespostaValidationMessage(resposta);
+                      const showValidation =
+                        resposta.nota !== null &&
+                        validationMessage !== null &&
+                        !isRespostaCompleta(resposta);
 
-                    <ScorePicker
-                      value={resposta.nota}
-                      onChange={(nota) =>
-                        updateResposta(pergunta.id, {
-                          nota,
-                          evidencia: '',
-                        })
-                      }
-                    />
+                      return (
+                        <View
+                          key={pergunta.id}
+                          style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+                          <ThemedText style={styles.perguntaIndex}>
+                            {pergunta.codigo ?? `Pergunta ${index + 1}`}
+                          </ThemedText>
+                          <ThemedText style={styles.perguntaTexto}>{pergunta.descricao}</ThemedText>
 
-                    {resposta.nota !== null ? (
-                      <View style={styles.fieldGroup}>
-                        <ThemedText style={styles.fieldLabel}>Justificativa *</ThemedText>
-                        <TextInput
-                          multiline
-                          placeholder="Descreva o motivo da nota atribuída"
-                          placeholderTextColor={theme.placeholder}
-                          style={[
-                            styles.textInput,
-                            {
-                              color: theme.text,
-                              backgroundColor: theme.background,
-                              borderColor: showValidation ? theme.danger : theme.border,
-                            },
-                          ]}
-                          value={resposta.justificativa}
-                          onChangeText={(justificativa) =>
-                            updateResposta(pergunta.id, { justificativa })
-                          }
-                        />
-                      </View>
-                    ) : null}
+                          <ScorePicker
+                            value={resposta.nota}
+                            onChange={(nota) =>
+                              updateResposta(pergunta.id, {
+                                nota,
+                                evidencia: '',
+                              })
+                            }
+                          />
 
-                    {showValidation ? (
-                      <ThemedText themeColor="danger" style={styles.fieldError}>
-                        {validationMessage}
-                      </ThemedText>
-                    ) : null}
+                          {resposta.nota !== null ? (
+                            <View style={styles.fieldGroup}>
+                              <ThemedText style={styles.fieldLabel}>Justificativa *</ThemedText>
+                              <TextInput
+                                multiline
+                                placeholder="Descreva o motivo da nota atribuída"
+                                placeholderTextColor={theme.placeholder}
+                                style={[
+                                  styles.textInput,
+                                  {
+                                    color: theme.text,
+                                    backgroundColor: theme.background,
+                                    borderColor: showValidation ? theme.danger : theme.border,
+                                  },
+                                ]}
+                                value={resposta.justificativa}
+                                onChangeText={(justificativa) =>
+                                  updateResposta(pergunta.id, { justificativa })
+                                }
+                              />
+                            </View>
+                          ) : null}
+
+                          {showValidation ? (
+                            <ThemedText themeColor="danger" style={styles.fieldError}>
+                              {validationMessage}
+                            </ThemedText>
+                          ) : null}
+                        </View>
+                      );
+                    })}
                   </View>
                 );
               })

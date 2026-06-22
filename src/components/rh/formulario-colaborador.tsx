@@ -41,6 +41,10 @@ const INITIAL_FORM: CreateColaboradorInput = {
   telefone: '',
   expertise: '',
   formacao_tecnica: '',
+  codigo_interno: '',
+  plataforma: '',
+  formacao_academica: '',
+  certificacoes: '',
   certificacao_edn: false,
   senha_temporaria: '',
   status: 'ativo',
@@ -214,6 +218,22 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
 
       <FormSection embedded={embedded} title="Dados contratuais">
         <Input
+          error={errors.codigo_interno}
+          label="Código interno"
+          onChangeText={(value) => updateField('codigo_interno', value)}
+          placeholder="Ex.: OFF-0042"
+          value={form.codigo_interno ?? ''}
+          variant={inputVariant}
+        />
+        <Input
+          error={errors.plataforma}
+          label="Plataforma / unidade"
+          onChangeText={(value) => updateField('plataforma', value)}
+          placeholder="Ex.: P-74"
+          value={form.plataforma ?? ''}
+          variant={inputVariant}
+        />
+        <Input
           error={errors.funcao}
           label="Função / cargo"
           onChangeText={(value) => updateField('funcao', value)}
@@ -304,6 +324,22 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           onChangeText={(value) => updateField('formacao_tecnica', value)}
           placeholder="Ex.: Técnico em Segurança do Trabalho"
           value={form.formacao_tecnica ?? ''}
+          variant={inputVariant}
+        />
+        <Input
+          error={errors.formacao_academica}
+          label="Formação acadêmica"
+          onChangeText={(value) => updateField('formacao_academica', value)}
+          placeholder="Ex.: Engenharia Mecânica"
+          value={form.formacao_academica ?? ''}
+          variant={inputVariant}
+        />
+        <Input
+          error={errors.certificacoes}
+          label="Certificações (texto livre)"
+          onChangeText={(value) => updateField('certificacoes', value)}
+          placeholder="Ex.: IRATA N2, NR-35, CBSP"
+          value={form.certificacoes ?? ''}
           variant={inputVariant}
         />
         <NotionCheckbox

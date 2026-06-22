@@ -11,8 +11,16 @@ import {
 import {
   getCicloInicioPorTipo,
   getQuinzenaStartDate,
-  SECAO_PERGUNTAS_UNIVERSAIS,
+  SECAO_PERGUNTAS_UNIVERSAIS_LEGACY,
 } from '@/features/avaliacao/ciclos';
+import {
+  resolveSecoesParaAvaliador,
+  SECOES_OFFSHORE,
+  type SecaoOffshore,
+} from '@/features/avaliacao/secoes-offshore';
+import { avaliarGovernancaAvaliacao } from '@/features/avaliacao/governanca';
+import { criarPdiAutomaticoSeNecessario } from '@/features/avaliacao/pdi-auto';
+import { registrarAuditLog } from '@/features/compliance/audit-log';
 import { supabase } from '@/lib/supabase';
 import type {
   PerguntaAvaliacao,
@@ -67,11 +75,11 @@ export type MelhoriaFormulario = {
 
 export { getQuinzenaStartDate } from '@/features/avaliacao/ciclos';
 
-export async function fetchPerguntasUniversais(): Promise<PerguntaAvaliacao[]> {
+export async function fetchPerguntasOffshore(): Promise<PerguntaAvaliacao[]> {
   const { data, error } = await supabase
     .from('perguntas')
     .select('*')
-    .eq('secao_departamento', SECAO_PERGUNTAS_UNIVERSAIS)
+    .in('secao_departamento', [...SECOES_OFFSHORE])
     .order('codigo', { ascending: true });
 
   if (error) {
@@ -79,6 +87,90 @@ export async function fetchPerguntasUniversais(): Promise<PerguntaAvaliacao[]> {
   }
 
   return data ?? [];
+}
+
+export async function fetchPerguntasPorAvaliador(params: {
+  role: UserRole | null | undefined;
+  tipo: TipoAvaliacao;
+  departamentoAvaliador?: string | null;
+}): Promise<PerguntaAvaliacao[]> {
+  const secoes = resolveSecoesParaAvaliador(
+    params.role,
+    params.tipo,
+    params.departamentoAvaliador,
+  );
+
+  if (secoes.length === 0) {
+    return fetchPerguntasUniversais();
+  }
+
+  const { data, error } = await supabase
+    .from('perguntas')
+    .select('*')
+    .in('secao_departamento', secoes)
+    .order('codigo', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const offshore = data ?? [];
+  if (offshore.length > 0) {
+    return offshore;
+  }
+
+  return fetchPerguntasUniversais();
+}
+
+export async function fetchPerguntasUniversais(): Promise<PerguntaAvaliacao[]> {
+  const { data, error } = await supabase
+    .from('perguntas')
+    .select('*')
+    .eq('secao_departamento', SECAO_PERGUNTAS_UNIVERSAIS_LEGACY)
+    .order('codigo', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const universais = data ?? [];
+  if (universais.length > 0) {
+    return universais;
+  }
+
+  return fetchPerguntasOffshore();
+}
+
+export function filterPerguntasPorAvaliador(
+  perguntas: PerguntaAvaliacao[],
+  params: {
+    role: UserRole | null | undefined;
+    tipo: TipoAvaliacao;
+    departamentoAvaliador?: string | null;
+  },
+): PerguntaAvaliacao[] {
+  const secoes = resolveSecoesParaAvaliador(
+    params.role,
+    params.tipo,
+    params.departamentoAvaliador,
+  );
+
+  if (secoes.length > 0) {
+    const offshore = perguntas.filter((pergunta) =>
+      secoes.includes(pergunta.secao_departamento as SecaoOffshore),
+    );
+    if (offshore.length > 0) {
+      return offshore;
+    }
+  }
+
+  const universais = perguntas.filter(
+    (pergunta) =>
+      pergunta.secao_departamento === SECAO_PERGUNTAS_UNIVERSAIS_LEGACY ||
+      pergunta.secao_departamento === 'UNIVERSAL',
+  );
+
+  return universais.length > 0 ? universais : perguntas;
 }
 
 export async function fetchColaboradoresPage(
@@ -215,7 +307,7 @@ export async function fetchEquipeStatusCiclo(
   };
 }
 
-/** @deprecated Use fetchPerguntasUniversais */
+/** @deprecated Use fetchPerguntasPorAvaliador com role/tipo */
 export async function fetchPerguntasPorDepartamento(_departamento?: string | null): Promise<{
   perguntas: PerguntaAvaliacao[];
   departamentoLabel: string;
@@ -224,22 +316,9 @@ export async function fetchPerguntasPorDepartamento(_departamento?: string | nul
 
   return {
     perguntas,
-    departamentoLabel: 'Metodologia 360°',
+    departamentoLabel: 'Metodologia Offshore',
   };
 }
-
-/** @deprecated Use fetchPerguntasUniversais */
-export async function fetchPerguntasPorAvaliador(_departamento?: string | null) {
-  const perguntas = await fetchPerguntasUniversais();
-
-  return {
-    perguntas,
-    perfilAlvo: 'Metodologia 360°',
-  };
-}
-
-/** @deprecated Use fetchEquipeStatusCiclo */
-export const fetchEquipeStatusQuinzena = fetchEquipeStatusCiclo;
 
 type RespostaComPergunta = {
   id: string;
@@ -289,6 +368,9 @@ export async function fetchPontosMelhoriaAnteriores(avaliadoId: string): Promise
 
 /** @deprecated Use fetchPontosMelhoriaAnteriores */
 export const fetchPontosMelhoriaPendentes = fetchPontosMelhoriaAnteriores;
+
+/** @deprecated Use fetchEquipeStatusCiclo */
+export const fetchEquipeStatusQuinzena = fetchEquipeStatusCiclo;
 
 export async function submitAvaliacao(params: {
   avaliadorId: string;
@@ -340,6 +422,28 @@ export async function submitAvaliacao(params: {
       throw new Error(error.message);
     }
   }
+
+  const notas = params.respostas.map((r) => r.nota);
+  const mediaSimples =
+    notas.length > 0 ? notas.reduce((a, b) => a + b, 0) / notas.length : null;
+  const governanca = avaliarGovernancaAvaliacao({ mediaPonderada: mediaSimples });
+
+  if (governanca.acoes.includes('pdi_urgente') || governanca.acoes.includes('alerta_critico')) {
+    await criarPdiAutomaticoSeNecessario({
+      colaboradorId: params.avaliadoId,
+      criadoPorId: params.avaliadorId,
+      avaliacaoOrigemId: avaliacao.id,
+      media: mediaSimples,
+      classificacao: governanca.classificacao,
+    });
+  }
+
+  await registrarAuditLog({
+    acao: 'CRIACAO',
+    tabela: 'avaliacoes',
+    registroId: avaliacao.id,
+    observacao: `Avaliação ${params.tipo ?? 'quinzenal'} registrada. IMA parcial: ${mediaSimples?.toFixed(2) ?? 'N/A'}`,
+  });
 
   return { avaliacaoId: avaliacao.id };
 }

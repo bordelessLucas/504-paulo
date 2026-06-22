@@ -4,6 +4,15 @@ import {
   CODIGOS_PERGUNTAS_UNIVERSAIS,
   PERGUNTAS_UNIVERSAIS_RADAR,
 } from '@/features/gerencial/perguntas-universais';
+import {
+  CODIGOS_SECOES_OFFSHORE,
+  PERGUNTAS_OFFSHORE_RADAR,
+} from '@/features/gerencial/perguntas-offshore';
+import {
+  buildMediasPorSecaoFromCodigos,
+  calcularImaPonderado,
+} from '@/features/avaliacao/ima';
+import { SECOES_OFFSHORE } from '@/features/avaliacao/secoes-offshore';
 import { matchDepartamentoEmpresa } from '@/features/gerencial/departamentos';
 import { getSemaforoPorMedia, type SemaforoStatus } from '@/features/gerencial/semaforo';
 import { supabase } from '@/lib/supabase';
@@ -48,11 +57,13 @@ export type GestorPreenchimentoStatus = {
 
 export type GerencialDashboardData = {
   radarUniversal: RadarUniversalData;
+  radarOffshore: RadarUniversalData;
   ima: number | null;
   semaforoStatus: SemaforoStatus;
   statusPreenchimento: GestorPreenchimentoStatus[];
   top5: ColaboradorRanking[];
   bottom5: ColaboradorRanking[];
+  rankingCompleto: ColaboradorRanking[];
 };
 
 type ColaboradorBase = Pick<Profile, 'id' | 'nome' | 'departamento' | 'funcao'>;
@@ -107,7 +118,19 @@ function colaboradorPertenceAoGestor(
 function calcularIma(
   colaboradores: ColaboradorBase[],
   notasPorColaborador: Map<string, number[]>,
+  notasPorColaboradorSecao?: Map<string, Map<string, number[]>>,
 ): number | null {
+  if (notasPorColaboradorSecao && notasPorColaboradorSecao.size > 0) {
+    const imas = colaboradores
+      .map((colaborador) => {
+        const notasCodigo = notasPorColaboradorSecao.get(colaborador.id);
+        if (!notasCodigo) return null;
+        return calcularImaPonderado(buildMediasPorSecaoFromCodigos(notasCodigo));
+      })
+      .filter((v): v is number => v !== null);
+    return calcularMedia(imas);
+  }
+
   const mediasColaboradores = colaboradores
     .map((colaborador) => calcularMedia(notasPorColaborador.get(colaborador.id) ?? []))
     .filter((media): media is number => media !== null);
@@ -137,26 +160,39 @@ function buildRankings(
     .sort((left, right) => right.media - left.media);
 }
 
-async function fetchPerguntasUniversaisIds(): Promise<Map<string, string>> {
-  const { data, error } = await supabase
-    .from('perguntas')
-    .select('id, codigo')
-    .eq('secao_departamento', 'UNIVERSAL')
-    .in('codigo', [...CODIGOS_PERGUNTAS_UNIVERSAIS]);
+async function fetchPerguntasIdsPorSecao(): Promise<{
+  porCodigo: Map<string, string>;
+  offshore: boolean;
+}> {
+  const { data, error } = await supabase.from('perguntas').select('id, codigo, secao_departamento');
 
   if (error) {
     throw new Error(error.message);
   }
 
   const map = new Map<string, string>();
+  let offshore = false;
 
   for (const pergunta of data ?? []) {
     if (pergunta.codigo) {
       map.set(pergunta.codigo, pergunta.id);
     }
+    if (pergunta.secao_departamento && SECOES_OFFSHORE.includes(pergunta.secao_departamento as never)) {
+      offshore = true;
+    }
   }
 
-  return map;
+  return { porCodigo: map, offshore };
+}
+
+function buildRadarOffshore(notasPorSecao: Map<string, number[]>): RadarUniversalData {
+  return {
+    labels: PERGUNTAS_OFFSHORE_RADAR.map((item) => item.label),
+    valores: CODIGOS_SECOES_OFFSHORE.map((secao) => {
+      const media = calcularMedia(notasPorSecao.get(secao) ?? []);
+      return media ?? 0;
+    }),
+  };
 }
 
 function buildRadarUniversal(notasPorCodigo: Map<string, number[]>): RadarUniversalData {
@@ -254,11 +290,13 @@ export async function fetchGerencialDashboard(): Promise<GerencialDashboardData>
   if (listaColaboradores.length === 0) {
     return {
       radarUniversal: radarVazio,
+      radarOffshore: buildRadarOffshore(new Map()),
       ima: null,
       semaforoStatus: 'cinza',
       statusPreenchimento: [],
       top5: [],
       bottom5: [],
+      rankingCompleto: [],
     };
   }
 
@@ -266,9 +304,9 @@ export async function fetchGerencialDashboard(): Promise<GerencialDashboardData>
   const cicloQuinzena = getCicloInicioPorTipo('quinzenal');
   const cicloSemestre = getCicloInicioPorTipo('semestral');
 
-  const [perguntasPorCodigo, avaliacoesResult, avaliadosQuinzena, avaliadosSemestre] =
+  const [perguntasMeta, avaliacoesResult, avaliadosQuinzena, avaliadosSemestre] =
     await Promise.all([
-      fetchPerguntasUniversaisIds(),
+      fetchPerguntasIdsPorSecao(),
       supabase
         .from('avaliacoes')
         .select('id, avaliado_id')
@@ -291,22 +329,26 @@ export async function fetchGerencialDashboard(): Promise<GerencialDashboardData>
   }
 
   const notasPorColaborador = new Map<string, number[]>();
+  const notasPorColaboradorCodigo = new Map<string, Map<string, number[]>>();
   const notasPorCodigo = new Map<string, number[]>();
+  const notasPorSecao = new Map<string, number[]>();
 
   for (const codigo of CODIGOS_PERGUNTAS_UNIVERSAIS) {
     notasPorCodigo.set(codigo, []);
   }
+  for (const secao of CODIGOS_SECOES_OFFSHORE) {
+    notasPorSecao.set(secao, []);
+  }
 
   const perguntaIdPorCodigo = new Map<string, string>();
-
-  for (const [codigo, perguntaId] of perguntasPorCodigo.entries()) {
+  for (const [codigo, perguntaId] of perguntasMeta.porCodigo.entries()) {
     perguntaIdPorCodigo.set(perguntaId, codigo);
   }
 
   if (avaliacaoIds.length > 0) {
     const { data: respostas, error: respostasError } = await supabase
       .from('respostas')
-      .select('avaliacao_id, pergunta_id, nota')
+      .select('avaliacao_id, pergunta_id, nota, perguntas(codigo, secao_departamento)')
       .in('avaliacao_id', avaliacaoIds);
 
     if (respostasError) {
@@ -326,23 +368,42 @@ export async function fetchGerencialDashboard(): Promise<GerencialDashboardData>
         notasPorColaborador.set(colaboradorId, atualColaborador);
       }
 
-      if (resposta.pergunta_id) {
-        const codigo = perguntaIdPorCodigo.get(resposta.pergunta_id);
+      const pergunta = resposta.perguntas as { codigo?: string; secao_departamento?: string } | null;
+      const codigo = pergunta?.codigo ?? (resposta.pergunta_id ? perguntaIdPorCodigo.get(resposta.pergunta_id) : undefined);
 
-        if (codigo) {
-          const atualCodigo = notasPorCodigo.get(codigo) ?? [];
-          atualCodigo.push(resposta.nota);
-          notasPorCodigo.set(codigo, atualCodigo);
+      if (codigo) {
+        const atualCodigo = notasPorCodigo.get(codigo) ?? [];
+        atualCodigo.push(resposta.nota);
+        notasPorCodigo.set(codigo, atualCodigo);
+
+        if (colaboradorId) {
+          const mapaColab = notasPorColaboradorCodigo.get(colaboradorId) ?? new Map();
+          const arr = mapaColab.get(codigo) ?? [];
+          arr.push(resposta.nota);
+          mapaColab.set(codigo, arr);
+          notasPorColaboradorCodigo.set(colaboradorId, mapaColab);
+        }
+
+        const secao = pergunta?.secao_departamento ?? codigo.replace(/\d+$/, '');
+        if (secao && notasPorSecao.has(secao)) {
+          const arrSecao = notasPorSecao.get(secao) ?? [];
+          arrSecao.push(resposta.nota);
+          notasPorSecao.set(secao, arrSecao);
         }
       }
     }
   }
 
   const rankings = buildRankings(listaColaboradores, notasPorColaborador);
-  const ima = calcularIma(listaColaboradores, notasPorColaborador);
+  const ima = calcularIma(
+    listaColaboradores,
+    notasPorColaborador,
+    perguntasMeta.offshore ? notasPorColaboradorCodigo : undefined,
+  );
 
   return {
     radarUniversal: buildRadarUniversal(notasPorCodigo),
+    radarOffshore: buildRadarOffshore(notasPorSecao),
     ima,
     semaforoStatus: getSemaforoPorMedia(ima),
     statusPreenchimento: buildStatusPreenchimento(
@@ -353,5 +414,6 @@ export async function fetchGerencialDashboard(): Promise<GerencialDashboardData>
     ),
     top5: rankings.slice(0, 5),
     bottom5: [...rankings].reverse().slice(0, 5),
+    rankingCompleto: rankings,
   };
 }

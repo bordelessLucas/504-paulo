@@ -24,6 +24,10 @@ export type CreateColaboradorInput = {
   telefone?: string;
   expertise?: string;
   formacao_tecnica?: string;
+  codigo_interno?: string;
+  plataforma?: string;
+  formacao_academica?: string;
+  certificacoes?: string;
   certificacao_edn?: boolean;
   senha_temporaria?: string;
   role?: UserRole;
@@ -141,6 +145,10 @@ export function normalizeCreateColaboradorInput(input: CreateColaboradorInput): 
     telefone: sanitizeTelefoneDigits(input.telefone),
     expertise: input.expertise?.trim() || undefined,
     formacao_tecnica: input.formacao_tecnica?.trim() || undefined,
+    codigo_interno: input.codigo_interno?.trim() || undefined,
+    plataforma: input.plataforma?.trim() || undefined,
+    formacao_academica: input.formacao_academica?.trim() || undefined,
+    certificacoes: input.certificacoes?.trim() || undefined,
     certificacao_edn: input.certificacao_edn ?? false,
     senha_temporaria: input.senha_temporaria?.trim() || undefined,
     role: input.role,

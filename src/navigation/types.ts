@@ -9,6 +9,9 @@ export type MainTabParamList = {
   PainelReajuste: undefined;
   AdminDashboard: undefined;
   DashboardsGerenciais: undefined;
+  VisaoEstrategica: undefined;
+  Compliance: undefined;
+  Metodologia: undefined;
   Aprovacoes: undefined;
   PainelAnualEstrategico: undefined;
   Perfil: undefined;
