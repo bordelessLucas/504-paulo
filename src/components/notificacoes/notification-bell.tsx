@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { NotificationsPanel } from '@/components/notificacoes/notifications-panel';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { BrandColors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { useNotifications } from '@/features/notificacoes/notifications-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -17,6 +17,7 @@ export function NotificationBellButton({ compact = false }: NotificationBellButt
   const { unreadCount, openPanel } = useNotifications();
 
   const badgeLabel = unreadCount > 99 ? '99+' : String(unreadCount);
+  const iconSize = compact ? 18 : 22;
 
   return (
     <Pressable
@@ -28,13 +29,13 @@ export function NotificationBellButton({ compact = false }: NotificationBellButt
       style={({ pressed }) => [
         compact ? styles.compactButton : styles.button,
         {
-          backgroundColor: theme.background,
+          backgroundColor: BrandColors.card,
           borderColor: theme.border,
-          shadowColor: theme.text,
+          shadowColor: BrandColors.primary,
         },
         pressed && styles.pressed,
       ]}>
-      <Ionicons color={theme.text} name="notifications-outline" size={compact ? 18 : 22} />
+      <Ionicons color={BrandColors.primary} name="notifications-outline" size={iconSize} />
 
       {unreadCount > 0 ? (
         <View style={[styles.badge, { backgroundColor: theme.danger }]}>
@@ -64,6 +65,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: Spacing.four,
     zIndex: 50,
+    overflow: 'visible',
   },
   button: {
     width: 44,
@@ -72,8 +74,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'visible',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
@@ -84,20 +87,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'visible',
   },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -2,
+    right: -2,
     minWidth: 18,
     height: 18,
     borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: BrandColors.card,
   },
   badgeText: {
-    color: '#FFFFFF',
+    color: BrandColors.textOnPrimary,
     fontFamily: Fonts.sansSemiBold,
     fontSize: 10,
     lineHeight: 12,

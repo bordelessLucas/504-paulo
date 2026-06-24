@@ -20,7 +20,7 @@ function ProfileInfoRow({ label, value }: ProfileInfoRowProps) {
   const theme = useTheme();
 
   return (
-    <View style={[styles.infoRow, { borderBottomColor: '#F0F0F0' }]}>
+    <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
       <ThemedText themeColor="textSecondary" style={styles.infoLabel}>
         {label}
       </ThemedText>
@@ -69,7 +69,7 @@ export function PerfilScreen() {
       <View
         style={[
           styles.card,
-          { backgroundColor: theme.background, borderColor: '#F0F0F0' },
+          { backgroundColor: theme.backgroundElement, borderColor: theme.border },
         ]}>
         <ThemedText type="subtitle">Minha conta</ThemedText>
 

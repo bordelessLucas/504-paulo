@@ -15,7 +15,8 @@ import { SyncStatusBar } from '@/components/SyncStatusBar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
-import { Fonts, Spacing } from '@/constants/theme';
+import { SCREEN_PADDING_LEFT, SCREEN_PADDING_RIGHT } from '@/constants/layout';
+import { Colors, Fonts, Spacing } from '@/constants/theme';
 import {
   COLABORADORES_PAGE_SIZE,
   fetchColaboradoresAvaliacaoExecutive,
@@ -553,8 +554,9 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+    paddingLeft: SCREEN_PADDING_LEFT,
+    paddingRight: SCREEN_PADDING_RIGHT,
+    paddingTop: Spacing.four,
   },
   body: {
     flex: 1,
@@ -619,7 +621,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingTop: Spacing.two,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: Colors.light.border,
   },
   pageLabel: {
     fontFamily: Fonts.sansMedium,

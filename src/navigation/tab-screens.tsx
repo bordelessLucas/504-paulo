@@ -1,6 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentType } from 'react';
+import { StyleSheet, View } from 'react-native';
 
+import { BrandColors } from '@/constants/theme';
 import type { MainTabParamList, TabIconName } from '@/navigation/types';
 import { AdminDashboardScreen } from '@/screens/admin/admin-dashboard-screen';
 import { ComplianceScreen } from '@/screens/admin/compliance-screen';
@@ -32,6 +34,34 @@ export const TAB_SCREENS: Record<keyof MainTabParamList, ComponentType> = {
   Perfil: PerfilScreen,
 };
 
-export function TabIcon({ name, color }: { name: TabIconName; color: string }) {
-  return <Ionicons color={color} name={name} size={20} />;
+type TabIconProps = {
+  name: TabIconName;
+  color: string;
+  focused?: boolean;
+};
+
+export function TabIcon({ name, color, focused = false }: TabIconProps) {
+  return (
+    <View style={styles.wrapper}>
+      <Ionicons color={color} name={name} size={22} />
+      {focused ? <View style={styles.indicator} /> : null}
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    width: 28,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  indicator: {
+    position: 'absolute',
+    bottom: 0,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: BrandColors.secondary,
+  },
+});

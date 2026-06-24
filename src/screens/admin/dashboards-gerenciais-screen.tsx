@@ -19,6 +19,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
+import { SCREEN_PADDING_LEFT, SCREEN_PADDING_RIGHT } from '@/constants/layout';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import {
   fetchColaboradorFicha,
@@ -285,7 +286,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingHorizontal: Spacing.four,
+    paddingLeft: SCREEN_PADDING_LEFT,
+    paddingRight: SCREEN_PADDING_RIGHT,
     paddingVertical: Spacing.four,
     gap: Spacing.four,
     width: '100%',

@@ -5,6 +5,7 @@ import {
   TAB_CONTENT_EXTRA_PADDING,
   TAB_FOOTER_EXTRA_PADDING,
 } from '@/constants/layout';
+import { Spacing } from '@/constants/theme';
 import { useNavigationLayout } from '@/navigation/navigation-layout-context';
 
 export function useTabScreenLayout() {
@@ -12,11 +13,11 @@ export function useTabScreenLayout() {
   const { hasBottomTabs } = useNavigationLayout();
 
   const tabBarHeight = hasBottomTabs ? TAB_BAR_BASE_HEIGHT + insets.bottom : 0;
-  const scrollPaddingBottom = TAB_CONTENT_EXTRA_PADDING;
-  const footerPaddingBottom = TAB_FOOTER_EXTRA_PADDING;
+  const scrollPaddingBottom = TAB_CONTENT_EXTRA_PADDING + Spacing.two;
+  const footerPaddingBottom = TAB_FOOTER_EXTRA_PADDING + Spacing.one;
   const toastBottomOffset = hasBottomTabs
-    ? tabBarHeight + TAB_FOOTER_EXTRA_PADDING
-    : TAB_FOOTER_EXTRA_PADDING + insets.bottom;
+    ? tabBarHeight + Spacing.three
+    : Spacing.four + insets.bottom;
 
   return {
     topInset: insets.top,

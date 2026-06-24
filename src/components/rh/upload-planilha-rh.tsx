@@ -110,7 +110,7 @@ export function UploadPlanilhaRH({ embedded = false, onImported }: UploadPlanilh
         style={
           embedded
             ? styles.embedded
-            : [styles.container, { backgroundColor: theme.background, borderColor: '#F0F0F0' }]
+            : [styles.container, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]
         }>
         <ThemedText themeColor="textSecondary" style={styles.hint}>
           Apenas RH, CEO e administradores podem importar planilhas de RH.
@@ -124,7 +124,7 @@ export function UploadPlanilhaRH({ embedded = false, onImported }: UploadPlanilh
       style={
         embedded
           ? styles.embedded
-          : [styles.container, { backgroundColor: theme.background, borderColor: '#F0F0F0' }]
+          : [styles.container, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]
       }>
       {!embedded ? (
         <View style={styles.header}>

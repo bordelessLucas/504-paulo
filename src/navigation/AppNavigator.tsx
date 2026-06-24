@@ -71,6 +71,7 @@ export function AppNavigator() {
 const styles = StyleSheet.create({
   appShell: {
     flex: 1,
+    overflow: 'visible',
   },
   loading: {
     flex: 1,

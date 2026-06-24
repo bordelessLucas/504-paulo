@@ -24,11 +24,11 @@ export function NotionCheckbox({ label, checked, onToggle }: NotionCheckboxProps
         style={[
           styles.box,
           {
-            backgroundColor: checked ? theme.text : theme.background,
-            borderColor: theme.border,
+            backgroundColor: checked ? theme.secondary : theme.backgroundElement,
+            borderColor: checked ? theme.secondary : theme.border,
           },
         ]}>
-        {checked ? <Ionicons color={theme.background} name="checkmark" size={14} /> : null}
+        {checked ? <Ionicons color={theme.textOnPrimary} name="checkmark" size={14} /> : null}
       </View>
       <ThemedText style={styles.label}>{label}</ThemedText>
     </Pressable>

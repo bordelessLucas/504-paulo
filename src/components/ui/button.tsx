@@ -30,7 +30,7 @@ export function Button({
 
   const getContainerStyle = () => {
     if (variant === "primary") {
-      return { backgroundColor: theme.accent };
+      return { backgroundColor: theme.primary };
     }
 
     if (variant === "secondary") {
@@ -46,7 +46,7 @@ export function Button({
 
   const getLabelColor = () => {
     if (variant === "primary") {
-      return theme.background;
+      return theme.textOnPrimary;
     }
 
     return theme.text;

@@ -10,6 +10,10 @@ import {
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { ThemedView } from '@/components/themed-view';
+import {
+  SCREEN_PADDING_LEFT,
+  SCREEN_PADDING_RIGHT,
+} from '@/constants/layout';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
@@ -22,6 +26,7 @@ type TabScreenContainerProps = {
   contentContainerStyle?: StyleProp<ViewStyle>;
   maxContentWidth?: number;
   withHorizontalPadding?: boolean;
+  reserveHeaderActions?: boolean;
   refreshControl?: React.ReactElement<RefreshControlProps>;
 };
 
@@ -33,6 +38,7 @@ export function TabScreenContainer({
   contentContainerStyle,
   maxContentWidth,
   withHorizontalPadding = true,
+  reserveHeaderActions = true,
   refreshControl,
 }: TabScreenContainerProps) {
   const { scrollPaddingBottom } = useTabScreenLayout();
@@ -40,9 +46,18 @@ export function TabScreenContainer({
   const resolvedMaxWidth =
     maxContentWidth ?? (isDesktopLayout ? 0 : MaxContentWidth + 360);
 
+  const horizontalInsets = withHorizontalPadding
+    ? {
+        paddingLeft: SCREEN_PADDING_LEFT,
+        paddingRight: reserveHeaderActions ? SCREEN_PADDING_RIGHT : SCREEN_PADDING_LEFT,
+        paddingTop: Spacing.four,
+      }
+    : null;
+
   const paddedContentStyle = [
-    withHorizontalPadding && styles.horizontalPadding,
+    horizontalInsets,
     scrollable && { paddingBottom: scrollPaddingBottom },
+    !scrollable && { paddingBottom: scrollPaddingBottom },
     resolvedMaxWidth > 0 && styles.centeredContent,
     resolvedMaxWidth > 0 && { maxWidth: resolvedMaxWidth },
     contentContainerStyle,
@@ -53,7 +68,7 @@ export function TabScreenContainer({
       <SafeAreaView style={styles.safeArea} edges={edges}>
         {scrollable ? (
           <ScrollView
-            contentContainerStyle={paddedContentStyle}
+            contentContainerStyle={[styles.scrollGrow, paddedContentStyle]}
             keyboardShouldPersistTaps={keyboardShouldPersistTaps}
             refreshControl={refreshControl}
             showsVerticalScrollIndicator={false}>
@@ -77,9 +92,8 @@ const styles = StyleSheet.create({
   fill: {
     flex: 1,
   },
-  horizontalPadding: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
+  scrollGrow: {
+    flexGrow: 1,
   },
   centeredContent: {
     width: '100%',

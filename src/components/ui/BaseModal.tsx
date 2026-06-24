@@ -24,6 +24,7 @@ import {
 } from '@/constants/modal';
 import { Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
 
 const SHEET_RADIUS = MODAL_SHEET_RADIUS;
 const SHEET_HEIGHT_RATIO = 0.92;
@@ -97,9 +98,10 @@ export function BaseModal({
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const colorScheme = useColorScheme();
+  const theme = useTheme();
   const isDark = colorScheme === 'dark';
   const surfaceColor = isDark ? MODAL_SURFACE_DARK : MODAL_SURFACE_LIGHT;
-  const borderColor = isDark ? '#3D3D3D' : '#E0E0E0';
+  const borderColor = theme.border;
 
   const isSheet = variant === 'sheet';
   const resolvedMaxWidth = maxWidth ?? (isSheet ? undefined : MaxContentWidth);
@@ -174,7 +176,7 @@ export function BaseModal({
               contentContainerStyle,
             ]}>
             {shouldShowHandle ? (
-              <View style={[styles.handle, { backgroundColor: isDark ? '#4A4A4A' : '#D3D1CB' }]} />
+              <View style={[styles.handle, { backgroundColor: theme.border }]} />
             ) : null}
 
             {title ? (
@@ -200,7 +202,7 @@ export function BaseModal({
                     onPress={onClose}
                     style={({ pressed }) => [
                       styles.closeButton,
-                      { backgroundColor: isDark ? '#2A2A2A' : '#F1F1EF' },
+                      { backgroundColor: theme.backgroundSelected },
                       pressed && styles.pressed,
                     ]}>
                     <Ionicons color={isDark ? '#CFCFCF' : '#5C5C5A'} name="close" size={20} />

@@ -4,6 +4,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
@@ -16,13 +17,12 @@ import {
   updateGalaxyPointer,
 } from "@/components/auth/galaxy-star-background";
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { MaxContentWidth, Radius, Spacing } from "@/constants/theme";
+import { BrandColors, Fonts, MaxContentWidth, Radius, Spacing } from "@/constants/theme";
 import { useGalaxyDeviceTilt } from "@/hooks/use-galaxy-device-tilt";
 import { useTheme } from "@/hooks/use-theme";
 
 type AuthLayoutProps = {
-  title: string;
+  title?: string;
   subtitle: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
@@ -43,6 +43,23 @@ function getPointerPositionFromPointer(event: {
     x: pageX ?? clientX ?? GALAXY_CENTER_X,
     y: pageY ?? clientY ?? GALAXY_CENTER_Y,
   };
+}
+
+function BrandLogo({ onDarkBackground = false }: { onDarkBackground?: boolean }) {
+  const theme = useTheme();
+  const primaryColor = onDarkBackground ? BrandColors.textOnPrimary : theme.primary;
+  const secondaryColor = onDarkBackground ? BrandColors.background : theme.text;
+
+  return (
+    <View style={styles.brandLogo} accessibilityRole="header">
+      <Text style={[styles.brandVertek, { color: primaryColor, fontFamily: Fonts.display }]}>
+        Vertek
+      </Text>
+      <Text style={[styles.brandAvalia, { color: secondaryColor, fontFamily: Fonts.sansMedium }]}>
+        Avalia
+      </Text>
+    </View>
+  );
 }
 
 export function AuthLayout({
@@ -98,26 +115,42 @@ export function AuthLayout({
   }, [pointerX, pointerY, showStarBackground]);
 
   return (
-    <ThemedView
+    <View
       onPointerLeave={isWeb ? handlePointerLeave : undefined}
       onPointerMove={
         isWeb && showStarBackground ? handleWebPointerMove : undefined
       }
-      style={styles.container}
+      style={[
+        styles.container,
+        showStarBackground
+          ? { backgroundColor: BrandColors.primary }
+          : { backgroundColor: theme.background },
+      ]}
     >
       {showStarBackground ? (
         <GalaxyStarBackground pointerX={pointerX} pointerY={pointerY} />
       ) : null}
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
           style={styles.keyboardView}
         >
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              showStarBackground ? styles.scrollContentAuth : styles.scrollContentCentered,
+            ]}
             keyboardShouldPersistTaps="handled"
+            showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
           >
+            {showStarBackground ? (
+              <BrandLogo onDarkBackground />
+            ) : null}
+
             <View
               style={[
                 styles.card,
@@ -128,10 +161,8 @@ export function AuthLayout({
               ]}
             >
               <View style={styles.header}>
-                <View style={styles.badge}>
-                  <ThemedText type="badge">Avalia</ThemedText>
-                </View>
-                <ThemedText type="heading">{title}</ThemedText>
+                {!showStarBackground ? <BrandLogo /> : null}
+                {title ? <ThemedText type="heading">{title}</ThemedText> : null}
                 <ThemedText themeColor="textSecondary" style={styles.subtitle}>
                   {subtitle}
                 </ThemedText>
@@ -144,7 +175,7 @@ export function AuthLayout({
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </ThemedView>
+    </View>
   );
 }
 
@@ -162,20 +193,42 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
     paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.five,
+    paddingTop: Spacing.four,
+    paddingBottom: Spacing.six,
     maxWidth: MaxContentWidth,
     width: "100%",
     alignSelf: "center",
-    gap: Spacing.five,
+    gap: Spacing.four,
+  },
+  scrollContentCentered: {
+    justifyContent: "center",
+    paddingVertical: Spacing.five,
+  },
+  scrollContentAuth: {
+    justifyContent: "center",
+    flexGrow: 1,
+    paddingVertical: Spacing.five,
+  },
+  brandLogo: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: Spacing.two,
+    alignSelf: "center",
+  },
+  brandVertek: {
+    fontSize: 36,
+    lineHeight: 42,
+    letterSpacing: 1,
+  },
+  brandAvalia: {
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: 2,
+    textTransform: "uppercase",
   },
   header: {
     gap: Spacing.two,
-  },
-  badge: {
-    alignSelf: "flex-start",
-    marginBottom: Spacing.one,
   },
   subtitle: {
     fontSize: 15,
@@ -193,19 +246,18 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     borderWidth: 1,
     gap: Spacing.four,
-    // subtle shadow for native platforms
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: BrandColors.primary,
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.06,
+        shadowOpacity: 0.08,
         shadowRadius: 12,
       },
       android: {
         elevation: 6,
       },
       web: {
-        boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+        boxShadow: "0 6px 20px rgba(1, 45, 96, 0.08)",
       },
     }),
   },

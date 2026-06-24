@@ -9,11 +9,10 @@ import React, {
   useState,
 } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { TAB_BAR_BASE_HEIGHT } from '@/constants/layout';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 
 type ToastVariant = 'success' | 'error' | 'info';
@@ -39,8 +38,7 @@ function ToastBanner({
   onHide: () => void;
 }) {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
-  const toastBottomOffset = TAB_BAR_BASE_HEIGHT + insets.bottom + Spacing.two;
+  const { toastBottomOffset } = useTabScreenLayout();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(12)).current;
 
@@ -89,7 +87,7 @@ function ToastBanner({
 
   const accentColor =
     toast.variant === 'success'
-      ? theme.accent
+      ? theme.secondary
       : toast.variant === 'error'
         ? theme.danger
         : theme.textSecondary;
@@ -111,9 +109,9 @@ function ToastBanner({
         style={[
           styles.banner,
           {
-            backgroundColor: theme.background,
+            backgroundColor: theme.backgroundElement,
             borderColor: theme.border,
-            shadowColor: theme.text,
+            shadowColor: theme.primary,
           },
         ]}>
         <View style={[styles.iconWrap, { backgroundColor: theme.accentMuted }]}>

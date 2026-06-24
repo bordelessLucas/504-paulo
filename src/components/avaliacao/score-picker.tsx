@@ -28,14 +28,14 @@ export function ScorePicker({ value, onChange }: ScorePickerProps) {
             style={[
               styles.block,
               {
-                backgroundColor: isSelected ? theme.text : theme.backgroundElement,
-                borderColor: isSelected ? theme.text : theme.border,
+                backgroundColor: isSelected ? theme.primary : theme.backgroundElement,
+                borderColor: isSelected ? theme.primary : theme.border,
               },
             ]}>
             <ThemedText
               style={[
                 styles.scoreLabel,
-                { color: isSelected ? theme.background : theme.text },
+                { color: isSelected ? theme.textOnPrimary : theme.text },
               ]}>
               {score}
             </ThemedText>

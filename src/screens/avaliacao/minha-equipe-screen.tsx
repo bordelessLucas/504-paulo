@@ -13,7 +13,8 @@ import { SyncStatusBar } from '@/components/SyncStatusBar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
-import { Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
+import { SCREEN_PADDING_LEFT, SCREEN_PADDING_RIGHT } from '@/constants/layout';
+import { Colors, Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
 import {
   fetchEquipeStatusCiclo,
   type ColaboradorEquipeStatus,
@@ -264,8 +265,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+    paddingLeft: SCREEN_PADDING_LEFT,
+    paddingRight: SCREEN_PADDING_RIGHT,
+    paddingTop: Spacing.four,
     paddingBottom: Spacing.three,
     maxWidth: MaxContentWidth + 360,
     width: '100%',
@@ -290,10 +292,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.three,
-    paddingHorizontal: Spacing.four,
+    paddingLeft: SCREEN_PADDING_LEFT,
+    paddingRight: SCREEN_PADDING_RIGHT,
     paddingVertical: Spacing.three,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: Colors.light.border,
   },
   rowPressed: {
     opacity: 0.88,

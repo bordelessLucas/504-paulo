@@ -36,7 +36,6 @@ export default function LoginScreen() {
   return (
     <AuthLayout
       showStarBackground
-      title="Entrar na plataforma"
       subtitle="Acesse o ambiente de avaliações internas da sua equipe."
       footer={
         <View style={styles.footerRow}>

@@ -63,7 +63,7 @@ export function PDICard({
         </ThemedText>
       ) : null}
 
-      <View style={styles.progressTrack}>
+      <View style={[styles.progressTrack, { backgroundColor: theme.border }]}>
         <View
           style={[
             styles.progressFill,
@@ -137,7 +137,6 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#E5E7EB',
     overflow: 'hidden',
   },
   progressFill: {

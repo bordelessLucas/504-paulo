@@ -14,6 +14,7 @@ import { CriarPDIModal } from '@/components/pdi/CriarPDIModal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { SCREEN_PADDING_LEFT, SCREEN_PADDING_RIGHT } from '@/constants/layout';
 import { Fonts, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import {
   calcularMediaHistorico,
@@ -331,7 +332,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.four,
+    paddingLeft: SCREEN_PADDING_LEFT,
+    paddingRight: SCREEN_PADDING_RIGHT,
     paddingVertical: Spacing.three,
     gap: Spacing.three,
     maxWidth: MaxContentWidth + 360,

@@ -16,6 +16,7 @@ import { ScorePicker } from '@/components/avaliacao/score-picker';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { SCREEN_PADDING_LEFT, SCREEN_PADDING_RIGHT } from '@/constants/layout';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import {
   addPontoMelhoriaAvaliacao,
@@ -462,7 +463,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.four,
+    paddingLeft: SCREEN_PADDING_LEFT,
+    paddingRight: SCREEN_PADDING_RIGHT,
     paddingVertical: Spacing.three,
     gap: Spacing.four,
   },

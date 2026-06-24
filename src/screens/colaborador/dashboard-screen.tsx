@@ -74,7 +74,7 @@ function AvaliacaoEmAnaliseItem({ avaliacao }: { avaliacao: AvaliacaoEmAnalise }
     <View
       style={[
         styles.feedbackItem,
-        { backgroundColor: theme.background, borderColor: theme.border },
+        { backgroundColor: theme.backgroundSelected, borderColor: theme.border },
       ]}>
       <ThemedText style={styles.solicitacaoTipo}>
         {TIPO_AVALIACAO_LABELS[avaliacao.tipo]}
@@ -99,7 +99,7 @@ function SolicitacaoStatusItem({ solicitacao }: { solicitacao: SolicitacaoColabo
     <View
       style={[
         styles.feedbackItem,
-        { backgroundColor: theme.background, borderColor: theme.border },
+        { backgroundColor: theme.backgroundSelected, borderColor: theme.border },
       ]}>
       <ThemedText style={styles.solicitacaoTipo}>
         {solicitacao.tipo === 'autoavaliacao' ? 'Autoavaliação' : 'Solicitação de melhoria'}
@@ -321,7 +321,7 @@ export function DashboardColaboradorScreen() {
                   key={feedback.id}
                   style={[
                     styles.feedbackItem,
-                    { backgroundColor: theme.background, borderColor: theme.border },
+                    { backgroundColor: theme.backgroundSelected, borderColor: theme.border },
                   ]}>
                   <ThemedText style={styles.feedbackText}>{feedback.texto}</ThemedText>
                   <ThemedText themeColor="textSecondary" style={styles.feedbackDate}>

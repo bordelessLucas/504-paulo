@@ -94,11 +94,11 @@ export function ProfileAvatarPicker({
             </ThemedText>
           )}
 
-          <View style={[styles.editBadge, { backgroundColor: theme.text, borderColor: theme.background }]}>
+          <View style={[styles.editBadge, { backgroundColor: theme.primary, borderColor: theme.backgroundElement }]}>
             {isUploading ? (
-              <ActivityIndicator color={theme.background} size="small" />
+              <ActivityIndicator color={theme.textOnPrimary} size="small" />
             ) : (
-              <Ionicons color={theme.background} name="camera-outline" size={16} />
+              <Ionicons color={theme.textOnPrimary} name="camera-outline" size={16} />
             )}
           </View>
         </View>

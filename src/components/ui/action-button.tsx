@@ -30,13 +30,17 @@ export function ActionButton({
 
   const containerStyle =
     variant === 'primary'
-      ? { backgroundColor: theme.text, borderColor: theme.text }
+      ? { backgroundColor: theme.primary, borderColor: theme.primary }
       : variant === 'danger'
         ? { backgroundColor: 'transparent', borderColor: theme.border }
-        : { backgroundColor: theme.background, borderColor: theme.border };
+        : { backgroundColor: theme.backgroundElement, borderColor: theme.border };
 
   const labelColor =
-    variant === 'primary' ? theme.background : variant === 'danger' ? theme.danger : theme.text;
+    variant === 'primary'
+      ? theme.textOnPrimary
+      : variant === 'danger'
+        ? theme.danger
+        : theme.text;
 
   return (
     <Pressable

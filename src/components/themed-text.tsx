@@ -44,18 +44,18 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   heading: {
-    fontFamily: Fonts.sansSemiBold,
+    fontFamily: Fonts.display,
     fontSize: 28,
     lineHeight: 34,
     letterSpacing: -0.3,
   },
   title: {
-    fontFamily: Fonts.sansSemiBold,
+    fontFamily: Fonts.display,
     fontSize: 24,
     lineHeight: 30,
   },
   subtitle: {
-    fontFamily: Fonts.sansSemiBold,
+    fontFamily: Fonts.display,
     fontSize: 18,
     lineHeight: 26,
   },

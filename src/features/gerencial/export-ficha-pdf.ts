@@ -46,7 +46,7 @@ function buildSemaforoHtml(ficha: ColaboradorFichaData): string {
     const isActive = item.status === ficha.semaforoStatus;
     return `
       <div class="semaforo-item">
-        <div class="semaforo-light" style="background:${item.color};opacity:${isActive ? 1 : 0.25};border:${isActive ? '2px solid #2F3437' : '2px solid transparent'}"></div>
+        <div class="semaforo-light" style="background:${item.color};opacity:${isActive ? 1 : 0.25};border:${isActive ? '2px solid #012D60' : '2px solid transparent'}"></div>
         <div class="semaforo-label">${escapeHtml(item.label)}</div>
       </div>
     `;
@@ -206,33 +206,33 @@ function buildDecisoesHtml(ficha: ColaboradorFichaData): string {
 
 const PDF_STYLES = `
   @page { size: A4; margin: 18mm; }
-  body { font-family: Inter, Arial, sans-serif; color: #2F3437; font-size: 11px; line-height: 1.45; }
-  .doc-header { border-bottom: 3px solid #2F3437; padding-bottom: 12px; margin-bottom: 16px; }
-  .doc-title { font-size: 18px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-  .doc-subtitle { font-size: 12px; color: #787774; margin-top: 4px; }
-  .doc-meta { font-size: 10px; color: #787774; margin-top: 8px; }
-  h2 { font-size: 13px; margin: 20px 0 8px; border-bottom: 1px solid #EAEAEA; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
-  .highlight { background: #F7F6F3; border: 1px solid #EAEAEA; border-radius: 4px; padding: 12px; margin: 12px 0; }
+  body { font-family: Biko, Arial, sans-serif; color: #1A2332; font-size: 11px; line-height: 1.45; }
+  .doc-header { border-bottom: 3px solid #012D60; padding-bottom: 12px; margin-bottom: 16px; }
+  .doc-title { font-size: 18px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #012D60; }
+  .doc-subtitle { font-size: 12px; color: #5C6570; margin-top: 4px; }
+  .doc-meta { font-size: 10px; color: #5C6570; margin-top: 8px; }
+  h2 { font-size: 13px; margin: 20px 0 8px; border-bottom: 1px solid rgba(1,45,96,0.1); padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em; color: #012D60; }
+  .highlight { background: #F0EDE4; border: 1px solid rgba(1,45,96,0.1); border-radius: 4px; padding: 12px; margin: 12px 0; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; margin-top: 8px; }
-  .label { color: #787774; font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .label { color: #5C6570; font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em; }
   .value { font-size: 12px; font-weight: 600; margin-top: 2px; }
-  .meta { color: #787774; font-size: 10px; }
-  .empty { color: #787774; font-style: italic; }
+  .meta { color: #5C6570; font-size: 10px; }
+  .empty { color: #5C6570; font-style: italic; }
   .semaforo-wrap { margin-top: 8px; }
   .semaforo-row { display: flex; gap: 8px; justify-content: space-between; }
   .semaforo-item { flex: 1; text-align: center; }
   .semaforo-light { width: 24px; height: 24px; border-radius: 4px; margin: 0 auto 4px; }
-  .semaforo-label { font-size: 9px; color: #787774; }
-  .semaforo-summary { margin-top: 10px; padding: 10px; border: 1px solid #EAEAEA; border-radius: 4px; background: #FAFAF8; }
+  .semaforo-label { font-size: 9px; color: #5C6570; }
+  .semaforo-summary { margin-top: 10px; padding: 10px; border: 1px solid rgba(1,45,96,0.1); border-radius: 4px; background: #FFFFFF; }
   .radar-wrap { margin-top: 8px; display: grid; gap: 8px; }
   .radar-row { display: grid; grid-template-columns: 130px 1fr 36px; gap: 8px; align-items: center; }
   .radar-label { font-size: 10px; }
   .radar-track { height: 10px; background: #EFEFEF; border-radius: 999px; overflow: hidden; }
-  .radar-fill { height: 100%; background: #2F3437; border-radius: 999px; }
+  .radar-fill { height: 100%; background: #012D60; border-radius: 999px; }
   .radar-value { font-size: 10px; font-weight: 600; text-align: right; }
   .data-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
-  .data-table th, .data-table td { border: 1px solid #EAEAEA; padding: 6px 8px; vertical-align: top; text-align: left; }
-  .data-table th { background: #F7F6F3; font-size: 9px; text-transform: uppercase; }
+  .data-table th, .data-table td { border: 1px solid rgba(1,45,96,0.1); padding: 6px 8px; vertical-align: top; text-align: left; }
+  .data-table th { background: #F0EDE4; font-size: 9px; text-transform: uppercase; }
   .center { text-align: center; }
   .avaliacao-block { margin-bottom: 14px; page-break-inside: avoid; }
   .avaliacao-header { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; }

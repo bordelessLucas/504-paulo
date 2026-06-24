@@ -3,7 +3,7 @@ import {
   DrawerContentScrollView,
   type DrawerContentComponentProps,
 } from '@react-navigation/drawer';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -36,7 +36,14 @@ export function NotionDrawerContent({
   return (
     <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top }]}>
       <View style={[styles.brand, { borderBottomColor: theme.border }]}>
-        <ThemedText type="badge">Avalia</ThemedText>
+        <View style={styles.brandLogo}>
+          <Text style={[styles.brandVertek, { color: theme.primary, fontFamily: Fonts.display }]}>
+            Vertek
+          </Text>
+          <Text style={[styles.brandAvalia, { color: theme.text, fontFamily: Fonts.sansMedium }]}>
+            Avalia
+          </Text>
+        </View>
         <ThemedText type="subtitle" style={styles.userName}>
           {user.name}
         </ThemedText>
@@ -66,14 +73,14 @@ export function NotionDrawerContent({
                 },
               ]}>
               <Ionicons
-                color={isActive ? theme.text : theme.textSecondary}
+                color={isActive ? theme.primary : theme.textSecondary}
                 name={item.icon}
                 size={18}
               />
               <ThemedText
                 style={[
                   styles.menuLabel,
-                  { color: isActive ? theme.text : theme.textSecondary },
+                  { color: isActive ? theme.primary : theme.textSecondary },
                 ]}>
                 {label}
               </ThemedText>
@@ -112,6 +119,22 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.four,
     gap: Spacing.one,
     borderBottomWidth: 1,
+  },
+  brandLogo: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: Spacing.two,
+  },
+  brandVertek: {
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: 0.5,
+  },
+  brandAvalia: {
+    fontSize: 16,
+    lineHeight: 22,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
   },
   userName: {
     marginTop: Spacing.two,

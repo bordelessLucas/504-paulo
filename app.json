@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Avalia",
-    "slug": "avalia",
+    "name": "Vertek Avalia",
+    "slug": "vertek-avalia",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "avalia",
+    "scheme": "vertek-avalia",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
+        "backgroundColor": "#F0EDE4",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -36,9 +36,20 @@
       ],
       "expo-secure-store",
       [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Korataki-Regular.ttf",
+            "./assets/fonts/Biko-Regular.ttf",
+            "./assets/fonts/Biko-Medium.ttf",
+            "./assets/fonts/Biko-Bold.ttf"
+          ]
+        }
+      ],
+      [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "#F0EDE4",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76

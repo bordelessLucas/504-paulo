@@ -126,7 +126,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
 
   if (!canCreate) {
     return (
-      <View style={embedded ? styles.embedded : [styles.container, { backgroundColor: theme.background, borderColor: '#F0F0F0' }]}>
+      <View style={embedded ? styles.embedded : [styles.container, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
         <ThemedText themeColor="textSecondary" style={styles.hint}>
           Apenas RH, CEO e administradores podem cadastrar colaboradores.
         </ThemedText>

@@ -1,13 +1,16 @@
-import { useMemo } from "react";
-import { Dimensions, Platform, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import Animated, {
   interpolate,
   SharedValue,
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import Svg, { Polygon } from "react-native-svg";
 
+import { BrandColors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+
+type StarVariant = "five" | "four" | "sparkle";
 
 type Star = {
   id: number;
@@ -16,8 +19,9 @@ type Star = {
   size: number;
   opacity: number;
   isBright: boolean;
+  colorVariant: number;
+  variant: StarVariant;
   rotation: number;
-  glyph: "★" | "✦" | "✧";
 };
 
 type DepthLayerConfig = {
@@ -37,6 +41,12 @@ type StarLayer = DepthLayerConfig & {
   stars: Star[];
 };
 
+const STAR_PARTICLE_COLORS = [
+  "#FFFFFF",
+  BrandColors.background,
+  BrandColors.secondary,
+] as const;
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CENTER_X = SCREEN_WIDTH / 2;
 const CENTER_Y = SCREEN_HEIGHT / 2;
@@ -50,31 +60,31 @@ const SPRING_CONFIG = {
 const DEPTH_LAYER_CONFIGS: DepthLayerConfig[] = [
   {
     depth: 0,
-    count: 100,
+    count: 80,
     parallax: 0.004,
     spread: 1.02,
     sizeMin: 3,
     sizeMax: 5,
-    opacityMin: 0.15,
-    opacityMax: 0.32,
-    brightChance: 0.04,
+    opacityMin: 0.2,
+    opacityMax: 0.4,
+    brightChance: 0.05,
     zIndex: 1,
   },
   {
     depth: 1,
-    count: 90,
+    count: 70,
     parallax: 0.01,
     spread: 1.04,
     sizeMin: 4,
     sizeMax: 6.5,
     opacityMin: 0.28,
-    opacityMax: 0.48,
+    opacityMax: 0.5,
     brightChance: 0.08,
     zIndex: 2,
   },
   {
     depth: 2,
-    count: 75,
+    count: 55,
     parallax: 0.022,
     spread: 1.06,
     sizeMin: 5,
@@ -86,7 +96,7 @@ const DEPTH_LAYER_CONFIGS: DepthLayerConfig[] = [
   },
   {
     depth: 3,
-    count: 55,
+    count: 40,
     parallax: 0.042,
     spread: 1.08,
     sizeMin: 6.5,
@@ -98,7 +108,7 @@ const DEPTH_LAYER_CONFIGS: DepthLayerConfig[] = [
   },
   {
     depth: 4,
-    count: 38,
+    count: 28,
     parallax: 0.075,
     spread: 1.1,
     sizeMin: 8,
@@ -117,6 +127,40 @@ function seededRandom(seed: number) {
 
 function lerp(min: number, max: number, t: number) {
   return min + (max - min) * t;
+}
+
+function buildStarPolygonPoints(
+  size: number,
+  points: number,
+  innerRatio: number,
+  rotationDeg: number,
+): string {
+  const cx = size / 2;
+  const cy = size / 2;
+  const outerRadius = size / 2;
+  const innerRadius = outerRadius * innerRatio;
+  const rotation = (rotationDeg * Math.PI) / 180;
+  const vertices: string[] = [];
+
+  for (let i = 0; i < points * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = rotation + (i * Math.PI) / points - Math.PI / 2;
+    vertices.push(`${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`);
+  }
+
+  return vertices.join(" ");
+}
+
+function getStarPolygon(variant: StarVariant, size: number, rotation: number): string {
+  if (variant === "five") {
+    return buildStarPolygonPoints(size, 5, 0.42, rotation);
+  }
+
+  if (variant === "four") {
+    return buildStarPolygonPoints(size, 4, 0.38, rotation);
+  }
+
+  return buildStarPolygonPoints(size, 4, 0.22, rotation);
 }
 
 function buildGalaxyLayers(): StarLayer[] {
@@ -138,11 +182,14 @@ function buildGalaxyLayers(): StarLayer[] {
         const isBright = seededRandom(seed + 4) < config.brightChance;
         const rotation = seededRandom(seed + 5) * 360;
         const glyphRoll = seededRandom(seed + 6);
-        const glyph: Star["glyph"] = isBright
-          ? "★"
+        const variant: StarVariant = isBright
+          ? "five"
           : glyphRoll > 0.5
-            ? "✦"
-            : "✧";
+            ? "four"
+            : "sparkle";
+        const colorVariant = Math.floor(
+          seededRandom(seed + 7) * STAR_PARTICLE_COLORS.length,
+        );
 
         return {
           id: starIndex,
@@ -151,8 +198,9 @@ function buildGalaxyLayers(): StarLayer[] {
           size,
           opacity: isBright ? Math.min(opacity + 0.1, 1) : opacity,
           isBright,
+          colorVariant,
+          variant,
           rotation,
-          glyph,
         };
       },
     );
@@ -163,56 +211,55 @@ function buildGalaxyLayers(): StarLayer[] {
 
 const GALAXY_LAYERS = buildGalaxyLayers();
 
-type DepthPalette = {
-  far: string;
-  mid: string;
-  near: string;
-  bright: string;
-  vignette: string;
-  vignetteNative: string;
-};
-
-function getDepthPalette(
-  scheme: "light" | "dark" | null | undefined,
-): DepthPalette {
-  if (scheme === "dark") {
-    return {
-      far: "#6B7394",
-      mid: "#A8AFC8",
-      near: "#E4E6F2",
-      bright: "#FFFFFF",
-      vignette:
-        "radial-gradient(ellipse 85% 75% at 50% 42%, transparent 18%, rgba(0,0,0,0.5) 100%)",
-      vignetteNative: "rgba(0,0,0,0.35)",
-    };
+function getStarColor(star: Star) {
+  if (star.isBright) {
+    return "#FFFFFF";
   }
 
-  // Blue-ish palette tuned to match the app accent in light mode
-  return {
-    far: "#8EBEEB",
-    mid: "#2383E2",
-    near: "#DFF6FF",
-    bright: "#FFFFFF",
-    vignette:
-      "radial-gradient(ellipse 85% 75% at 50% 42%, transparent 26%, rgba(55,53,47,0.18) 100%)",
-    vignetteNative: "rgba(55,53,47,0.16)",
-  };
+  return STAR_PARTICLE_COLORS[star.colorVariant];
 }
 
-function getStarColor(depth: number, isBright: boolean, palette: DepthPalette) {
-  if (isBright) {
-    return palette.bright;
-  }
+type StarParticleProps = {
+  star: Star;
+  color: string;
+  glowStrength: number;
+};
 
-  if (depth <= 1) {
-    return palette.far;
-  }
+function StarParticle({ star, color, glowStrength }: StarParticleProps) {
+  const displaySize = star.isBright ? star.size * 1.2 : star.size;
+  const polygonPoints = getStarPolygon(star.variant, displaySize, star.rotation);
 
-  if (depth <= 3) {
-    return palette.mid;
-  }
-
-  return palette.near;
+  return (
+    <View
+      style={[
+        styles.particle,
+        {
+          left: star.x,
+          top: star.y,
+          width: displaySize,
+          height: displaySize,
+          opacity: star.opacity,
+          ...(star.isBright
+            ? Platform.OS === "web"
+              ? ({
+                  filter: `drop-shadow(0 0 ${glowStrength}px rgba(255,255,255,0.9))`,
+                } as object)
+              : {
+                  shadowColor: "#FFFFFF",
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.95,
+                  shadowRadius: glowStrength,
+                  elevation: 2,
+                }
+            : null),
+        },
+      ]}
+    >
+      <Svg width={displaySize} height={displaySize}>
+        <Polygon points={polygonPoints} fill={color} />
+      </Svg>
+    </View>
+  );
 }
 
 type GalaxyStarBackgroundProps = {
@@ -224,15 +271,9 @@ type StarLayerViewProps = {
   layer: StarLayer;
   pointerX: SharedValue<number>;
   pointerY: SharedValue<number>;
-  palette: DepthPalette;
 };
 
-function StarLayerView({
-  layer,
-  pointerX,
-  pointerY,
-  palette,
-}: StarLayerViewProps) {
+function StarLayerView({ layer, pointerX, pointerY }: StarLayerViewProps) {
   const depthNorm = layer.depth / (DEPTH_LAYER_CONFIGS.length - 1);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -258,93 +299,46 @@ function StarLayerView({
       pointerEvents="none"
       style={[styles.layer, { zIndex: layer.zIndex }, animatedStyle]}
     >
-      {layer.stars.map((star) => {
-        const color = getStarColor(layer.depth, star.isBright, palette);
-        const glowStrength = 4 + layer.depth * 2;
-
-        return (
-          <Text
-            key={star.id}
-            style={[
-              styles.star,
-              {
-                left: star.x,
-                top: star.y,
-                fontSize: star.size,
-                lineHeight: star.size,
-                opacity: star.opacity,
-                color,
-                transform: [{ rotate: `${star.rotation}deg` }],
-                ...(star.isBright && layer.depth >= 3
-                  ? Platform.OS === "web"
-                    ? ({
-                        textShadow: `0 0 ${glowStrength}px rgba(255,255,255,0.95)`,
-                      } as object)
-                    : {
-                        textShadowColor: "#FFFFFF",
-                        textShadowOffset: { width: 0, height: 0 },
-                        textShadowRadius: glowStrength,
-                      }
-                  : null),
-              },
-            ]}
-          >
-            {star.glyph}
-          </Text>
-        );
-      })}
+      {layer.stars.map((star) => (
+        <StarParticle
+          key={star.id}
+          color={getStarColor(star)}
+          glowStrength={4 + layer.depth * 2}
+          star={star}
+        />
+      ))}
     </Animated.View>
   );
 }
 
-function DepthVignette({ palette }: { palette: DepthPalette }) {
+function SubtleVignette() {
+  const scheme = useColorScheme();
+
   if (Platform.OS === "web") {
+    const vignette =
+      scheme === "dark"
+        ? "radial-gradient(ellipse 90% 80% at 50% 45%, transparent 40%, rgba(0,0,0,0.35) 100%)"
+        : "radial-gradient(ellipse 90% 80% at 50% 45%, transparent 50%, rgba(0,15,40,0.18) 100%)";
+
     return (
       <View
         pointerEvents="none"
-        style={[
-          styles.vignette,
-          { backgroundImage: palette.vignette } as object,
-        ]}
+        style={[styles.vignette, { backgroundImage: vignette } as object]}
       />
     );
   }
 
   return (
-    <>
-      <View
-        pointerEvents="none"
-        style={[
-          styles.edgeFade,
-          styles.edgeTop,
-          { backgroundColor: palette.vignetteNative },
-        ]}
-      />
-      <View
-        pointerEvents="none"
-        style={[
-          styles.edgeFade,
-          styles.edgeBottom,
-          { backgroundColor: palette.vignetteNative },
-        ]}
-      />
-      <View
-        pointerEvents="none"
-        style={[
-          styles.edgeFade,
-          styles.edgeLeft,
-          { backgroundColor: palette.vignetteNative },
-        ]}
-      />
-      <View
-        pointerEvents="none"
-        style={[
-          styles.edgeFade,
-          styles.edgeRight,
-          { backgroundColor: palette.vignetteNative },
-        ]}
-      />
-    </>
+    <View
+      pointerEvents="none"
+      style={[
+        styles.vignette,
+        {
+          backgroundColor:
+            scheme === "dark" ? "rgba(0,0,0,0.12)" : "rgba(0,15,40,0.08)",
+        },
+      ]}
+    />
   );
 }
 
@@ -352,22 +346,17 @@ export function GalaxyStarBackground({
   pointerX,
   pointerY,
 }: GalaxyStarBackgroundProps) {
-  const scheme = useColorScheme();
-  const palette = useMemo(() => getDepthPalette(scheme), [scheme]);
-
   return (
     <View pointerEvents="none" style={styles.container}>
       {GALAXY_LAYERS.map((layer) => (
         <StarLayerView
           key={layer.depth}
           layer={layer}
-          palette={palette}
           pointerX={pointerX}
           pointerY={pointerY}
         />
       ))}
-      {/* Render vignette/edge fades only on dark scheme to keep light background plain */}
-      {scheme === "dark" ? <DepthVignette palette={palette} /> : null}
+      <SubtleVignette />
     </View>
   );
 }
@@ -393,48 +382,16 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     overflow: "hidden",
     zIndex: 0,
+    backgroundColor: BrandColors.primary,
   },
   layer: {
     ...StyleSheet.absoluteFillObject,
   },
-  star: {
+  particle: {
     position: "absolute",
-    includeFontPadding: false,
-    textAlign: "center",
   },
   vignette: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 10,
-  },
-  edgeFade: {
-    position: "absolute",
-  },
-  edgeTop: {
-    top: 0,
-    left: 0,
-    right: 0,
-    height: "28%",
-    opacity: 0.55,
-  },
-  edgeBottom: {
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "28%",
-    opacity: 0.55,
-  },
-  edgeLeft: {
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: "18%",
-    opacity: 0.4,
-  },
-  edgeRight: {
-    top: 0,
-    bottom: 0,
-    right: 0,
-    width: "18%",
-    opacity: 0.4,
   },
 });
