@@ -64,10 +64,16 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
+      "router": {
+        "headers": {
+          "Cross-Origin-Embedder-Policy": "credentialless",
+          "Cross-Origin-Opener-Policy": "same-origin"
+        }
+      },
       "eas": {
-        "projectId": "a00d9202-c12e-475d-932d-d5e73dca925e"
+        "projectId": "3983676c-f69b-4af6-ad60-6111013f0b77"
       }
-    }
+    },
+    "owner": "borderlesspc7"
   }
 }
