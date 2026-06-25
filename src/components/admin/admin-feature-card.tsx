@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Card } from '@/components/ui/card';
 import { ThemedText } from '@/components/themed-text';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { TabIconName } from '@/navigation/types';
 
@@ -17,32 +18,20 @@ export function AdminFeatureCard({ title, description, icon, onPress }: AdminFea
   const theme = useTheme();
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.backgroundElement,
-          borderColor: theme.border,
-        },
-        pressed && styles.pressed,
-      ]}>
+    <Card onPress={onPress} style={styles.card}>
       <View style={[styles.iconWrap, { backgroundColor: theme.backgroundSelected }]}>
         <Ionicons color={theme.text} name={icon} size={22} />
       </View>
 
       <View style={styles.content}>
-        <ThemedText type="subtitle" style={styles.title}>
-          {title}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.description}>
+        <ThemedText type="cardTitle">{title}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
           {description}
         </ThemedText>
       </View>
 
       <Ionicons color={theme.textSecondary} name="chevron-forward" size={18} />
-    </Pressable>
+    </Card>
   );
 }
 
@@ -51,10 +40,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    padding: Spacing.four,
-    minHeight: 96,
+    minHeight: 88,
   },
   iconWrap: {
     width: 44,
@@ -66,17 +52,5 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     gap: Spacing.one,
-  },
-  title: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  description: {
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  pressed: {
-    opacity: 0.88,
   },
 });

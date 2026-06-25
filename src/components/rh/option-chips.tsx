@@ -1,8 +1,7 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Chip } from 'react-native-paper';
 
-import { ThemedText } from '@/components/themed-text';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Spacing } from '@/constants/theme';
 
 type OptionChipsProps<T extends string> = {
   options: readonly T[];
@@ -17,34 +16,21 @@ export function OptionChips<T extends string>({
   value,
   onChange,
 }: OptionChipsProps<T>) {
-  const theme = useTheme();
-
   return (
     <View style={styles.row}>
       {options.map((option) => {
         const isSelected = value === option;
 
         return (
-          <Pressable
+          <Chip
             key={option}
-            accessibilityRole="button"
-            accessibilityState={{ selected: isSelected }}
+            mode={isSelected ? 'flat' : 'outlined'}
+            selected={isSelected}
+            showSelectedOverlay
             onPress={() => onChange(option)}
-            style={[
-              styles.chip,
-              {
-                borderColor: isSelected ? theme.text : theme.border,
-                backgroundColor: isSelected ? theme.backgroundSelected : theme.background,
-              },
-            ]}>
-            <ThemedText
-              style={[
-                styles.label,
-                isSelected && { fontFamily: Fonts.sansSemiBold },
-              ]}>
-              {labels?.[option] ?? option}
-            </ThemedText>
-          </Pressable>
+            style={styles.chip}>
+            {labels?.[option] ?? option}
+          </Chip>
         );
       })}
     </View>
@@ -58,13 +44,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   chip: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-  },
-  label: {
-    fontSize: 13,
-    lineHeight: 18,
+    borderRadius: 8,
   },
 });

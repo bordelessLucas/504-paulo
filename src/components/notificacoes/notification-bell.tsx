@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { NotificationsPanel } from '@/components/notificacoes/notifications-panel';
-import { BrandColors, Fonts, Radius, Spacing } from '@/constants/theme';
+import { BrandColors, Fonts, PressedOpacity, Radius, Shadows, Spacing } from '@/constants/theme';
 import { useNotifications } from '@/features/notificacoes/notifications-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -29,9 +29,9 @@ export function NotificationBellButton({ compact = false }: NotificationBellButt
       style={({ pressed }) => [
         compact ? styles.compactButton : styles.button,
         {
-          backgroundColor: BrandColors.card,
+          backgroundColor: theme.backgroundElement,
           borderColor: theme.border,
-          shadowColor: BrandColors.primary,
+          shadowColor: theme.primary,
         },
         pressed && styles.pressed,
       ]}>
@@ -75,10 +75,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'visible',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    ...Shadows.sm,
   },
   compactButton: {
     width: 32,
@@ -109,6 +106,6 @@ const styles = StyleSheet.create({
     lineHeight: 12,
   },
   pressed: {
-    opacity: 0.88,
+    opacity: PressedOpacity,
   },
 });

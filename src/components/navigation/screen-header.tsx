@@ -1,6 +1,6 @@
 import { StyleSheet, View, type ViewProps } from 'react-native';
+import { Text } from 'react-native-paper';
 
-import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 
 type ScreenHeaderProps = ViewProps & {
@@ -13,11 +13,13 @@ export function ScreenHeader({ title, description, accessory, style, ...rest }: 
   return (
     <View style={[styles.header, style]} {...rest}>
       <View style={styles.textBlock}>
-        <ThemedText type="heading">{title}</ThemedText>
+        <Text variant="headlineMedium" style={styles.title}>
+          {title}
+        </Text>
         {description ? (
-          <ThemedText themeColor="textSecondary" style={styles.description}>
+          <Text variant="bodyLarge" style={styles.description}>
             {description}
-          </ThemedText>
+          </Text>
         ) : null}
       </View>
       {accessory}
@@ -33,8 +35,10 @@ const styles = StyleSheet.create({
   textBlock: {
     gap: Spacing.two,
   },
+  title: {
+    fontFamily: 'Korataki_Regular',
+  },
   description: {
-    fontSize: 15,
-    lineHeight: 22,
+    opacity: 0.78,
   },
 });

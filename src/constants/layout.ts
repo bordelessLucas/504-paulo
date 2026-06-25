@@ -1,13 +1,19 @@
 import { Spacing } from '@/constants/theme';
 
-/** Espaço reservado à direita para o sino de notificações flutuante (44px + folga). */
-export const HEADER_ACTIONS_CLEARANCE = 48;
+/** Altura da faixa superior (menu + notificações), abaixo do safe area. */
+export const SCREEN_TOP_BAR_HEIGHT = 48;
 
-/** Padding horizontal padrão das telas (esquerda). */
-export const SCREEN_PADDING_LEFT = Spacing.four;
+/** Padding horizontal padrão das telas. */
+export const SCREEN_PADDING_HORIZONTAL = Spacing.three;
 
-/** Padding horizontal padrão das telas (direita, com folga para o sino). */
-export const SCREEN_PADDING_RIGHT = Spacing.four + HEADER_ACTIONS_CLEARANCE;
+/** @deprecated Use SCREEN_PADDING_HORIZONTAL */
+export const SCREEN_PADDING_LEFT = SCREEN_PADDING_HORIZONTAL;
+
+/** @deprecated Use SCREEN_PADDING_HORIZONTAL */
+export const SCREEN_PADDING_RIGHT = SCREEN_PADDING_HORIZONTAL;
+
+/** Folga no topo do conteúdo para não sobrepor a barra menu + notificações (mobile). */
+export const SCREEN_CONTENT_TOP_OFFSET = SCREEN_TOP_BAR_HEIGHT + Spacing.two;
 
 /** Altura base dos ícones + label da tab bar (sem home indicator). */
 export const TAB_BAR_BASE_HEIGHT = 56;
@@ -24,12 +30,12 @@ export const SPLIT_LAYOUT_MIN_WIDTH = 768;
 /** Largura da sidebar fixa no layout desktop. */
 export const DESKTOP_SIDEBAR_WIDTH = 260;
 
-/** Insets padrão de conteúdo de tela (mobile com sino global). */
+/** Insets padrão de conteúdo de tela em mobile. */
 export function getScreenContentInsets(options?: { top?: number; bottom?: number }) {
   return {
-    paddingLeft: SCREEN_PADDING_LEFT,
-    paddingRight: SCREEN_PADDING_RIGHT,
-    paddingTop: options?.top ?? Spacing.four,
+    paddingLeft: SCREEN_PADDING_HORIZONTAL,
+    paddingRight: SCREEN_PADDING_HORIZONTAL,
+    paddingTop: options?.top ?? SCREEN_CONTENT_TOP_OFFSET,
     paddingBottom: options?.bottom,
   };
 }

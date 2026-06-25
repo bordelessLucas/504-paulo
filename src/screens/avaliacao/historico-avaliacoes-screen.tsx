@@ -332,13 +332,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingLeft: SCREEN_PADDING_LEFT,
-    paddingRight: SCREEN_PADDING_RIGHT,
+    paddingHorizontal: SCREEN_PADDING_LEFT,
     paddingVertical: Spacing.three,
     gap: Spacing.three,
-    maxWidth: MaxContentWidth + 360,
     width: '100%',
-    alignSelf: 'center',
   },
   header: {
     gap: Spacing.one,

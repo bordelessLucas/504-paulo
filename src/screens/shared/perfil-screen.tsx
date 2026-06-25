@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
+import { ScreenHeader } from '@/components/navigation/screen-header';
+import { Card } from '@/components/ui/card';
 import { ChangePasswordForm } from '@/components/perfil/change-password-form';
 import { ProfileAvatarPicker } from '@/components/perfil/profile-avatar-picker';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { ROLE_LABELS } from '@/navigation/role-menus';
@@ -52,12 +54,10 @@ export function PerfilScreen() {
 
   return (
     <TabScreenContainer scrollable contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <ThemedText type="heading">Perfil</ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.description}>
-          Gerencie sua conta, foto e senha de acesso.
-        </ThemedText>
-      </View>
+      <ScreenHeader
+        title="Perfil"
+        description="Gerencie sua conta, foto e senha de acesso."
+      />
 
       <ProfileAvatarPicker
         userId={user.id}
@@ -66,11 +66,7 @@ export function PerfilScreen() {
         onAvatarUpdated={(url) => void handleAvatarUpdated(url)}
       />
 
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-        ]}>
+      <Card>
         <ThemedText type="subtitle">Minha conta</ThemedText>
 
         <ProfileInfoRow label="Nome" value={user.name} />
@@ -85,7 +81,7 @@ export function PerfilScreen() {
         ) : null}
 
         {user.funcao ? <ProfileInfoRow label="Função" value={user.funcao} /> : null}
-      </View>
+      </Card>
 
       <ChangePasswordForm email={user.email} />
 
@@ -97,19 +93,6 @@ export function PerfilScreen() {
 const styles = StyleSheet.create({
   content: {
     gap: Spacing.four,
-  },
-  header: {
-    gap: Spacing.one,
-  },
-  description: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.lg,
-    padding: Spacing.four,
-    gap: Spacing.three,
   },
   infoRow: {
     gap: Spacing.one,

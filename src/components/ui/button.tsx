@@ -1,97 +1,53 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  type PressableProps,
-} from "react-native";
+import { Button as PaperButton, useTheme as usePaperTheme } from 'react-native-paper';
+import type { StyleProp, ViewStyle } from 'react-native';
 
-import { Fonts, Radius, Spacing } from "@/constants/theme";
-import { useTheme } from "@/hooks/use-theme";
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type ButtonSize = 'md' | 'sm';
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
-
-type ButtonProps = PressableProps & {
+type ButtonProps = {
   label: string;
   variant?: ButtonVariant;
+  size?: ButtonSize;
   isLoading?: boolean;
+  disabled?: boolean;
+  onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function Button({
   label,
-  variant = "primary",
+  variant = 'primary',
+  size = 'md',
   isLoading = false,
   disabled,
+  onPress,
   style,
-  ...rest
 }: ButtonProps) {
-  const theme = useTheme();
+  const paperTheme = usePaperTheme();
   const isDisabled = disabled || isLoading;
+  const isSmall = size === 'sm';
 
-  const getContainerStyle = () => {
-    if (variant === "primary") {
-      return { backgroundColor: theme.primary };
-    }
-
-    if (variant === "secondary") {
-      return {
-        backgroundColor: theme.backgroundElement,
-        borderColor: theme.border,
-        borderWidth: 1,
-      };
-    }
-
-    return { backgroundColor: "transparent" };
-  };
-
-  const getLabelColor = () => {
-    if (variant === "primary") {
-      return theme.textOnPrimary;
-    }
-
-    return theme.text;
-  };
+  const mode =
+    variant === 'primary' ? 'contained' : variant === 'ghost' ? 'text' : 'outlined';
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <PaperButton
+      mode={mode}
+      loading={isLoading}
       disabled={isDisabled}
-      style={({ pressed, hovered }) => [
-        styles.base,
-        getContainerStyle(),
-        isDisabled && styles.disabled,
-        pressed && !isDisabled && styles.pressed,
-        typeof style === "function" ? style({ pressed, hovered }) : style,
-      ]}
-      {...rest}
-    >
-      {isLoading ? (
-        <ActivityIndicator color={getLabelColor()} />
-      ) : (
-        <Text style={[styles.label, { color: getLabelColor() }]}>{label}</Text>
-      )}
-    </Pressable>
+      onPress={onPress}
+      compact={isSmall}
+      buttonColor={variant === 'primary' ? paperTheme.colors.primary : undefined}
+      textColor={
+        variant === 'danger'
+          ? paperTheme.colors.error
+          : variant === 'primary'
+            ? paperTheme.colors.onPrimary
+            : undefined
+      }
+      style={style}
+      contentStyle={isSmall ? undefined : { minHeight: 44 }}>
+      {label}
+    </PaperButton>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    minHeight: 44,
-    borderRadius: Radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-  },
-  label: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  pressed: {
-    opacity: 0.86,
-  },
-  disabled: {
-    opacity: 0.55,
-  },
-});

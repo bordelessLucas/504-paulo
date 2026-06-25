@@ -4,6 +4,7 @@ import { AppNavigationBridge } from '@/navigation/app-navigation-bridge';
 import { NotionDrawerContent } from '@/components/navigation/notion-drawer-content';
 import { DESKTOP_SIDEBAR_WIDTH } from '@/constants/layout';
 import { useAuth } from '@/features/auth/auth-context';
+import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { usePendingApprovalCount } from '@/hooks/use-pending-approval-count';
 import { getPrimaryTabForRole, getTabLabelForRole, getTabsForRole } from '@/navigation/role-menus';
@@ -19,6 +20,7 @@ type RoleDrawerNavigatorProps = {
 
 export function RoleDrawerNavigator({ role }: RoleDrawerNavigatorProps) {
   const theme = useTheme();
+  const isDesktopLayout = useIsDesktopLayout();
   const { user, signOut } = useAuth();
   const tabs = getTabsForRole(role);
   const initialRouteName = getPrimaryTabForRole(role);
@@ -38,6 +40,7 @@ export function RoleDrawerNavigator({ role }: RoleDrawerNavigatorProps) {
           user={user}
           pendingApprovalCount={pendingApprovalCount}
           onSignOut={() => void signOut()}
+          closeOnNavigate={!isDesktopLayout}
         />
       )}
       screenLayout={({ children }) => (
@@ -47,13 +50,14 @@ export function RoleDrawerNavigator({ role }: RoleDrawerNavigatorProps) {
         </>
       )}
       screenOptions={{
-        drawerType: 'permanent',
+        drawerType: isDesktopLayout ? 'permanent' : 'front',
         headerShown: false,
-        swipeEnabled: false,
+        swipeEnabled: !isDesktopLayout,
+        overlayColor: 'rgba(1, 26, 56, 0.55)',
         drawerStyle: {
-          width: DESKTOP_SIDEBAR_WIDTH,
+          width: isDesktopLayout ? DESKTOP_SIDEBAR_WIDTH : 300,
           backgroundColor: theme.background,
-          borderRightWidth: 1,
+          borderRightWidth: isDesktopLayout ? 1 : 0,
           borderRightColor: theme.border,
         },
         sceneStyle: {

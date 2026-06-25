@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { AppState, Platform } from 'react-native';
 
 import { mapAuthError } from '@/features/auth/map-auth-error';
 import { resolveUserRole } from '@/features/auth/resolve-user-role';
@@ -135,6 +136,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    let refreshTimer: ReturnType<typeof setInterval> | null = null;
+
+    const stopRefreshTimer = () => {
+      if (refreshTimer) {
+        clearInterval(refreshTimer);
+        refreshTimer = null;
+      }
+    };
+
+    const startRefreshTimer = () => {
+      stopRefreshTimer();
+      refreshTimer = setInterval(() => {
+        void getSafeSession().then((session) => {
+          if (!session && isMounted) {
+            setUser(null);
+            setIsProfileReady(true);
+          }
+        });
+      }, 5 * 60 * 1000);
+    };
 
     async function bootstrapSession() {
       try {
@@ -145,6 +166,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (isMounted) {
           await syncSession(session);
+          if (session) {
+            startRefreshTimer();
+          }
         }
       } catch (error) {
         if (isInvalidRefreshTokenError(error)) {
@@ -166,28 +190,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      try {
-        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          await syncSession(session);
-        }
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      void (async () => {
+        try {
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            await syncSession(session);
+            if (session) {
+              startRefreshTimer();
+            }
+            return;
+          }
 
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setIsProfileReady(true);
+          if (event === 'SIGNED_OUT') {
+            stopRefreshTimer();
+            setUser(null);
+            setIsProfileReady(true);
+          }
+        } catch (error) {
+          if (isInvalidRefreshTokenError(error)) {
+            await clearStaleAuthSession();
+            stopRefreshTimer();
+            setUser(null);
+            setIsProfileReady(true);
+          }
         }
-      } catch (error) {
-        if (isInvalidRefreshTokenError(error)) {
-          await clearStaleAuthSession();
-          setUser(null);
-          setIsProfileReady(true);
-        }
-      }
+      })();
     });
+
+    const appStateSubscription =
+      Platform.OS === 'web'
+        ? null
+        : AppState.addEventListener('change', (nextState) => {
+            if (nextState !== 'active') {
+              return;
+            }
+
+            void getSafeSession().then((session) => {
+              if (!session && isMounted) {
+                setUser(null);
+                setIsProfileReady(true);
+              }
+            });
+          });
 
     return () => {
       isMounted = false;
+      stopRefreshTimer();
       subscription.unsubscribe();
+      appStateSubscription?.remove();
     };
   }, [syncSession]);
 

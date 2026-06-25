@@ -2,23 +2,21 @@ import { NavigationIndependentTree } from '@react-navigation/native';
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { NotificationBell } from '@/components/notificacoes/notification-bell';
+import { ScreenTopBar } from '@/components/navigation/screen-top-bar';
+import { NotificationsPanel } from '@/components/notificacoes/notifications-panel';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
 import { NotificationsProvider } from '@/features/notificacoes/notifications-context';
-import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { RoleDrawerNavigator } from '@/navigation/RoleDrawerNavigator';
-import { RoleTabNavigator } from '@/navigation/RoleTabNavigator';
 import { AppNavigationProvider } from '@/navigation/app-navigation-context';
 import { NavigationLayoutProvider } from '@/navigation/navigation-layout-context';
 
 export function AppNavigator() {
   const { user, isLoading, isProfileReady, refetchProfile, signOut } = useAuth();
   const role = user?.role ?? null;
-  const isDesktopLayout = useIsDesktopLayout();
 
   if (isLoading || (user && !isProfileReady)) {
     return (
@@ -37,7 +35,7 @@ export function AppNavigator() {
       <ThemedView style={styles.loading}>
         <View style={styles.errorBox}>
           <ThemedText type="subtitle">Perfil de acesso não encontrado</ThemedText>
-          <ThemedText themeColor="textSecondary" style={styles.errorText}>
+          <ThemedText type="description" themeColor="textSecondary">
             Não foi possível identificar seu papel ({user.email}). Verifique se o perfil está
             cadastrado em `profiles` com o campo `role` correto (ex.: ceo).
           </ThemedText>
@@ -51,15 +49,12 @@ export function AppNavigator() {
   return (
     <NavigationIndependentTree>
       <NotificationsProvider>
-        <NavigationLayoutProvider hasBottomTabs={!isDesktopLayout}>
+        <NavigationLayoutProvider hasBottomTabs={false}>
           <AppNavigationProvider>
             <View style={styles.appShell}>
-              {isDesktopLayout ? (
-                <RoleDrawerNavigator key={role} role={role} />
-              ) : (
-                <RoleTabNavigator key={role} role={role} />
-              )}
-              <NotificationBell />
+              <RoleDrawerNavigator key={role} role={role} />
+              <ScreenTopBar />
+              <NotificationsPanel />
             </View>
           </AppNavigationProvider>
         </NavigationLayoutProvider>
@@ -83,9 +78,5 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     gap: Spacing.three,
-  },
-  errorText: {
-    fontSize: 14,
-    lineHeight: 20,
   },
 });

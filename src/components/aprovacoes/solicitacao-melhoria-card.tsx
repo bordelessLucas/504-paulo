@@ -1,8 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
+import { Card } from '@/components/ui/card';
 import { ThemedText } from '@/components/themed-text';
-import { ActionButton } from '@/components/ui/action-button';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Button } from '@/components/ui/button';
+import { Radius, Spacing } from '@/constants/theme';
 import type { SolicitacaoMelhoria } from '@/features/aprovacoes/api';
 import { formatDataSolicitacao } from '@/features/aprovacoes/api';
 import { useTheme } from '@/hooks/use-theme';
@@ -37,79 +38,71 @@ export function SolicitacaoMelhoriaCard({
   const theme = useTheme();
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}>
+    <Card>
       <View style={styles.header}>
         <View style={styles.titleBlock}>
-          <ThemedText style={styles.colaboradorNome}>{solicitacao.colaboradorNome}</ThemedText>
+          <ThemedText type="cardTitle">{solicitacao.colaboradorNome}</ThemedText>
           {solicitacao.colaboradorDepartamento ? (
-            <ThemedText themeColor="textSecondary" style={styles.meta}>
+            <ThemedText type="small" themeColor="textSecondary">
               {solicitacao.colaboradorDepartamento}
             </ThemedText>
           ) : null}
         </View>
-        <ThemedText themeColor="textSecondary" style={styles.date}>
+        <ThemedText type="small" themeColor="textSecondary">
           {formatDataSolicitacao(solicitacao.createdAt)}
         </ThemedText>
       </View>
 
       {solicitacao.gerenteNome ? (
-        <ThemedText themeColor="textSecondary" style={styles.gerente}>
+        <ThemedText type="small" themeColor="textSecondary">
           Solicitante: {solicitacao.gerenteNome}
         </ThemedText>
       ) : null}
 
       {showRhValidatedBadge ? (
         <View style={[styles.badge, { borderColor: theme.border, backgroundColor: theme.background }]}>
-          <ThemedText style={styles.badgeText}>Validado pelo RH</ThemedText>
+          <ThemedText type="badge">Validado pelo RH</ThemedText>
         </View>
       ) : null}
 
       <View style={styles.justificativaBlock}>
-        <ThemedText themeColor="textSecondary" style={styles.justificativaLabel}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.justificativaLabel}>
           Justificativa
         </ThemedText>
-        <ThemedText style={styles.justificativa}>{solicitacao.justificativa}</ThemedText>
+        <ThemedText type="description">{solicitacao.justificativa}</ThemedText>
       </View>
 
       <View style={styles.actions}>
-        <ActionButton
+        <Button
           label={primaryLabel}
           isLoading={isPrimaryLoading}
-          variant="primary"
+          size="sm"
           onPress={onPrimary}
         />
         {secondaryLabel && onSecondary ? (
-          <ActionButton
+          <Button
             label={secondaryLabel}
             isLoading={isSecondaryLoading}
             variant="secondary"
+            size="sm"
             onPress={onSecondary}
           />
         ) : null}
         {dangerLabel && onDanger ? (
-          <ActionButton
+          <Button
             label={dangerLabel}
             isLoading={isDangerLoading}
             variant="danger"
+            size="sm"
             onPress={onDanger}
           />
         ) : null}
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -118,24 +111,7 @@ const styles = StyleSheet.create({
   },
   titleBlock: {
     flex: 1,
-    gap: 2,
-  },
-  colaboradorNome: {
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  meta: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  date: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  gerente: {
-    fontSize: 14,
-    lineHeight: 20,
+    gap: Spacing.half,
   },
   badge: {
     alignSelf: 'flex-start',
@@ -144,23 +120,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
   },
-  badgeText: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 12,
-    lineHeight: 16,
-  },
   justificativaBlock: {
     gap: Spacing.one,
   },
   justificativaLabel: {
-    fontSize: 12,
-    lineHeight: 16,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
-  },
-  justificativa: {
-    fontSize: 15,
-    lineHeight: 22,
   },
   actions: {
     gap: Spacing.two,

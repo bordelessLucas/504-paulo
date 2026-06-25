@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { Card } from '@/components/ui/card';
 import { ThemedText } from '@/components/themed-text';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import {
@@ -31,17 +32,7 @@ export function PDICard({
   const statusStyle = PDI_STATUS_COLORS[pdi.status];
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          backgroundColor: theme.backgroundElement,
-          borderColor: theme.border,
-          opacity: pressed ? 0.9 : 1,
-        },
-      ]}>
+    <Card onPress={onPress} padding="compact">
       <View style={styles.header}>
         <View style={[styles.eixoBadge, { backgroundColor: eixoStyle.bg }]}>
           <ThemedText style={[styles.eixoText, { color: eixoStyle.text }]}>
@@ -88,17 +79,11 @@ export function PDICard({
           </ThemedText>
         ) : null}
       </View>
-    </Pressable>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.md,
-    padding: Spacing.three,
-    gap: Spacing.two,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -136,12 +121,12 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 8,
-    borderRadius: 4,
+    borderRadius: Radius.sm,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: Radius.sm,
   },
   progressLabel: {
     fontSize: 12,

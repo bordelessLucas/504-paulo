@@ -11,6 +11,7 @@ import { BrandColors } from '@/constants/theme';
 import { ThemedView } from '@/components/themed-view';
 import { ToastProvider } from '@/components/ui/toast';
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
+import { AppPaperProvider } from '@/providers/app-paper-provider';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -86,11 +87,13 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
-      </ToastProvider>
+      <AppPaperProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <RootNavigator />
+          </AuthProvider>
+        </ToastProvider>
+      </AppPaperProvider>
     </SafeAreaProvider>
   );
 }

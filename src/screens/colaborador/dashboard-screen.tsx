@@ -9,7 +9,9 @@ import {
   View,
 } from 'react-native';
 import { PDICard } from '@/components/pdi/PDICard';
+import { ScreenHeader } from '@/components/navigation/screen-header';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
+import { Card } from '@/components/ui/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
@@ -53,17 +55,11 @@ function DashboardCard({
   title: string;
   children: React.ReactNode;
 }) {
-  const theme = useTheme();
-
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}>
+    <Card>
       <ThemedText type="subtitle">{title}</ThemedText>
       {children}
-    </View>
+    </Card>
   );
 }
 
@@ -229,12 +225,10 @@ export function DashboardColaboradorScreen() {
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadDashboard({ refreshing: true })} />
         }>
-        <View style={styles.header}>
-            <ThemedText type="heading">Olá, {user?.name.split(' ')[0] ?? 'colaborador'}</ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-              Acompanhe seu desempenho e os feedbacks recebidos nas avaliações.
-            </ThemedText>
-          </View>
+        <ScreenHeader
+          title={`Olá, ${user?.name.split(' ')[0] ?? 'colaborador'}`}
+          description="Acompanhe seu desempenho e os feedbacks recebidos nas avaliações."
+        />
 
           <DashboardCard title="Seu desempenho">
             <DesempenhoSemaforo
@@ -396,19 +390,6 @@ export const ColaboradorDashboardScreen = DashboardColaboradorScreen;
 const styles = StyleSheet.create({
   content: {
     gap: Spacing.four,
-  },
-  header: {
-    gap: Spacing.two,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    padding: Spacing.four,
-    gap: Spacing.three,
   },
   mediaBlock: {
     gap: Spacing.one,

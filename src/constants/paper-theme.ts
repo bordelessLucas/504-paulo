@@ -1,0 +1,71 @@
+import { MD3DarkTheme, MD3LightTheme, type MD3Theme } from 'react-native-paper';
+
+import { BrandColors } from '@/constants/theme';
+
+export const PaperLightTheme: MD3Theme = {
+  ...MD3LightTheme,
+  roundness: 10,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: BrandColors.primary,
+    onPrimary: BrandColors.textOnPrimary,
+    primaryContainer: 'rgba(1, 45, 96, 0.12)',
+    onPrimaryContainer: BrandColors.primary,
+    secondary: BrandColors.secondary,
+    onSecondary: BrandColors.textOnPrimary,
+    secondaryContainer: 'rgba(0, 166, 117, 0.14)',
+    onSecondaryContainer: '#005C41',
+    background: BrandColors.background,
+    onBackground: '#1A2332',
+    surface: BrandColors.card,
+    onSurface: '#1A2332',
+    surfaceVariant: '#E5E1D6',
+    onSurfaceVariant: '#5C6570',
+    outline: 'rgba(1, 45, 96, 0.18)',
+    outlineVariant: 'rgba(1, 45, 96, 0.1)',
+    error: '#D64545',
+    onError: '#FFFFFF',
+    elevation: {
+      level0: 'transparent',
+      level1: BrandColors.card,
+      level2: '#F7F5F0',
+      level3: '#F0EDE4',
+      level4: '#EAE6DC',
+      level5: '#E5E1D6',
+    },
+  },
+};
+
+export const PaperDarkTheme: MD3Theme = {
+  ...MD3DarkTheme,
+  roundness: 10,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: '#3D8FD4',
+    onPrimary: BrandColors.textOnPrimary,
+    primaryContainer: 'rgba(61, 143, 212, 0.2)',
+    onPrimaryContainer: '#D4E8F8',
+    secondary: BrandColors.secondary,
+    onSecondary: BrandColors.textOnPrimary,
+    secondaryContainer: 'rgba(0, 166, 117, 0.2)',
+    onSecondaryContainer: '#A8F0D8',
+    background: '#011A38',
+    onBackground: BrandColors.background,
+    surface: '#012D60',
+    onSurface: BrandColors.background,
+    surfaceVariant: '#023A72',
+    onSurfaceVariant: '#A8B4C4',
+    outline: 'rgba(240, 237, 228, 0.16)',
+    outlineVariant: 'rgba(240, 237, 228, 0.1)',
+    error: '#FF7369',
+    onError: '#1A2332',
+    elevation: {
+      level0: 'transparent',
+      level1: '#012D60',
+      level2: '#023A72',
+      level3: '#034680',
+      level4: '#04528E',
+      level5: '#055E9C',
+    },
+  },
+};

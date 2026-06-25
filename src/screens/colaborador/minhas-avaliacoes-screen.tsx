@@ -9,6 +9,7 @@ import {
 
 import { AvaliacaoHistoricoCard } from '@/components/avaliacao/avaliacao-historico-card';
 import { EscalaLegenda } from '@/components/avaliacao/escala-legenda';
+import { ScreenHeader } from '@/components/navigation/screen-header';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -74,12 +75,10 @@ export function MinhasAvaliacoesScreen() {
           />
         ) : undefined
       }>
-      <View style={styles.header}>
-        <ThemedText type="heading">Minhas avaliações</ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.description}>
-          Metodologia 360° — você vê suas notas e feedbacks, sem identificação de quem avaliou.
-        </ThemedText>
-      </View>
+      <ScreenHeader
+        title="Minhas avaliações"
+        description="Metodologia 360° — você vê suas notas e feedbacks, sem identificação de quem avaliou."
+      />
 
       {isLoading ? (
         <View style={styles.centered}>
@@ -121,14 +120,6 @@ export function MinhasAvaliacoesScreen() {
 const styles = StyleSheet.create({
   content: {
     gap: Spacing.three,
-  },
-  header: {
-    gap: Spacing.one,
-    marginBottom: Spacing.one,
-  },
-  description: {
-    fontSize: 14,
-    lineHeight: 20,
   },
   empty: {
     fontSize: 14,

@@ -265,13 +265,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingLeft: SCREEN_PADDING_LEFT,
-    paddingRight: SCREEN_PADDING_RIGHT,
+    paddingHorizontal: SCREEN_PADDING_LEFT,
     paddingTop: Spacing.four,
     paddingBottom: Spacing.three,
-    maxWidth: MaxContentWidth + 360,
     width: '100%',
-    alignSelf: 'center',
   },
   subtitle: {
     fontSize: 14,
@@ -283,17 +280,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.one,
   },
   listContent: {
-    maxWidth: MaxContentWidth + 360,
     width: '100%',
-    alignSelf: 'center',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.three,
-    paddingLeft: SCREEN_PADDING_LEFT,
-    paddingRight: SCREEN_PADDING_RIGHT,
+    paddingHorizontal: SCREEN_PADDING_LEFT,
     paddingVertical: Spacing.three,
     borderBottomWidth: 1,
     borderBottomColor: Colors.light.border,

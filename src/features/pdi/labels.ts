@@ -1,4 +1,7 @@
 import type { PdiEixo, PdiStatus } from '@/features/pdi/types';
+import { SemanticColors } from '@/constants/theme';
+
+const semantic = SemanticColors.light;
 
 export const PDI_EIXO_LABELS: Record<PdiEixo, string> = {
   P1: 'P1 — Técnica / Prazos',
@@ -23,18 +26,18 @@ export const PDI_STATUS_LABELS: Record<PdiStatus, string> = {
 };
 
 export const PDI_STATUS_COLORS: Record<PdiStatus, { bg: string; text: string }> = {
-  aberto: { bg: '#DBEAFE', text: '#1E40AF' },
-  em_andamento: { bg: '#FEF3C7', text: '#92400E' },
-  concluido: { bg: '#DCFCE7', text: '#166534' },
-  vencido: { bg: '#FEE2E2', text: '#991B1B' },
-  cancelado: { bg: '#F3F4F6', text: '#6B7280' },
+  aberto: semantic.info,
+  em_andamento: semantic.warning,
+  concluido: semantic.success,
+  vencido: semantic.danger,
+  cancelado: semantic.neutral,
 };
 
 export const PDI_EIXO_COLORS: Record<PdiEixo, { bg: string; text: string }> = {
   P1: { bg: '#E8EAF6', text: '#283593' },
-  P2: { bg: '#FFF3E0', text: '#E65100' },
+  P2: { bg: '#FFF3E0', text: '#C2410C' },
   P3: { bg: '#F3E5F5', text: '#6A1B9A' },
-  geral: { bg: '#ECEFF1', text: '#455A64' },
+  geral: semantic.neutral,
 };
 
 export const PDI_EIXO_OPTIONS: PdiEixo[] = ['P1', 'P2', 'P3', 'geral'];

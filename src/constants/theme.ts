@@ -96,6 +96,70 @@ export const Radius = {
   md: 6,
   lg: 8,
   xl: 12,
+  "2xl": 16,
+} as const;
+
+export const PressedOpacity = 0.88;
+export const DisabledOpacity = 0.55;
+
+export type SemanticTone = "success" | "warning" | "danger" | "info" | "neutral";
+
+export const SemanticColors = {
+  light: {
+    success: { bg: "#DCFCE7", text: "#166534" },
+    warning: { bg: "#FEF3C7", text: "#92400E" },
+    danger: { bg: "#FEE2E2", text: "#991B1B" },
+    info: { bg: "#DBEAFE", text: "#1E40AF" },
+    neutral: { bg: "#ECEFF1", text: "#455A64" },
+  },
+  dark: {
+    success: { bg: "#14532D", text: "#86EFAC" },
+    warning: { bg: "#78350F", text: "#FCD34D" },
+    danger: { bg: "#7F1D1D", text: "#FCA5A5" },
+    info: { bg: "#1E3A5F", text: "#93C5FD" },
+    neutral: { bg: "#1E293B", text: "#94A3B8" },
+  },
+} as const;
+
+export const SemaforoColors = {
+  verde: "#2ECC71",
+  amarelo: "#F1C40F",
+  laranja: "#E67E22",
+  vermelho: "#E74C3C",
+  cinza: "#9CA3AF",
+} as const;
+
+export const Shadows = {
+  sm: Platform.select({
+    ios: {
+      shadowColor: BrandColors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+    },
+    android: { elevation: 3 },
+    default: {},
+  }),
+  md: Platform.select({
+    ios: {
+      shadowColor: BrandColors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+    },
+    android: { elevation: 6 },
+    default: {},
+  }),
+  lg: Platform.select({
+    ios: {
+      shadowColor: BrandColors.primary,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.16,
+      shadowRadius: 24,
+    },
+    android: { elevation: 16 },
+    default: {},
+  }),
 } as const;
 
 export const MaxContentWidth = 420;

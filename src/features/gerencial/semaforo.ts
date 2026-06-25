@@ -1,3 +1,5 @@
+import { SemaforoColors } from '@/constants/theme';
+
 export type SemaforoStatus = 'verde' | 'amarelo' | 'cinza' | 'laranja' | 'vermelho';
 
 export type SemaforoItem = {
@@ -12,31 +14,31 @@ export const SEMAFORO_ITENS: SemaforoItem[] = [
     status: 'verde',
     label: 'Verde',
     description: 'Média ≥ 2,5 (escala 0–3)',
-    color: '#2ECC71',
+    color: SemaforoColors.verde,
   },
   {
     status: 'amarelo',
     label: 'Amarelo',
     description: 'Média ≥ 2,0',
-    color: '#F1C40F',
+    color: SemaforoColors.amarelo,
   },
   {
     status: 'laranja',
     label: 'Laranja',
     description: 'Média ≥ 1,0',
-    color: '#E67E22',
+    color: SemaforoColors.laranja,
   },
   {
     status: 'vermelho',
     label: 'Vermelho',
     description: 'Média < 1,0',
-    color: '#E74C3C',
+    color: SemaforoColors.vermelho,
   },
   {
     status: 'cinza',
     label: 'Cinza',
     description: 'Sem dados',
-    color: '#9CA3AF',
+    color: SemaforoColors.cinza,
   },
 ];
 

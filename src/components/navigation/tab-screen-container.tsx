@@ -9,14 +9,11 @@ import {
 } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
-import { ThemedView } from '@/components/themed-view';
-import {
-  SCREEN_PADDING_LEFT,
-  SCREEN_PADDING_RIGHT,
-} from '@/constants/layout';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { SCREEN_CONTENT_TOP_OFFSET, SCREEN_PADDING_HORIZONTAL } from '@/constants/layout';
+import { Spacing } from '@/constants/theme';
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
+import { ThemedView } from '@/components/themed-view';
 
 type TabScreenContainerProps = {
   children: ReactNode;
@@ -26,6 +23,7 @@ type TabScreenContainerProps = {
   contentContainerStyle?: StyleProp<ViewStyle>;
   maxContentWidth?: number;
   withHorizontalPadding?: boolean;
+  /** @deprecated Barra superior global já reserva o espaço; mantido por compatibilidade. */
   reserveHeaderActions?: boolean;
   refreshControl?: React.ReactElement<RefreshControlProps>;
 };
@@ -38,28 +36,24 @@ export function TabScreenContainer({
   contentContainerStyle,
   maxContentWidth,
   withHorizontalPadding = true,
-  reserveHeaderActions = true,
   refreshControl,
 }: TabScreenContainerProps) {
   const { scrollPaddingBottom } = useTabScreenLayout();
   const isDesktopLayout = useIsDesktopLayout();
-  const resolvedMaxWidth =
-    maxContentWidth ?? (isDesktopLayout ? 0 : MaxContentWidth + 360);
 
   const horizontalInsets = withHorizontalPadding
     ? {
-        paddingLeft: SCREEN_PADDING_LEFT,
-        paddingRight: reserveHeaderActions ? SCREEN_PADDING_RIGHT : SCREEN_PADDING_LEFT,
-        paddingTop: Spacing.four,
+        paddingHorizontal: SCREEN_PADDING_HORIZONTAL,
+        paddingTop: isDesktopLayout ? Spacing.four : SCREEN_CONTENT_TOP_OFFSET,
       }
     : null;
 
   const paddedContentStyle = [
     horizontalInsets,
-    scrollable && { paddingBottom: scrollPaddingBottom },
-    !scrollable && { paddingBottom: scrollPaddingBottom },
-    resolvedMaxWidth > 0 && styles.centeredContent,
-    resolvedMaxWidth > 0 && { maxWidth: resolvedMaxWidth },
+    { paddingBottom: scrollPaddingBottom },
+    maxContentWidth != null && maxContentWidth > 0
+      ? { maxWidth: maxContentWidth, alignSelf: 'center' as const, flex: 1 }
+      : styles.fullWidth,
     contentContainerStyle,
   ];
 
@@ -95,8 +89,8 @@ const styles = StyleSheet.create({
   scrollGrow: {
     flexGrow: 1,
   },
-  centeredContent: {
-    width: '100%',
-    alignSelf: 'center',
+  fullWidth: {
+    width: '100%' as const,
+    alignSelf: 'stretch' as const,
   },
 });

@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto';
 
 import { createClient } from '@supabase/supabase-js';
-import { AppState, Platform } from 'react-native';
+import { Platform } from 'react-native';
 
 import { supabaseStorage } from '@/lib/supabase-storage';
 import type { Database } from '@/types/supabase';
@@ -21,19 +21,10 @@ export const supabase = createClient<Database>(
   {
     auth: {
       storage: supabaseStorage,
-      autoRefreshToken: true,
+      // Refresh manual via getSafeSession() evita rejeições não tratadas no boot.
+      autoRefreshToken: false,
       persistSession: true,
       detectSessionInUrl: Platform.OS === 'web',
     },
   },
 );
-
-if (Platform.OS !== 'web') {
-  AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-      void supabase.auth.startAutoRefresh();
-    } else {
-      void supabase.auth.stopAutoRefresh();
-    }
-  });
-}

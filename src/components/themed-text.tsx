@@ -4,7 +4,17 @@ import { Fonts, Radius, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedTextProps = TextProps & {
-  type?: 'default' | 'heading' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'badge';
+  type?:
+    | 'default'
+    | 'heading'
+    | 'title'
+    | 'cardTitle'
+    | 'description'
+    | 'small'
+    | 'smallBold'
+    | 'subtitle'
+    | 'link'
+    | 'badge';
   themeColor?: ThemeColor;
 };
 
@@ -18,6 +28,8 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         type === 'default' && styles.default,
         type === 'heading' && styles.heading,
         type === 'title' && styles.title,
+        type === 'cardTitle' && styles.cardTitle,
+        type === 'description' && styles.description,
         type === 'small' && styles.small,
         type === 'smallBold' && styles.smallBold,
         type === 'subtitle' && styles.subtitle,
@@ -53,6 +65,16 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.display,
     fontSize: 24,
     lineHeight: 30,
+  },
+  cardTitle: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  description: {
+    fontFamily: Fonts.sans,
+    fontSize: 15,
+    lineHeight: 22,
   },
   subtitle: {
     fontFamily: Fonts.display,

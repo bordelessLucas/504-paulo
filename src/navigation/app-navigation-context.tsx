@@ -3,19 +3,27 @@ import { createContext, useCallback, useContext, useMemo, useRef, type ReactNode
 import type { MainTabParamList } from '@/navigation/types';
 
 type NavigateToTab = (routeName: keyof MainTabParamList) => void;
+type OpenDrawer = () => void;
 
 type AppNavigationContextValue = {
   registerNavigator: (navigate: NavigateToTab | null) => void;
+  registerDrawer: (openDrawer: OpenDrawer | null) => void;
   navigateToTab: (routeName: keyof MainTabParamList) => boolean;
+  openDrawer: () => void;
 };
 
 const AppNavigationContext = createContext<AppNavigationContextValue | null>(null);
 
 export function AppNavigationProvider({ children }: { children: ReactNode }) {
   const navigatorRef = useRef<NavigateToTab | null>(null);
+  const drawerRef = useRef<OpenDrawer | null>(null);
 
   const registerNavigator = useCallback((navigate: NavigateToTab | null) => {
     navigatorRef.current = navigate;
+  }, []);
+
+  const registerDrawer = useCallback((openDrawer: OpenDrawer | null) => {
+    drawerRef.current = openDrawer;
   }, []);
 
   const navigateToTab = useCallback((routeName: keyof MainTabParamList) => {
@@ -27,12 +35,18 @@ export function AppNavigationProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
+  const openDrawer = useCallback(() => {
+    drawerRef.current?.();
+  }, []);
+
   const value = useMemo(
     () => ({
       registerNavigator,
+      registerDrawer,
       navigateToTab,
+      openDrawer,
     }),
-    [navigateToTab, registerNavigator],
+    [navigateToTab, openDrawer, registerDrawer, registerNavigator],
   );
 
   return <AppNavigationContext.Provider value={value}>{children}</AppNavigationContext.Provider>;

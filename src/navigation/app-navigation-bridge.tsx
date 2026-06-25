@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import { useEffect } from 'react';
 
@@ -7,17 +7,22 @@ import type { MainTabParamList } from '@/navigation/types';
 
 export function AppNavigationBridge() {
   const navigation = useNavigation<NavigationProp<MainTabParamList>>();
-  const { registerNavigator } = useAppNavigation();
+  const { registerNavigator, registerDrawer } = useAppNavigation();
 
   useEffect(() => {
     registerNavigator((routeName) => {
       navigation.navigate(routeName);
     });
 
+    registerDrawer(() => {
+      navigation.dispatch(DrawerActions.openDrawer());
+    });
+
     return () => {
       registerNavigator(null);
+      registerDrawer(null);
     };
-  }, [navigation, registerNavigator]);
+  }, [navigation, registerDrawer, registerNavigator]);
 
   return null;
 }

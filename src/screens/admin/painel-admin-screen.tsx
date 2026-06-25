@@ -3,6 +3,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AdminFeatureCard } from '@/components/admin/admin-feature-card';
 import { AdminFeatureModal } from '@/components/admin/admin-feature-modal';
+import { ScreenHeader } from '@/components/navigation/screen-header';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { FormularioAcessoPlataforma } from '@/components/rh/formulario-acesso-plataforma';
 import { FormularioColaborador } from '@/components/rh/formulario-colaborador';
@@ -122,13 +123,10 @@ export function PainelAdminScreen() {
 
   return (
     <TabScreenContainer scrollable contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <ThemedText type="heading">Painel administrativo</ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.description}>
-          Selecione uma funcionalidade para gerenciar acessos, colaboradores e incidentes da
-          plataforma.
-        </ThemedText>
-      </View>
+      <ScreenHeader
+        title="Painel administrativo"
+        description="Selecione uma funcionalidade para gerenciar acessos, colaboradores e incidentes da plataforma."
+      />
 
       <View style={[styles.grid, isWideLayout && styles.gridWide]}>
         {visibleFeatures.map((feature) => (
@@ -161,13 +159,6 @@ export function PainelAdminScreen() {
 const styles = StyleSheet.create({
   content: {
     gap: Spacing.four,
-  },
-  header: {
-    gap: Spacing.two,
-  },
-  description: {
-    fontSize: 15,
-    lineHeight: 22,
   },
   grid: {
     gap: Spacing.three,

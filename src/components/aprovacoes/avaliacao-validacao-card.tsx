@@ -1,8 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
+import { Card } from '@/components/ui/card';
 import { ThemedText } from '@/components/themed-text';
-import { ActionButton } from '@/components/ui/action-button';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Button } from '@/components/ui/button';
+import { Radius, Spacing } from '@/constants/theme';
 import { formatDataSolicitacao } from '@/features/aprovacoes/api';
 import {
   formatTipoAvaliacaoLabel,
@@ -34,74 +35,65 @@ export function AvaliacaoValidacaoCard({
   const theme = useTheme();
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}>
+    <Card>
       <View style={styles.header}>
         <View style={styles.titleBlock}>
-          <ThemedText style={styles.colaboradorNome}>{avaliacao.avaliadoNome}</ThemedText>
+          <ThemedText type="cardTitle">{avaliacao.avaliadoNome}</ThemedText>
           {avaliacao.avaliadoDepartamento ? (
-            <ThemedText themeColor="textSecondary" style={styles.meta}>
+            <ThemedText type="small" themeColor="textSecondary">
               {avaliacao.avaliadoDepartamento}
             </ThemedText>
           ) : null}
         </View>
-        <ThemedText themeColor="textSecondary" style={styles.date}>
+        <ThemedText type="small" themeColor="textSecondary">
           {formatDataSolicitacao(avaliacao.createdAt)}
         </ThemedText>
       </View>
 
       <View style={styles.badges}>
         <View style={[styles.badge, { borderColor: theme.border, backgroundColor: theme.background }]}>
-          <ThemedText style={styles.badgeText}>{formatTipoAvaliacaoLabel(avaliacao.tipo)}</ThemedText>
+          <ThemedText type="badge">{formatTipoAvaliacaoLabel(avaliacao.tipo)}</ThemedText>
         </View>
         {avaliacao.media !== null ? (
           <View style={[styles.badge, { borderColor: theme.border, backgroundColor: theme.background }]}>
-            <ThemedText style={styles.badgeText}>Média {avaliacao.media.toFixed(1)}</ThemedText>
+            <ThemedText type="badge">Média {avaliacao.media.toFixed(1)}</ThemedText>
           </View>
         ) : null}
         {showRhValidatedBadge ? (
           <View style={[styles.badge, { borderColor: theme.border, backgroundColor: theme.background }]}>
-            <ThemedText style={styles.badgeText}>Validada pelo RH</ThemedText>
+            <ThemedText type="badge">Validada pelo RH</ThemedText>
           </View>
         ) : null}
       </View>
 
       {avaliacao.avaliadorNome ? (
-        <ThemedText themeColor="textSecondary" style={styles.avaliador}>
+        <ThemedText type="small" themeColor="textSecondary">
           Avaliador: {avaliacao.avaliadorNome}
         </ThemedText>
       ) : null}
 
       <View style={styles.actions}>
-        <ActionButton
+        <Button
           isLoading={isPrimaryLoading}
           label={primaryLabel}
+          size="sm"
           onPress={onPrimary}
-          variant="primary"
         />
         {dangerLabel && onDanger ? (
-          <ActionButton
+          <Button
             isLoading={isDangerLoading}
             label={dangerLabel}
-            onPress={onDanger}
             variant="danger"
+            size="sm"
+            onPress={onDanger}
           />
         ) : null}
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -110,20 +102,7 @@ const styles = StyleSheet.create({
   },
   titleBlock: {
     flex: 1,
-    gap: 2,
-  },
-  colaboradorNome: {
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  meta: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  date: {
-    fontSize: 12,
-    lineHeight: 16,
+    gap: Spacing.half,
   },
   badges: {
     flexDirection: 'row',
@@ -135,15 +114,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
-  },
-  badgeText: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  avaliador: {
-    fontSize: 14,
-    lineHeight: 20,
   },
   actions: {
     gap: Spacing.two,

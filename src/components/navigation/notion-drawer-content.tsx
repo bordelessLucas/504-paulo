@@ -1,13 +1,13 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import {
   DrawerContentScrollView,
   type DrawerContentComponentProps,
 } from '@react-navigation/drawer';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { StyleSheet, Text, View } from 'react-native';
+import { Divider, Drawer, Surface, Text as PaperText, useTheme as usePaperTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ThemedText } from '@/components/themed-text';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Fonts, Spacing } from '@/constants/theme';
 import { getMenuItemsForRole, getTabLabelForRole, ROLE_LABELS } from '@/navigation/role-menus';
 import type { AuthUser } from '@/types/auth';
 import type { UserRole } from '@/types/supabase';
@@ -18,6 +18,7 @@ type NotionDrawerContentProps = DrawerContentComponentProps & {
   role: UserRole;
   pendingApprovalCount?: number;
   onSignOut: () => void;
+  closeOnNavigate?: boolean;
 };
 
 export function NotionDrawerContent({
@@ -27,15 +28,24 @@ export function NotionDrawerContent({
   role,
   pendingApprovalCount = 0,
   onSignOut,
+  closeOnNavigate = false,
 }: NotionDrawerContentProps) {
   const theme = useTheme();
+  const paperTheme = usePaperTheme();
   const insets = useSafeAreaInsets();
   const menuItems = getMenuItemsForRole(role);
   const activeRoute = state.routes[state.index]?.name;
 
+  const handleNavigate = (routeName: string) => {
+    navigation.navigate(routeName);
+    if (closeOnNavigate) {
+      navigation.closeDrawer();
+    }
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top }]}>
-      <View style={[styles.brand, { borderBottomColor: theme.border }]}>
+    <View style={[styles.container, { backgroundColor: paperTheme.colors.background, paddingTop: insets.top }]}>
+      <Surface style={[styles.brand, { backgroundColor: paperTheme.colors.surface }]} elevation={0}>
         <View style={styles.brandLogo}>
           <Text style={[styles.brandVertek, { color: theme.primary, fontFamily: Fonts.display }]}>
             Vertek
@@ -44,67 +54,55 @@ export function NotionDrawerContent({
             Avalia
           </Text>
         </View>
-        <ThemedText type="subtitle" style={styles.userName}>
+        <PaperText variant="titleMedium" style={styles.userName}>
           {user.name}
-        </ThemedText>
-        <ThemedText themeColor="textSecondary" style={styles.userMeta}>
+        </PaperText>
+        <PaperText variant="bodySmall" style={{ color: paperTheme.colors.onSurfaceVariant }}>
           {ROLE_LABELS[role]}
-        </ThemedText>
-      </View>
+        </PaperText>
+      </Surface>
 
       <DrawerContentScrollView
         contentContainerStyle={styles.menuList}
         showsVerticalScrollIndicator={false}>
-        {menuItems.map((item) => {
-          const isActive = activeRoute === item.name;
-          const label = getTabLabelForRole(item.name, role);
-          const badgeCount = item.name === 'Aprovacoes' ? pendingApprovalCount : 0;
+        <Drawer.Section title="Navegação" showDivider={false}>
+          {menuItems.map((item) => {
+            const isActive = activeRoute === item.name;
+            const label = getTabLabelForRole(item.name, role);
+            const badgeCount = item.name === 'Aprovacoes' ? pendingApprovalCount : 0;
 
-          return (
-            <Pressable
-              key={item.name}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isActive }}
-              onPress={() => navigation.navigate(item.name)}
-              style={[
-                styles.menuItem,
-                {
-                  backgroundColor: isActive ? theme.backgroundSelected : 'transparent',
-                },
-              ]}>
-              <Ionicons
-                color={isActive ? theme.primary : theme.textSecondary}
-                name={item.icon}
-                size={18}
-              />
-              <ThemedText
+            const displayLabel = badgeCount > 0 ? `${label} (${badgeCount})` : label;
+
+            return (
+              <Drawer.Item
+                key={item.name}
+                label={displayLabel}
+                icon={({ color, size }) => (
+                  <Ionicons color={color} name={item.icon} size={size} />
+                )}
+                active={isActive}
+                onPress={() => handleNavigate(item.name)}
                 style={[
-                  styles.menuLabel,
-                  { color: isActive ? theme.primary : theme.textSecondary },
-                ]}>
-                {label}
-              </ThemedText>
-              {badgeCount > 0 ? (
-                <View style={[styles.badge, { backgroundColor: theme.danger }]}>
-                  <ThemedText style={styles.badgeText}>{badgeCount}</ThemedText>
-                </View>
-              ) : null}
-            </Pressable>
-          );
-        })}
+                  styles.drawerItem,
+                  isActive && { backgroundColor: paperTheme.colors.primaryContainer },
+                ]}
+              />
+            );
+          })}
+        </Drawer.Section>
       </DrawerContentScrollView>
 
-      <View style={[styles.footer, { borderTopColor: theme.border, paddingBottom: insets.bottom + Spacing.two }]}>
-        <Pressable
-          accessibilityRole="button"
+      <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.two }]}>
+        <Divider />
+        <Drawer.Item
+          label="Sair da conta"
+          icon={({ color, size }) => (
+            <Ionicons color={paperTheme.colors.error} name="log-out-outline" size={size} />
+          )}
           onPress={onSignOut}
-          style={({ pressed }) => [
-            styles.menuItem,
-            pressed && { opacity: 0.7 },
-          ]}>
-          <Ionicons color={theme.danger} name="log-out-outline" size={18} />
-          <ThemedText style={[styles.menuLabel, { color: theme.danger }]}>Sair da conta</ThemedText>
-        </Pressable>
+          style={styles.signOutItem}
+          theme={{ colors: { onSurfaceVariant: paperTheme.colors.error } }}
+        />
       </View>
     </View>
   );
@@ -115,10 +113,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   brand: {
+    marginHorizontal: Spacing.three,
+    marginTop: Spacing.two,
+    marginBottom: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.four,
+    borderRadius: 12,
     gap: Spacing.one,
-    borderBottomWidth: 1,
   },
   brandLogo: {
     flexDirection: 'row',
@@ -139,46 +140,17 @@ const styles = StyleSheet.create({
   userName: {
     marginTop: Spacing.two,
   },
-  userMeta: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
   menuList: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    gap: Spacing.one,
+    paddingBottom: Spacing.two,
   },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two + 2,
-    borderRadius: Radius.md,
-  },
-  badge: {
-    marginLeft: 'auto',
-    minWidth: 20,
-    height: 20,
+  drawerItem: {
+    marginHorizontal: Spacing.two,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 11,
-    lineHeight: 14,
-  },
-  menuLabel: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 14,
-    lineHeight: 20,
   },
   footer: {
-    borderTopWidth: 1,
-    paddingHorizontal: Spacing.two,
-    paddingTop: Spacing.two,
+    paddingTop: Spacing.one,
+  },
+  signOutItem: {
+    marginHorizontal: Spacing.two,
   },
 });

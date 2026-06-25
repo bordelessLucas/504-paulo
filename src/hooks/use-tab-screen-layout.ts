@@ -13,7 +13,9 @@ export function useTabScreenLayout() {
   const { hasBottomTabs } = useNavigationLayout();
 
   const tabBarHeight = hasBottomTabs ? TAB_BAR_BASE_HEIGHT + insets.bottom : 0;
-  const scrollPaddingBottom = TAB_CONTENT_EXTRA_PADDING + Spacing.two;
+  const scrollPaddingBottom = hasBottomTabs
+    ? TAB_CONTENT_EXTRA_PADDING + Spacing.two
+    : TAB_CONTENT_EXTRA_PADDING + insets.bottom;
   const footerPaddingBottom = TAB_FOOTER_EXTRA_PADDING + Spacing.one;
   const toastBottomOffset = hasBottomTabs
     ? tabBarHeight + Spacing.three

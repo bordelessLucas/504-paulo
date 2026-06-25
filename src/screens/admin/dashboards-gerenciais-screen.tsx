@@ -3,11 +3,9 @@ import { useCallback, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ColaboradorRankingList } from '@/components/gerencial/colaborador-ranking-list';
 import { PdiExecutivoCard } from '@/components/pdi/PdiExecutivoCard';
@@ -15,12 +13,14 @@ import { ExportacaoFichaPanel } from '@/components/gerencial/exportacao-ficha-pa
 import { ImaGaugeChart } from '@/components/gerencial/ima-gauge-chart';
 import { RadarDesempenhoChart } from '@/components/gerencial/radar-desempenho-chart';
 import { StatusPreenchimentoList } from '@/components/gerencial/status-preenchimento-list';
+import { ScreenHeader } from '@/components/navigation/screen-header';
+import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/toast';
-import { SCREEN_PADDING_LEFT, SCREEN_PADDING_RIGHT } from '@/constants/layout';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import {
   fetchColaboradorFicha,
   fetchGerencialDashboard,
@@ -31,8 +31,6 @@ import { exportColaboradorFichaPdf } from '@/features/gerencial/export-ficha-pdf
 import type { PdiEstatisticas } from '@/features/pdi/types';
 import { buscarEstatisticasPDI } from '@/services/pdiService';
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
-import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
-import { useTheme } from '@/hooks/use-theme';
 
 function DashboardCard({
   title,
@@ -43,24 +41,18 @@ function DashboardCard({
   description?: string;
   children: ReactNode;
 }) {
-  const theme = useTheme();
-
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.background, borderColor: theme.border },
-      ]}>
+    <Card padding="compact">
       <View style={styles.cardHeader}>
         <ThemedText type="subtitle">{title}</ThemedText>
         {description ? (
-          <ThemedText themeColor="textSecondary" style={styles.cardDescription}>
+          <ThemedText type="small" themeColor="textSecondary">
             {description}
           </ThemedText>
         ) : null}
       </View>
       {children}
-    </View>
+    </Card>
   );
 }
 
@@ -73,7 +65,6 @@ export function DashboardsGerenciaisScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { scrollPaddingBottom } = useTabScreenLayout();
 
   const loadDashboard = useCallback(async (options?: { refreshing?: boolean }) => {
     if (options?.refreshing) {
@@ -150,30 +141,21 @@ export function DashboardsGerenciaisScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView
-          contentContainerStyle={[
-            styles.content,
-            isDesktopLayout && styles.contentDesktop,
-            { paddingBottom: scrollPaddingBottom },
-          ]}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={() => void loadDashboard({ refreshing: true })}
-            />
-          }
-          showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <ThemedText type="heading">Dashboard executivo</ThemedText>
-            <ThemedText themeColor="textSecondary" style={styles.subtitle}>
-              Visão consolidada offshore: 12 áreas de avaliação, IMA ponderado e ranking completo
-              da equipe.
-            </ThemedText>
-          </View>
+    <TabScreenContainer
+      scrollable
+      contentContainerStyle={[styles.content, isDesktopLayout && styles.contentDesktop]}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={() => void loadDashboard({ refreshing: true })}
+        />
+      }>
+      <ScreenHeader
+        title="Dashboard executivo"
+        description="Visão consolidada offshore: 12 áreas de avaliação, IMA ponderado e ranking completo da equipe."
+      />
 
-          <View style={[styles.cardsGrid, isDesktopLayout && styles.cardsGridDesktop]}>
+      <View style={[styles.cardsGrid, isDesktopLayout && styles.cardsGridDesktop]}>
             <View style={isDesktopLayout ? styles.cardSlotDesktopWide : undefined}>
           <DashboardCard
             title="Exportação de fichas PDF"
@@ -272,23 +254,12 @@ export function DashboardsGerenciaisScreen() {
           </DashboardCard>
             </View>
           </View>
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+    </TabScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
   content: {
-    paddingLeft: SCREEN_PADDING_LEFT,
-    paddingRight: SCREEN_PADDING_RIGHT,
-    paddingVertical: Spacing.four,
     gap: Spacing.four,
     width: '100%',
   },
@@ -303,20 +274,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'stretch',
   },
-  header: {
-    gap: Spacing.two,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    padding: Spacing.four,
-    gap: Spacing.three,
-    flex: 1,
-  },
   cardSlotDesktop: {
     flexGrow: 1,
     flexBasis: '48%',
@@ -329,10 +286,6 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     gap: Spacing.one,
-  },
-  cardDescription: {
-    fontSize: 13,
-    lineHeight: 18,
   },
   centered: {
     flex: 1,
