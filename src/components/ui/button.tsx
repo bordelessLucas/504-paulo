@@ -1,8 +1,12 @@
-import { Button as PaperButton, useTheme as usePaperTheme } from 'react-native-paper';
-import type { StyleProp, ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { ActivityIndicator, Text } from "react-native";
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-type ButtonSize = 'md' | 'sm';
+import { Fonts, DisabledOpacity, PressedOpacity, layout } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+import { hapticLightImpact } from "@/lib/haptics";
+
+type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
+type ButtonSize = "sm" | "md" | "lg";
 
 type ButtonProps = {
   label: string;
@@ -14,40 +18,92 @@ type ButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+const sizeStyles: Record<ButtonSize, { minHeight: number; fontSize: number; paddingHorizontal: number }> = {
+  sm: { minHeight: 40, fontSize: 13, paddingHorizontal: layout.space.md },
+  md: { minHeight: layout.touchMin, fontSize: 15, paddingHorizontal: layout.space.lg },
+  lg: { minHeight: 56, fontSize: 16, paddingHorizontal: layout.space.xl },
+};
+
 export function Button({
   label,
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   isLoading = false,
   disabled,
   onPress,
   style,
 }: ButtonProps) {
-  const paperTheme = usePaperTheme();
+  const theme = useTheme();
   const isDisabled = disabled || isLoading;
-  const isSmall = size === 'sm';
+  const metrics = sizeStyles[size];
 
-  const mode =
-    variant === 'primary' ? 'contained' : variant === 'ghost' ? 'text' : 'outlined';
+  const backgroundColor =
+    variant === "primary"
+      ? theme.secondary
+      : variant === "danger"
+        ? theme.danger
+        : variant === "secondary"
+          ? theme.backgroundSelected
+          : "transparent";
+
+  const textColor =
+    variant === "primary" || variant === "danger"
+      ? theme.textOnPrimary
+      : variant === "ghost"
+        ? theme.accent
+        : variant === "outline"
+          ? theme.text
+          : theme.text;
+
+  const borderWidth = variant === "outline" || variant === "secondary" ? 1 : 0;
+  const borderColor = variant === "outline" ? theme.border : theme.border;
 
   return (
-    <PaperButton
-      mode={mode}
-      loading={isLoading}
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled }}
       disabled={isDisabled}
-      onPress={onPress}
-      compact={isSmall}
-      buttonColor={variant === 'primary' ? paperTheme.colors.primary : undefined}
-      textColor={
-        variant === 'danger'
-          ? paperTheme.colors.error
-          : variant === 'primary'
-            ? paperTheme.colors.onPrimary
-            : undefined
-      }
-      style={style}
-      contentStyle={isSmall ? undefined : { minHeight: 44 }}>
-      {label}
-    </PaperButton>
+      onPress={() => {
+        if (isDisabled) return;
+        void hapticLightImpact();
+        onPress?.();
+      }}
+      style={({ pressed }) => [
+        styles.base,
+        theme.shadow.button,
+        {
+          minHeight: metrics.minHeight,
+          paddingHorizontal: metrics.paddingHorizontal,
+          backgroundColor,
+          borderWidth,
+          borderColor,
+          borderRadius: layout.radius.md,
+          opacity: isDisabled ? DisabledOpacity : pressed ? PressedOpacity : 1,
+          transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
+        },
+        style,
+      ]}>
+      {isLoading ? (
+        <ActivityIndicator color={textColor} size="small" />
+      ) : (
+        <Text
+          style={{
+            color: textColor,
+            fontFamily: Fonts.sansSemiBold,
+            fontSize: metrics.fontSize,
+            lineHeight: metrics.fontSize + 4,
+            textAlign: "center",
+          }}>
+          {label}
+        </Text>
+      )}
+    </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  base: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

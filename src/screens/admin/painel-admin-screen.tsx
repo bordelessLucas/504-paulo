@@ -32,7 +32,7 @@ const ADMIN_FEATURES: AdminFeatureDefinition[] = [
   {
     id: 'acesso',
     title: 'Gerar acesso à plataforma',
-    description: 'Crie logins com papel definido: RH, supervisor, admin, colaborador e outros.',
+    description: 'Crie logins com papel definido.',
     icon: 'key-outline',
     modalDescription:
       'Informe e-mail, nome e o papel do usuário. A senha temporária é opcional — se vazia, será gerada automaticamente.',
@@ -41,7 +41,7 @@ const ADMIN_FEATURES: AdminFeatureDefinition[] = [
   {
     id: 'colaborador',
     title: 'Cadastrar colaborador',
-    description: 'Ficha completa offshore com dados pessoais, contratuais e certificações.',
+    description: 'Ficha completa com dados contratuais.',
     icon: 'person-add-outline',
     modalDescription:
       'Cadastre colaboradores com ficha completa. Contas novas recebem acesso automaticamente.',
@@ -50,7 +50,7 @@ const ADMIN_FEATURES: AdminFeatureDefinition[] = [
   {
     id: 'incidente',
     title: 'Registrar incidente',
-    description: 'Acidentes SMS, faltas ou advertências que bloqueiam autoavaliação e reajuste.',
+    description: 'Acidentes, faltas ou advertências.',
     icon: 'warning-outline',
     modalDescription:
       'Incidentes nos últimos 6 meses bloqueiam autoavaliação e solicitações de reajuste do colaborador.',
@@ -59,7 +59,7 @@ const ADMIN_FEATURES: AdminFeatureDefinition[] = [
   {
     id: 'planilha',
     title: 'Importar planilha RH',
-    description: 'Importe colaboradores em lote via arquivo CSV com ficha completa.',
+    description: 'Importe colaboradores via CSV.',
     icon: 'cloud-upload-outline',
     modalDescription:
       'CSV com email, nome, classificacao, nivel_irata, datas, telefone, certificacoes, status e role. Contas novas recebem senha padrão 12345678.',
@@ -123,10 +123,7 @@ export function PainelAdminScreen() {
 
   return (
     <TabScreenContainer scrollable contentContainerStyle={styles.content}>
-      <ScreenHeader
-        title="Painel administrativo"
-        description="Selecione uma funcionalidade para gerenciar acessos, colaboradores e incidentes da plataforma."
-      />
+      <ScreenHeader title="Painel administrativo" />
 
       <View style={[styles.grid, isWideLayout && styles.gridWide]}>
         {visibleFeatures.map((feature) => (

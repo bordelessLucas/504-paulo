@@ -10,8 +10,9 @@ import {
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { SCREEN_CONTENT_TOP_OFFSET, SCREEN_PADDING_HORIZONTAL } from '@/constants/layout';
-import { Spacing } from '@/constants/theme';
+import { layout } from '@/constants/theme';
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
+import { useListContentStyle } from '@/lib/layoutPadding';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { ThemedView } from '@/components/themed-view';
 
@@ -40,11 +41,12 @@ export function TabScreenContainer({
 }: TabScreenContainerProps) {
   const { scrollPaddingBottom } = useTabScreenLayout();
   const isDesktopLayout = useIsDesktopLayout();
+  const listInsets = useListContentStyle({ safeTop: !isDesktopLayout, withTabBar: false });
 
   const horizontalInsets = withHorizontalPadding
     ? {
         paddingHorizontal: SCREEN_PADDING_HORIZONTAL,
-        paddingTop: isDesktopLayout ? Spacing.four : SCREEN_CONTENT_TOP_OFFSET,
+        paddingTop: isDesktopLayout ? layout.space.lg : listInsets.paddingTop ?? SCREEN_CONTENT_TOP_OFFSET,
       }
     : null;
 
@@ -94,3 +96,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch' as const,
   },
 });
+
+/** Alias semântico alinhado ao guia VERTEK. */
+export const ScreenLayout = TabScreenContainer;

@@ -20,10 +20,7 @@ import { SECAO_OFFSHORE_LABELS, SECAO_OFFSHORE_PESOS } from '@/features/avaliaca
 export function MetodologiaScreen() {
   return (
     <TabScreenContainer scrollable contentContainerStyle={styles.content}>
-      <ScreenHeader
-        title="Metodologia Offshore"
-        description="Escala 0–3, 12 áreas avaliadoras e governança de performance (Excel cliente)."
-      />
+      <ScreenHeader title="Metodologia Offshore" />
 
       <Block title="Marcos temporais">
         <Bullet text={`${MARCOS_TEMPORAIS.quinzenal.label}: ${MARCOS_TEMPORAIS.quinzenal.descricao}`} />

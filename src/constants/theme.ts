@@ -1,58 +1,223 @@
 import "@/global.css";
 
-import { Platform } from "react-native";
+import { Platform, type ViewStyle } from "react-native";
 
-export const BrandColors = {
-  primary: "#012D60",
-  secondary: "#00A675",
-  background: "#F0EDE4",
-  card: "#FFFFFF",
-  focus: "#6D5BFF",
-  textOnPrimary: "#FFFFFF",
+import { brand, brandRgb } from "@/constants/brand";
+
+export { brand, brandRgb, BrandColors } from "@/constants/brand";
+
+export type ThemeColors = {
+  text: string;
+  textSecondary: string;
+  textMuted: string;
+  background: string;
+  backgroundElement: string;
+  surface: string;
+  backgroundSelected: string;
+  border: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  accentSoft: string;
+  accentMuted: string;
+  focus: string;
+  success: string;
+  successMuted: string;
+  warning: string;
+  warningMuted: string;
+  danger: string;
+  dangerMuted: string;
+  info: string;
+  infoMuted: string;
+  inputBackground: string;
+  placeholder: string;
+  overlay: string;
+  textOnPrimary: string;
+};
+
+export type ThemeMode = "light" | "dark";
+
+export const layout = {
+  radius: { sm: 12, md: 16, lg: 20, xl: 24, pill: 999 },
+  space: { xs: 6, sm: 10, md: 16, lg: 24, xl: 32, xxl: 48 },
+  touchMin: 52,
 } as const;
+
+/** @deprecated Prefer layout.space */
+export const Spacing = {
+  half: 2,
+  one: 4,
+  two: layout.space.xs,
+  three: layout.space.md,
+  four: layout.space.lg,
+  five: layout.space.xl,
+  six: layout.space.xxl,
+} as const;
+
+/** @deprecated Prefer layout.radius */
+export const Radius = {
+  sm: layout.radius.sm,
+  md: layout.radius.md,
+  lg: layout.radius.lg,
+  xl: layout.radius.xl,
+  "2xl": layout.radius.xl,
+  pill: layout.radius.pill,
+} as const;
+
+export const PressedOpacity = 0.92;
+export const DisabledOpacity = 0.55;
+
+const darkColors: ThemeColors = {
+  text: brand.cream,
+  textSecondary: "#A8B4C4",
+  textMuted: "#6B7A8D",
+  background: brand.navyDeep,
+  backgroundElement: brand.navy,
+  surface: brand.navy,
+  backgroundSelected: brand.navyMid,
+  border: "rgba(240, 237, 228, 0.12)",
+  primary: brand.navy,
+  secondary: brand.green,
+  accent: brand.green,
+  accentSoft: brand.greenSoft,
+  accentMuted: brandRgb(brand.green, 0.15),
+  focus: "#6D5BFF",
+  success: "#2ECC71",
+  successMuted: brandRgb("#2ECC71", 0.15),
+  warning: "#F1C40F",
+  warningMuted: brandRgb("#F1C40F", 0.15),
+  danger: "#FF7369",
+  dangerMuted: "#3D2624",
+  info: "#3D8FD4",
+  infoMuted: brandRgb("#3D8FD4", 0.15),
+  inputBackground: brand.navy,
+  placeholder: "#8A9BB0",
+  overlay: "rgba(0, 0, 0, 0.72)",
+  textOnPrimary: brand.white,
+};
+
+const lightColors: ThemeColors = {
+  text: "#1A2332",
+  textSecondary: "#5C6570",
+  textMuted: "#8A9199",
+  background: brand.cream,
+  backgroundElement: brand.white,
+  surface: brand.white,
+  backgroundSelected: "#E5E1D6",
+  border: brandRgb(brand.navy, 0.1),
+  primary: brand.navy,
+  secondary: brand.green,
+  accent: brand.green,
+  accentSoft: brand.greenBright,
+  accentMuted: brandRgb(brand.green, 0.1),
+  focus: "#6D5BFF",
+  success: "#166534",
+  successMuted: "#DCFCE7",
+  warning: "#92400E",
+  warningMuted: "#FEF3C7",
+  danger: "#D64545",
+  dangerMuted: "#FDEBEC",
+  info: "#1E40AF",
+  infoMuted: "#DBEAFE",
+  inputBackground: brand.white,
+  placeholder: "#8A9199",
+  overlay: brandRgb(brand.navy, 0.45),
+  textOnPrimary: brand.white,
+};
 
 export const Colors = {
+  light: lightColors,
+  dark: darkColors,
+} as const;
+
+export type ThemeColor = keyof ThemeColors;
+
+export type SemanticTone = "success" | "warning" | "danger" | "info" | "neutral" | "accent";
+
+export const SemanticColors = {
   light: {
-    text: "#1A2332",
-    background: BrandColors.background,
-    backgroundElement: BrandColors.card,
-    backgroundSelected: "#E5E1D6",
-    textSecondary: "#5C6570",
-    border: "rgba(1, 45, 96, 0.1)",
-    primary: BrandColors.primary,
-    secondary: BrandColors.secondary,
-    accent: BrandColors.primary,
-    accentMuted: "rgba(1, 45, 96, 0.08)",
-    focus: BrandColors.focus,
-    danger: "#D64545",
-    dangerMuted: "#FDEBEC",
-    inputBackground: BrandColors.card,
-    placeholder: "#8A9199",
-    overlay: "rgba(1, 45, 96, 0.45)",
-    textOnPrimary: BrandColors.textOnPrimary,
+    success: { bg: lightColors.successMuted, text: lightColors.success, border: brandRgb(lightColors.success, 0.35) },
+    warning: { bg: lightColors.warningMuted, text: lightColors.warning, border: brandRgb(lightColors.warning, 0.35) },
+    danger: { bg: lightColors.dangerMuted, text: lightColors.danger, border: brandRgb(lightColors.danger, 0.35) },
+    info: { bg: lightColors.infoMuted, text: lightColors.info, border: brandRgb(lightColors.info, 0.35) },
+    neutral: { bg: "#ECEFF1", text: "#455A64", border: brandRgb("#455A64", 0.35) },
+    accent: { bg: lightColors.accentMuted, text: lightColors.accent, border: brandRgb(lightColors.accent, 0.35) },
   },
   dark: {
-    text: "#F0EDE4",
-    background: "#011A38",
-    backgroundElement: "#012D60",
-    backgroundSelected: "#023A72",
-    textSecondary: "#A8B4C4",
-    border: "rgba(240, 237, 228, 0.12)",
-    primary: BrandColors.primary,
-    secondary: BrandColors.secondary,
-    accent: "#3D8FD4",
-    accentMuted: "rgba(61, 143, 212, 0.15)",
-    focus: BrandColors.focus,
-    danger: "#FF7369",
-    dangerMuted: "#3D2624",
-    inputBackground: "#012D60",
-    placeholder: "#8A9BB0",
-    overlay: "rgba(0, 0, 0, 0.72)",
-    textOnPrimary: BrandColors.textOnPrimary,
+    success: { bg: darkColors.successMuted, text: darkColors.success, border: brandRgb(darkColors.success, 0.35) },
+    warning: { bg: darkColors.warningMuted, text: darkColors.warning, border: brandRgb(darkColors.warning, 0.35) },
+    danger: { bg: darkColors.dangerMuted, text: darkColors.danger, border: brandRgb(darkColors.danger, 0.35) },
+    info: { bg: darkColors.infoMuted, text: darkColors.info, border: brandRgb(darkColors.info, 0.35) },
+    neutral: { bg: "#1E293B", text: "#94A3B8", border: brandRgb("#94A3B8", 0.35) },
+    accent: { bg: darkColors.accentMuted, text: darkColors.accent, border: brandRgb(darkColors.accent, 0.35) },
   },
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export const SemaforoColors = {
+  verde: "#2ECC71",
+  amarelo: "#F1C40F",
+  laranja: "#E67E22",
+  vermelho: "#E74C3C",
+  cinza: "#9CA3AF",
+} as const;
+
+export type ShadowVariant = "card" | "glow" | "fab" | "button";
+
+export type ThemeShadows = Record<ShadowVariant, ViewStyle>;
+
+export function createShadow(colors: ThemeColors): ThemeShadows {
+  const shadowBase = colors.primary;
+
+  return {
+    card: Platform.select({
+      ios: {
+        shadowColor: shadowBase,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 12,
+      },
+      android: { elevation: 4 },
+      default: {},
+    }) ?? {},
+    glow: Platform.select({
+      ios: {
+        shadowColor: colors.accent,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+      },
+      android: { elevation: 8 },
+      default: {},
+    }) ?? {},
+    fab: Platform.select({
+      ios: {
+        shadowColor: colors.accent,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 14,
+      },
+      android: { elevation: 10 },
+      default: {},
+    }) ?? {},
+    button: Platform.select({
+      ios: {
+        shadowColor: shadowBase,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.18,
+        shadowRadius: 8,
+      },
+      android: { elevation: 3 },
+      default: {},
+    }) ?? {},
+  };
+}
+
+/** @deprecated Use createShadow(colors).card */
+export const Shadows = {
+  sm: createShadow(lightColors).card,
+  md: createShadow(lightColors).glow,
+  lg: createShadow(lightColors).fab,
+} as const;
 
 export const Fonts = Platform.select({
   ios: {
@@ -81,85 +246,10 @@ export const Fonts = Platform.select({
   },
 });
 
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 48,
-} as const;
-
-export const Radius = {
-  sm: 4,
-  md: 6,
-  lg: 8,
-  xl: 12,
-  "2xl": 16,
-} as const;
-
-export const PressedOpacity = 0.88;
-export const DisabledOpacity = 0.55;
-
-export type SemanticTone = "success" | "warning" | "danger" | "info" | "neutral";
-
-export const SemanticColors = {
-  light: {
-    success: { bg: "#DCFCE7", text: "#166534" },
-    warning: { bg: "#FEF3C7", text: "#92400E" },
-    danger: { bg: "#FEE2E2", text: "#991B1B" },
-    info: { bg: "#DBEAFE", text: "#1E40AF" },
-    neutral: { bg: "#ECEFF1", text: "#455A64" },
-  },
-  dark: {
-    success: { bg: "#14532D", text: "#86EFAC" },
-    warning: { bg: "#78350F", text: "#FCD34D" },
-    danger: { bg: "#7F1D1D", text: "#FCA5A5" },
-    info: { bg: "#1E3A5F", text: "#93C5FD" },
-    neutral: { bg: "#1E293B", text: "#94A3B8" },
-  },
-} as const;
-
-export const SemaforoColors = {
-  verde: "#2ECC71",
-  amarelo: "#F1C40F",
-  laranja: "#E67E22",
-  vermelho: "#E74C3C",
-  cinza: "#9CA3AF",
-} as const;
-
-export const Shadows = {
-  sm: Platform.select({
-    ios: {
-      shadowColor: BrandColors.primary,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-    },
-    android: { elevation: 3 },
-    default: {},
-  }),
-  md: Platform.select({
-    ios: {
-      shadowColor: BrandColors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 12,
-    },
-    android: { elevation: 6 },
-    default: {},
-  }),
-  lg: Platform.select({
-    ios: {
-      shadowColor: BrandColors.primary,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.16,
-      shadowRadius: 24,
-    },
-    android: { elevation: 16 },
-    default: {},
-  }),
-} as const;
-
 export const MaxContentWidth = 420;
+
+export const THEME_STORAGE_KEY = "@avalia/theme-mode";
+
+export function getSemanticColors(mode: ThemeMode) {
+  return SemanticColors[mode];
+}

@@ -190,14 +190,7 @@ export function AprovacoesScreen() {
           onRefresh={() => void loadData({ refreshing: true })}
         />
       }>
-      <ScreenHeader
-        title={isRhView ? 'Validações' : 'Aprovações finais'}
-        description={
-          isRhView
-            ? 'Valide solicitações e avaliações antes de encaminhar ao CEO para decisão final.'
-            : 'Aprove ou recuse solicitações e avaliações já validadas pelo RH.'
-        }
-      />
+      <ScreenHeader title={isRhView ? 'Validações' : 'Aprovações finais'} />
 
       <SegmentedControl
         value={section}

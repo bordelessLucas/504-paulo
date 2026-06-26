@@ -16,8 +16,10 @@ import {
   GalaxyStarBackground,
   updateGalaxyPointer,
 } from "@/components/auth/galaxy-star-background";
+import { GlassCard } from "@/components/premium/GlassCard";
 import { ThemedText } from "@/components/themed-text";
-import { BrandColors, Fonts, MaxContentWidth, Radius, Spacing } from "@/constants/theme";
+import { brand, brandRgb } from "@/constants/brand";
+import { Fonts, MaxContentWidth, layout } from "@/constants/theme";
 import { useGalaxyDeviceTilt } from "@/hooks/use-galaxy-device-tilt";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -47,11 +49,19 @@ function getPointerPositionFromPointer(event: {
 
 function BrandLogo({ onDarkBackground = false }: { onDarkBackground?: boolean }) {
   const theme = useTheme();
-  const primaryColor = onDarkBackground ? BrandColors.textOnPrimary : theme.primary;
-  const secondaryColor = onDarkBackground ? BrandColors.background : theme.text;
+  const primaryColor = onDarkBackground ? brand.white : theme.accent;
+  const secondaryColor = onDarkBackground ? brand.cream : theme.text;
 
   return (
-    <View style={styles.brandLogo} accessibilityRole="header">
+    <View
+      style={[
+        styles.emblemBox,
+        onDarkBackground && {
+          borderColor: brandRgb(brand.greenSoft, 0.35),
+          backgroundColor: brandRgb(brand.navy, 0.35),
+        },
+      ]}
+      accessibilityRole="header">
       <Text style={[styles.brandVertek, { color: primaryColor, fontFamily: Fonts.display }]}>
         Vertek
       </Text>
@@ -117,25 +127,19 @@ export function AuthLayout({
   return (
     <View
       onPointerLeave={isWeb ? handlePointerLeave : undefined}
-      onPointerMove={
-        isWeb && showStarBackground ? handleWebPointerMove : undefined
-      }
+      onPointerMove={isWeb && showStarBackground ? handleWebPointerMove : undefined}
       style={[
         styles.container,
         showStarBackground
-          ? { backgroundColor: BrandColors.primary }
+          ? { backgroundColor: brand.navyDeep }
           : { backgroundColor: theme.background },
-      ]}
-    >
-      {showStarBackground ? (
-        <GalaxyStarBackground pointerX={pointerX} pointerY={pointerY} />
-      ) : null}
+      ]}>
+      {showStarBackground ? <GalaxyStarBackground pointerX={pointerX} pointerY={pointerY} /> : null}
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-          style={styles.keyboardView}
-        >
+          style={styles.keyboardView}>
           <ScrollView
             contentContainerStyle={[
               styles.scrollContent,
@@ -145,21 +149,10 @@ export function AuthLayout({
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
             bounces={false}
-            overScrollMode="never"
-          >
-            {showStarBackground ? (
-              <BrandLogo onDarkBackground />
-            ) : null}
+            overScrollMode="never">
+            {showStarBackground ? <BrandLogo onDarkBackground /> : null}
 
-            <View
-              style={[
-                styles.card,
-                {
-                  backgroundColor: theme.backgroundElement,
-                  borderColor: theme.border,
-                },
-              ]}
-            >
+            <GlassCard glow={showStarBackground} style={styles.cardSurface}>
               <View style={styles.header}>
                 {!showStarBackground ? <BrandLogo /> : null}
                 {title ? <ThemedText type="heading">{title}</ThemedText> : null}
@@ -171,7 +164,7 @@ export function AuthLayout({
               <View style={styles.form}>{children}</View>
 
               {footer ? <View style={styles.footer}>{footer}</View> : null}
-            </View>
+            </GlassCard>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -193,28 +186,33 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.six,
+    paddingHorizontal: layout.space.lg,
+    paddingTop: layout.space.lg,
+    paddingBottom: layout.space.xxl,
     maxWidth: MaxContentWidth,
     width: "100%",
     alignSelf: "center",
-    gap: Spacing.four,
+    gap: layout.space.lg,
   },
   scrollContentCentered: {
     justifyContent: "center",
-    paddingVertical: Spacing.five,
+    paddingVertical: layout.space.xl,
   },
   scrollContentAuth: {
     justifyContent: "center",
     flexGrow: 1,
-    paddingVertical: Spacing.five,
+    paddingVertical: layout.space.xl,
   },
-  brandLogo: {
+  emblemBox: {
     flexDirection: "row",
     alignItems: "baseline",
-    gap: Spacing.two,
+    gap: layout.space.sm,
     alignSelf: "center",
+    paddingHorizontal: layout.space.md,
+    paddingVertical: layout.space.sm,
+    borderRadius: layout.radius.lg,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   brandVertek: {
     fontSize: 36,
@@ -228,37 +226,19 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   header: {
-    gap: Spacing.two,
+    gap: layout.space.sm,
   },
   subtitle: {
     fontSize: 15,
     lineHeight: 22,
   },
   form: {
-    gap: Spacing.three,
+    gap: layout.space.md,
   },
   footer: {
     alignItems: "center",
   },
-  card: {
+  cardSurface: {
     width: "100%",
-    borderRadius: Radius.xl,
-    padding: Spacing.four,
-    borderWidth: 1,
-    gap: Spacing.four,
-    ...Platform.select({
-      ios: {
-        shadowColor: BrandColors.primary,
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 6,
-      },
-      web: {
-        boxShadow: "0 6px 20px rgba(1, 45, 96, 0.08)",
-      },
-    }),
   },
 });

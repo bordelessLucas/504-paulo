@@ -54,10 +54,7 @@ export function PerfilScreen() {
 
   return (
     <TabScreenContainer scrollable contentContainerStyle={styles.content}>
-      <ScreenHeader
-        title="Perfil"
-        description="Gerencie sua conta, foto e senha de acesso."
-      />
+      <ScreenHeader title="Perfil" />
 
       <ProfileAvatarPicker
         userId={user.id}
@@ -85,6 +82,18 @@ export function PerfilScreen() {
 
       <ChangePasswordForm email={user.email} />
 
+      <Card>
+        <ThemedText type="subtitle">Aparência</ThemedText>
+        <ThemedText themeColor="textSecondary" style={styles.appearanceHint}>
+          Modo {theme.isDark ? 'escuro' : 'claro'} ativo.
+        </ThemedText>
+        <Button
+          label={theme.isDark ? 'Usar tema claro' : 'Usar tema escuro'}
+          variant="outline"
+          onPress={theme.toggleLightMode}
+        />
+      </Card>
+
       <Button label="Sair da conta" variant="secondary" onPress={() => void signOut()} />
     </TabScreenContainer>
   );
@@ -107,5 +116,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansMedium,
     fontSize: 15,
     lineHeight: 22,
+  },
+  appearanceHint: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

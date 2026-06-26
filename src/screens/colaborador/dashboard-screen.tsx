@@ -1,22 +1,37 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import { PDICard } from '@/components/pdi/PDICard';
-import { ScreenHeader } from '@/components/navigation/screen-header';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+
+import { BloqueioDeveresHint } from '@/components/colaborador/bloqueio-deveres-hint';
+import { DesempenhoSemaforo } from '@/components/gerencial/desempenho-semaforo';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
-import { Card } from '@/components/ui/card';
+import { PDICard } from '@/components/pdi/PDICard';
+import {
+  CollapsibleSection,
+  GlassCard,
+  MetricStrip,
+  PremiumHeader,
+  SectionTitle,
+  StatusBadge,
+} from '@/components/premium';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useToast } from '@/components/ui/toast';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Fonts, layout } from '@/constants/theme';
+import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
+import { STATUS_VALIDACAO_LABELS } from '@/features/avaliacao/historico-labels';
+import { useAuth } from '@/features/auth/auth-context';
+import { createAutoavaliacaoSolicitacao } from '@/features/colaborador/autoavaliacao-api';
+import { AutoavaliacaoModal } from '@/features/colaborador/autoavaliacao-modal';
 import {
   fetchColaboradorDashboard,
   formatFeedbackDate,
@@ -24,95 +39,67 @@ import {
   type AvaliacaoEmAnalise,
   type ColaboradorDashboardData,
 } from '@/features/colaborador/dashboard-api';
-import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
-import { STATUS_VALIDACAO_LABELS } from '@/features/avaliacao/historico-labels';
 import {
-  STATUS_SOLICITACAO_LABELS,
-  type SolicitacaoColaborador,
-} from '@/features/colaborador/solicitacoes-api';
-import { BloqueioDeveresHint } from '@/components/colaborador/bloqueio-deveres-hint';
-import { DesempenhoSemaforo } from '@/components/gerencial/desempenho-semaforo';
-import { createAutoavaliacaoSolicitacao } from '@/features/colaborador/autoavaliacao-api';
-import { AutoavaliacaoModal } from '@/features/colaborador/autoavaliacao-modal';
-import {
-  formatDataAdmissao,
   isElegivelParaAutoavaliacao,
   MENSAGEM_BLOQUEIO_TEMPO_CASA,
   resolveMotivoBloqueioAutoavaliacao,
 } from '@/features/colaborador/eligibility';
-import { useAuth } from '@/features/auth/auth-context';
-import { buscarPDIsAtivosColaborador } from '@/services/pdiService';
-import type { PlanoDesenvolvimento } from '@/features/pdi/types';
-import type { ColaboradorStackParamList } from '@/navigation/colaborador-stack';
+import {
+  STATUS_SOLICITACAO_LABELS,
+  type SolicitacaoColaborador,
+} from '@/features/colaborador/solicitacoes-api';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { useTheme } from '@/hooks/use-theme';
+import type { ColaboradorStackParamList } from '@/navigation/colaborador-stack';
+import type { PlanoDesenvolvimento } from '@/features/pdi/types';
+import { buscarPDIsAtivosColaborador } from '@/services/pdiService';
 
 type DashboardNavigation = NativeStackNavigationProp<ColaboradorStackParamList, 'Dashboard'>;
 
-function DashboardCard({
+function mapValidacaoTone(status: AvaliacaoEmAnalise['status']) {
+  if (status === 'aprovada') return 'success' as const;
+  if (status === 'recusada') return 'danger' as const;
+  if (status === 'pendente_rh' || status === 'pendente_ceo') return 'warning' as const;
+  return 'info' as const;
+}
+
+function mapSolicitacaoTone(status: SolicitacaoColaborador['status']) {
+  if (status === 'aprovado') return 'success' as const;
+  if (status === 'recusado') return 'danger' as const;
+  if (status === 'pendente_rh' || status === 'pendente_ceo') return 'warning' as const;
+  return 'info' as const;
+}
+
+function ListRow({
   title,
-  children,
+  badge,
+  meta,
+  body,
 }: {
   title: string;
-  children: React.ReactNode;
+  badge?: React.ReactNode;
+  meta?: string;
+  body?: string;
 }) {
-  return (
-    <Card>
-      <ThemedText type="subtitle">{title}</ThemedText>
-      {children}
-    </Card>
-  );
-}
-
-function AvaliacaoEmAnaliseItem({ avaliacao }: { avaliacao: AvaliacaoEmAnalise }) {
   const theme = useTheme();
 
   return (
-    <View
-      style={[
-        styles.feedbackItem,
-        { backgroundColor: theme.backgroundSelected, borderColor: theme.border },
-      ]}>
-      <ThemedText style={styles.solicitacaoTipo}>
-        {TIPO_AVALIACAO_LABELS[avaliacao.tipo]}
-      </ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.solicitacaoStatus}>
-        {STATUS_VALIDACAO_LABELS[avaliacao.status]}
-      </ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-        As notas ficam ocultas até a aprovação final do CEO.
-      </ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.feedbackDate}>
-        {formatFeedbackDate(avaliacao.createdAt)}
-      </ThemedText>
-    </View>
-  );
-}
-
-function SolicitacaoStatusItem({ solicitacao }: { solicitacao: SolicitacaoColaborador }) {
-  const theme = useTheme();
-
-  return (
-    <View
-      style={[
-        styles.feedbackItem,
-        { backgroundColor: theme.backgroundSelected, borderColor: theme.border },
-      ]}>
-      <ThemedText style={styles.solicitacaoTipo}>
-        {solicitacao.tipo === 'autoavaliacao' ? 'Autoavaliação' : 'Solicitação de melhoria'}
-      </ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.solicitacaoStatus}>
-        {STATUS_SOLICITACAO_LABELS[solicitacao.status]}
-      </ThemedText>
-      <ThemedText style={styles.feedbackText}>{solicitacao.resumo}</ThemedText>
-      <ThemedText themeColor="textSecondary" style={styles.feedbackDate}>
-        {formatFeedbackDate(solicitacao.createdAt)}
-      </ThemedText>
+    <View style={[styles.listItem, { backgroundColor: theme.backgroundSelected, borderColor: theme.border }]}>
+      {title ? (
+        <View style={styles.listItemHeader}>
+          <ThemedText style={styles.listItemTitle}>{title}</ThemedText>
+          {badge}
+        </View>
+      ) : null}
+      {body ? <ThemedText style={styles.bodyText} numberOfLines={3}>{body}</ThemedText> : null}
+      {meta ? <ThemedText themeColor="textMuted" style={styles.meta}>{meta}</ThemedText> : null}
     </View>
   );
 }
 
 export function DashboardColaboradorScreen() {
   const theme = useTheme();
+  const isReducedMotion = useReducedMotion();
   const navigation = useNavigation<DashboardNavigation>();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -125,15 +112,10 @@ export function DashboardColaboradorScreen() {
 
   const loadDashboard = useCallback(
     async (options?: { refreshing?: boolean }) => {
-      if (!user) {
-        return;
-      }
+      if (!user) return;
 
-      if (options?.refreshing) {
-        setIsRefreshing(true);
-      } else {
-        setIsLoading(true);
-      }
+      if (options?.refreshing) setIsRefreshing(true);
+      else setIsLoading(true);
 
       setError(null);
 
@@ -145,15 +127,10 @@ export function DashboardColaboradorScreen() {
         setData(dashboard);
         setPdisAtivos(pdis);
       } catch (loadError) {
-        setError(
-          loadError instanceof Error ? loadError.message : 'Erro ao carregar o dashboard.',
-        );
+        setError(loadError instanceof Error ? loadError.message : 'Erro ao carregar o dashboard.');
       } finally {
-        if (options?.refreshing) {
-          setIsRefreshing(false);
-        } else {
-          setIsLoading(false);
-        }
+        if (options?.refreshing) setIsRefreshing(false);
+        else setIsLoading(false);
       }
     },
     [user],
@@ -174,19 +151,30 @@ export function DashboardColaboradorScreen() {
     data?.temIncidentesRecentes ?? false,
   );
 
-  function handleAutoavaliacaoPress() {
-    if (!isAutoavaliacaoEnabled) {
-      return;
-    }
-
-    setIsAutoavaliacaoModalVisible(true);
-  }
+  const metrics = useMemo(
+    () => [
+      {
+        label: 'Média',
+        value: formatMediaGeral(data?.mediaGeral ?? null),
+        tone: 'accent' as const,
+      },
+      {
+        label: 'PDIs',
+        value: String(pdisAtivos.length),
+        tone: 'info' as const,
+      },
+      {
+        label: 'Em análise',
+        value: String(data?.avaliacoesEmAnalise.length ?? 0),
+        tone: 'warning' as const,
+      },
+    ],
+    [data?.avaliacoesEmAnalise.length, data?.mediaGeral, pdisAtivos.length],
+  );
 
   const handleAutoavaliacaoSubmit = useCallback(
     async (payload: { qualificacoes: string; investimento: string }) => {
-      if (!user) {
-        throw new Error('Sessão inválida. Faça login novamente.');
-      }
+      if (!user) throw new Error('Sessão inválida. Faça login novamente.');
 
       await createAutoavaliacaoSolicitacao({
         colaboradorId: user.id,
@@ -200,10 +188,15 @@ export function DashboardColaboradorScreen() {
     [loadDashboard, showToast, user],
   );
 
+  const animate = !isReducedMotion;
+  const avaliacoesCount = data?.avaliacoesEmAnalise.length ?? 0;
+  const feedbacksCount = data?.feedbacks.length ?? 0;
+  const solicitacoesCount = data?.solicitacoes.length ?? 0;
+
   if (isLoading) {
     return (
       <ThemedView style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator color={theme.accent} size="large" />
       </ThemedView>
     );
   }
@@ -217,162 +210,124 @@ export function DashboardColaboradorScreen() {
     );
   }
 
+  const hero = (
+    <>
+      <PremiumHeader userName={user?.name ?? 'Colaborador'} role="colaborador" />
+      <MetricStrip metrics={metrics} />
+      <GlassCard padding="compact">
+        <SectionTitle title="Desempenho" />
+        <DesempenhoSemaforo
+          status={data?.semaforoStatus ?? 'cinza'}
+          mediaEmpresa={data?.mediaGeral ?? null}
+          scopeLabel={data?.tempoEmpresaLabel ? `Tempo de casa: ${data.tempoEmpresaLabel}` : 'Status atual'}
+        />
+      </GlassCard>
+    </>
+  );
+
   return (
     <>
       <TabScreenContainer
         scrollable
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadDashboard({ refreshing: true })} />
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => void loadDashboard({ refreshing: true })}
+            tintColor={theme.accent}
+          />
         }>
-        <ScreenHeader
-          title={`Olá, ${user?.name.split(' ')[0] ?? 'colaborador'}`}
-          description="Acompanhe seu desempenho e os feedbacks recebidos nas avaliações."
-        />
+        {animate ? (
+          <Animated.View entering={FadeInDown.duration(300)} style={styles.block}>
+            {hero}
+          </Animated.View>
+        ) : (
+          <View style={styles.block}>{hero}</View>
+        )}
 
-          <DashboardCard title="Seu desempenho">
-            <DesempenhoSemaforo
-              status={data?.semaforoStatus ?? 'cinza'}
-              mediaEmpresa={data?.mediaGeral ?? null}
-              scopeLabel="Seu desempenho atual"
+        {pdisAtivos.length > 0 ? (
+          <GlassCard padding="compact">
+            <SectionTitle
+              title="PDI"
+              actionLabel="Ver todos"
+              onActionPress={() => navigation.navigate('PDIList')}
             />
-            <ThemedText themeColor="textSecondary" style={styles.metaText}>
-              {data?.totalRespostas
-                ? `Média ${formatMediaGeral(data.mediaGeral)} · ${data.totalRespostas} resposta(s) aprovada(s).`
-                : 'Sem notas aprovadas ainda — o semáforo ficará cinza até haver avaliações liberadas.'}
-            </ThemedText>
-            {data?.tempoEmpresaLabel ? (
-              <ThemedText themeColor="textSecondary" style={styles.metaText}>
-                Tempo de empresa: {data.tempoEmpresaLabel}
-              </ThemedText>
-            ) : null}
-          </DashboardCard>
+            {pdisAtivos.slice(0, 2).map((pdi) => (
+              <PDICard
+                key={pdi.id}
+                compact
+                hideCriador
+                pdi={pdi}
+                onPress={() => navigation.navigate('PDIDetail', { pdiId: pdi.id })}
+              />
+            ))}
+          </GlassCard>
+        ) : null}
 
-          <DashboardCard title="Resumo">
-            <View style={styles.mediaBlock}>
-              <ThemedText style={styles.mediaValue}>{formatMediaGeral(data?.mediaGeral ?? null)}</ThemedText>
-              <ThemedText themeColor="textSecondary" style={styles.mediaLabel}>
-                Média geral das suas notas
-              </ThemedText>
-            </View>
-            <ThemedText themeColor="textSecondary" style={styles.metaText}>
-              {data?.totalRespostas
-                ? `Calculada a partir de ${data.totalRespostas} resposta(s) registrada(s).`
-                : 'Você ainda não possui notas registradas nas avaliações.'}
-            </ThemedText>
-          </DashboardCard>
-
-          <DashboardCard title="Avaliações em análise">
-            <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-              Avaliações enviadas que ainda aguardam validação — sem exibição de notas.
-            </ThemedText>
-
-            {data?.avaliacoesEmAnalise.length ? (
-              data.avaliacoesEmAnalise.map((avaliacao) => (
-                <AvaliacaoEmAnaliseItem key={avaliacao.id} avaliacao={avaliacao} />
-              ))
-            ) : (
-              <ThemedText themeColor="textSecondary" style={styles.emptyText}>
-                Nenhuma avaliação em análise no momento.
-              </ThemedText>
-            )}
-          </DashboardCard>
-
-          <DashboardCard title="Meus Planos de Desenvolvimento">
-            {pdisAtivos.length === 0 ? (
-              <ThemedText themeColor="textSecondary" style={styles.emptyText}>
-                Nenhum plano ativo no momento. Quando seu líder criar um PDI para você, ele
-                aparecerá aqui com prazo e progresso.
-              </ThemedText>
-            ) : (
-              <>
-                {pdisAtivos.slice(0, 3).map((pdi) => (
-                  <PDICard
-                    key={pdi.id}
-                    compact
-                    hideCriador
-                    pdi={pdi}
-                    onPress={() => navigation.navigate('PDIDetail', { pdiId: pdi.id })}
+        {avaliacoesCount > 0 ? (
+          <CollapsibleSection title="Avaliações em análise" count={avaliacoesCount} defaultExpanded>
+            {data?.avaliacoesEmAnalise.map((avaliacao) => (
+              <ListRow
+                key={avaliacao.id}
+                title={TIPO_AVALIACAO_LABELS[avaliacao.tipo]}
+                meta={formatFeedbackDate(avaliacao.createdAt)}
+                badge={
+                  <StatusBadge
+                    label={STATUS_VALIDACAO_LABELS[avaliacao.status]}
+                    size="sm"
+                    tone={mapValidacaoTone(avaliacao.status)}
                   />
-                ))}
-                <Button
-                  label="Ver todos"
-                  variant="secondary"
-                  onPress={() => navigation.navigate('PDIList')}
-                />
-              </>
-            )}
-          </DashboardCard>
+                }
+              />
+            ))}
+          </CollapsibleSection>
+        ) : null}
 
-          <DashboardCard title="Pontos de melhoria">
-            <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-              Feedbacks construtivos recebidos — sem identificação de quem avaliou.
-            </ThemedText>
+        {feedbacksCount > 0 ? (
+          <CollapsibleSection title="Pontos de melhoria" count={feedbacksCount}>
+            {data?.feedbacks.map((feedback) => (
+              <ListRow
+                key={feedback.id}
+                body={feedback.texto}
+                meta={formatFeedbackDate(feedback.dataReferencia)}
+                title=""
+              />
+            ))}
+          </CollapsibleSection>
+        ) : null}
 
-            {data?.feedbacks.length ? (
-              data.feedbacks.map((feedback) => (
-                <View
-                  key={feedback.id}
-                  style={[
-                    styles.feedbackItem,
-                    { backgroundColor: theme.backgroundSelected, borderColor: theme.border },
-                  ]}>
-                  <ThemedText style={styles.feedbackText}>{feedback.texto}</ThemedText>
-                  <ThemedText themeColor="textSecondary" style={styles.feedbackDate}>
-                    {formatFeedbackDate(feedback.dataReferencia)}
-                  </ThemedText>
-                </View>
-              ))
-            ) : (
-              <ThemedText themeColor="textSecondary" style={styles.emptyText}>
-                Nenhum feedback registrado ainda. Quando houver justificativas ou evidências nas suas
-                avaliações, elas aparecerão aqui para apoiar seu desenvolvimento.
-              </ThemedText>
-            )}
-          </DashboardCard>
+        {solicitacoesCount > 0 ? (
+          <CollapsibleSection title="Solicitações" count={solicitacoesCount}>
+            {data?.solicitacoes.map((solicitacao) => (
+              <ListRow
+                key={solicitacao.id}
+                title={solicitacao.tipo === 'autoavaliacao' ? 'Autoavaliação' : 'Melhoria'}
+                body={solicitacao.resumo}
+                meta={formatFeedbackDate(solicitacao.createdAt)}
+                badge={
+                  <StatusBadge
+                    label={STATUS_SOLICITACAO_LABELS[solicitacao.status]}
+                    size="sm"
+                    tone={mapSolicitacaoTone(solicitacao.status)}
+                  />
+                }
+              />
+            ))}
+          </CollapsibleSection>
+        ) : null}
 
-          <DashboardCard title="Minhas solicitações">
-            <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-              Acompanhe o andamento das suas autoavaliações e solicitações enviadas.
-            </ThemedText>
-
-            {data?.solicitacoes.length ? (
-              data.solicitacoes.map((solicitacao) => (
-                <SolicitacaoStatusItem key={solicitacao.id} solicitacao={solicitacao} />
-              ))
-            ) : (
-              <ThemedText themeColor="textSecondary" style={styles.emptyText}>
-                Nenhuma solicitação em andamento. Quando você enviar uma autoavaliação, o status
-                aparecerá aqui.
-              </ThemedText>
-            )}
-          </DashboardCard>
-
-          <DashboardCard title="Autoavaliação">
-            <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-              Disponível após 6 meses de admissão na empresa.
-            </ThemedText>
-
-            {data?.dataAdmissao ? (
-              <ThemedText themeColor="textSecondary" style={styles.metaText}>
-                Data de admissão: {formatDataAdmissao(data.dataAdmissao)}
-              </ThemedText>
-            ) : null}
-
-            {bloqueioMotivo === 'deveres' ? <BloqueioDeveresHint visible /> : null}
-
-            {bloqueioMotivo === 'tempo_casa' ? (
-              <ThemedText themeColor="textSecondary" style={styles.disabledHint}>
-                {MENSAGEM_BLOQUEIO_TEMPO_CASA}
-              </ThemedText>
-            ) : null}
-
-            <Button
-              label="Nova Autoavaliação / Solicitação"
-              disabled={!isAutoavaliacaoEnabled}
-              onPress={handleAutoavaliacaoPress}
-            />
-          </DashboardCard>
+        <GlassCard padding="compact">
+          <SectionTitle title="Autoavaliação" />
+          {bloqueioMotivo === 'deveres' ? <BloqueioDeveresHint visible /> : null}
+          {bloqueioMotivo === 'tempo_casa' ? (
+            <EmptyState message={MENSAGEM_BLOQUEIO_TEMPO_CASA} />
+          ) : null}
+          <Button
+            label="Nova solicitação"
+            disabled={!isAutoavaliacaoEnabled}
+            onPress={() => setIsAutoavaliacaoModalVisible(true)}
+          />
+        </GlassCard>
       </TabScreenContainer>
 
       <AutoavaliacaoModal
@@ -389,67 +344,43 @@ export const ColaboradorDashboardScreen = DashboardColaboradorScreen;
 
 const styles = StyleSheet.create({
   content: {
-    gap: Spacing.four,
+    gap: layout.space.md,
   },
-  mediaBlock: {
-    gap: Spacing.one,
+  block: {
+    gap: layout.space.md,
   },
-  mediaValue: {
-    fontFamily: Fonts.sansBold,
-    fontSize: 40,
-    lineHeight: 44,
-  },
-  mediaLabel: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  metaText: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  sectionHint: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  feedbackItem: {
+  listItem: {
     borderWidth: 1,
-    borderRadius: Radius.sm,
-    padding: Spacing.three,
-    gap: Spacing.two,
+    borderRadius: layout.radius.sm,
+    padding: layout.space.sm,
+    gap: layout.space.xs,
   },
-  feedbackText: {
-    fontFamily: Fonts.sans,
-    fontSize: 14,
-    lineHeight: 21,
+  listItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: layout.space.sm,
   },
-  feedbackDate: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  solicitacaoTipo: {
+  listItemTitle: {
+    flex: 1,
     fontFamily: Fonts.sansSemiBold,
     fontSize: 14,
     lineHeight: 20,
   },
-  solicitacaoStatus: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  emptyText: {
+  bodyText: {
+    fontFamily: Fonts.sans,
     fontSize: 14,
-    lineHeight: 21,
+    lineHeight: 20,
   },
-  disabledHint: {
-    fontSize: 13,
-    lineHeight: 18,
+  meta: {
+    fontSize: 12,
+    lineHeight: 16,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.four,
-    gap: Spacing.three,
+    padding: layout.space.lg,
+    gap: layout.space.md,
   },
 });

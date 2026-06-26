@@ -1,5 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -14,7 +14,8 @@ import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Spacing } from '@/constants/theme';
+import { Fonts, layout, type SemanticTone } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import {
   fetchDashboardCompliance,
   registrarDenuncia,
@@ -48,6 +49,19 @@ export function ComplianceScreen() {
     }, [load]),
   );
 
+  const metrics = useMemo(
+    () =>
+      dashboard
+        ? [
+            { label: 'Denúncias', value: String(dashboard.totalDenuncias), tone: 'neutral' as const },
+            { label: 'Abertas', value: String(dashboard.abertas), tone: 'warning' as const },
+            { label: 'Riscos NR1', value: String(dashboard.totalRiscos), tone: 'danger' as const },
+            { label: 'Planos pendentes', value: String(dashboard.planosPendentes), tone: 'info' as const },
+          ]
+        : [],
+    [dashboard],
+  );
+
   async function handleRegistrar() {
     if (descricao.trim().length < 10) {
       showToast('Descreva a denúncia com pelo menos 10 caracteres.', 'error');
@@ -76,25 +90,23 @@ export function ComplianceScreen() {
       scrollable
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => void load()} />}>
-      <ScreenHeader
-        title="Compliance & Denúncias"
-        description="Canal de denúncias, riscos NR1 e planos de ação. Acesso restrito — LGPD."
-      />
+      <ScreenHeader title="Compliance & Denúncias" />
 
-      {dashboard ? (
+      {metrics.length > 0 ? (
         <View style={styles.metricsRow}>
-          <Metric label="Denúncias" value={String(dashboard.totalDenuncias)} />
-          <Metric label="Abertas" value={String(dashboard.abertas)} />
-          <Metric label="Riscos NR1" value={String(dashboard.totalRiscos)} />
-          <Metric label="Planos pendentes" value={String(dashboard.planosPendentes)} />
+          {metrics.map((metric) => (
+            <ComplianceMetric
+              key={metric.label}
+              label={metric.label}
+              tone={metric.tone}
+              value={metric.value}
+            />
+          ))}
         </View>
       ) : null}
 
       <Card padding="compact">
         <ThemedText type="subtitle">Nova denúncia</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Tipos: {Object.values(TIPO_DENUNCIA_LABELS).join(' · ')}
-        </ThemedText>
         <Input
           label="Descrição"
           placeholder="Descreva o relato com detalhes..."
@@ -129,27 +141,65 @@ export function ComplianceScreen() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function ComplianceMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: SemanticTone;
+}) {
+  const theme = useTheme();
+  const palette = tone ? theme.semantic[tone === 'accent' ? 'accent' : tone] : null;
+
   return (
-    <Card padding="compact" style={styles.metric}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText type="subtitle">{value}</ThemedText>
+    <Card
+      padding="compact"
+      variant="elevated"
+      style={[
+        styles.metric,
+        theme.shadow.card,
+        {
+          backgroundColor: palette?.bg ?? theme.backgroundElement,
+          borderWidth: 1,
+          borderColor: palette?.border ?? theme.border,
+          borderRadius: layout.radius.md,
+        },
+      ]}>
+      <View style={styles.metricBody}>
+        <ThemedText
+          type="small"
+          style={[palette ? { color: palette.text, fontFamily: Fonts.sansMedium } : undefined]}
+          themeColor={palette ? undefined : 'textSecondary'}>
+          {label}
+        </ThemedText>
+        <ThemedText type="subtitle">{value}</ThemedText>
+      </View>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { gap: Spacing.four },
-  metricsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  metric: { flex: 1, minWidth: 120 },
+  content: { gap: layout.space.lg },
+  metricsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: layout.space.sm,
+  },
+  metric: {
+    flex: 1,
+    minWidth: 140,
+  },
+  metricBody: {
+    gap: layout.space.xs,
+  },
   textArea: { minHeight: 100, textAlignVertical: 'top' },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: layout.space.sm },
   row: {
-    paddingVertical: Spacing.two,
+    paddingVertical: layout.space.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: Spacing.half,
+    gap: 2,
   },
 });

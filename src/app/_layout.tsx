@@ -1,29 +1,32 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, useColorScheme } from 'react-native';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { enableFreeze } from 'react-native-screens';
 
-import { BrandColors } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 import { ThemedView } from '@/components/themed-view';
 import { ToastProvider } from '@/components/ui/toast';
+import { ThemeProvider, useThemeContext } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
 import { AppPaperProvider } from '@/providers/app-paper-provider';
 
 SplashScreen.preventAutoHideAsync();
+enableFreeze(true);
 
 const NavigationLightTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: BrandColors.primary,
-    background: BrandColors.background,
-    card: BrandColors.card,
-    text: '#1A2332',
-    border: 'rgba(1, 45, 96, 0.1)',
+    primary: Colors.light.accent,
+    background: Colors.light.background,
+    card: Colors.light.surface,
+    text: Colors.light.text,
+    border: Colors.light.border,
   },
 };
 
@@ -31,15 +34,17 @@ const NavigationDarkTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    primary: BrandColors.primary,
-    background: '#011A38',
-    card: BrandColors.primary,
+    primary: Colors.dark.accent,
+    background: Colors.dark.background,
+    card: Colors.dark.surface,
+    text: Colors.dark.text,
+    border: Colors.dark.border,
   },
 };
 
 function RootNavigator() {
-  const colorScheme = useColorScheme();
   const { isLoading } = useAuth();
+  const { isDark } = useThemeContext();
 
   useEffect(() => {
     if (!isLoading) {
@@ -56,13 +61,13 @@ function RootNavigator() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? NavigationDarkTheme : NavigationLightTheme}>
+    <NavigationThemeProvider value={isDark ? NavigationDarkTheme : NavigationLightTheme}>
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(main)" />
       </Stack>
-    </ThemeProvider>
+    </NavigationThemeProvider>
   );
 }
 
@@ -87,13 +92,15 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AppPaperProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <RootNavigator />
-          </AuthProvider>
-        </ToastProvider>
-      </AppPaperProvider>
+      <ThemeProvider>
+        <AppPaperProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <RootNavigator />
+            </AuthProvider>
+          </ToastProvider>
+        </AppPaperProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

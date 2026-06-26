@@ -1,12 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { NotificationsPanel } from '@/components/notificacoes/notifications-panel';
-import { BrandColors, Fonts, PressedOpacity, Radius, Shadows, Spacing } from '@/constants/theme';
+import { brand } from '@/constants/brand';
+import { Fonts, layout, PressedOpacity } from '@/constants/theme';
 import { useNotifications } from '@/features/notificacoes/notifications-context';
 import { useTheme } from '@/hooks/use-theme';
+import { hapticSelection } from '@/lib/haptics';
 
 type NotificationBellButtonProps = {
   compact?: boolean;
@@ -25,21 +25,24 @@ export function NotificationBellButton({ compact = false }: NotificationBellButt
         unreadCount > 0 ? `Abrir alertas, ${unreadCount} não lidos` : 'Abrir alertas'
       }
       accessibilityRole="button"
-      onPress={openPanel}
+      onPress={() => {
+        void hapticSelection();
+        openPanel();
+      }}
       style={({ pressed }) => [
         compact ? styles.compactButton : styles.button,
+        theme.shadow.card,
         {
           backgroundColor: theme.backgroundElement,
           borderColor: theme.border,
-          shadowColor: theme.primary,
         },
         pressed && styles.pressed,
       ]}>
-      <Ionicons color={BrandColors.primary} name="notifications-outline" size={iconSize} />
+      <Ionicons color={theme.accent} name="notifications-outline" size={iconSize} />
 
       {unreadCount > 0 ? (
-        <View style={[styles.badge, { backgroundColor: theme.danger }]}>
-          <ThemedText style={styles.badgeText}>{badgeLabel}</ThemedText>
+        <View style={[styles.badge, { backgroundColor: theme.danger, borderColor: theme.background }]}>
+          <ThemedText style={[styles.badgeText, { color: brand.white }]}>{badgeLabel}</ThemedText>
         </View>
       ) : null}
     </Pressable>
@@ -47,40 +50,23 @@ export function NotificationBellButton({ compact = false }: NotificationBellButt
 }
 
 export function NotificationBell() {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <>
-      <View pointerEvents="box-none" style={[styles.container, { top: insets.top + Spacing.two }]}>
-        <NotificationBellButton />
-      </View>
-
-      <NotificationsPanel />
-    </>
-  );
+  return <NotificationBellButton />;
 }
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    right: Spacing.four,
-    zIndex: 50,
-    overflow: 'visible',
-  },
   button: {
     width: 44,
     height: 44,
-    borderRadius: Radius.lg,
+    borderRadius: layout.radius.md,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'visible',
-    ...Shadows.sm,
   },
   compactButton: {
-    width: 32,
-    height: 32,
-    borderRadius: Radius.md,
+    width: 36,
+    height: 36,
+    borderRadius: layout.radius.sm,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -97,15 +83,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: BrandColors.card,
   },
   badgeText: {
-    color: BrandColors.textOnPrimary,
     fontFamily: Fonts.sansSemiBold,
     fontSize: 10,
     lineHeight: 12,
   },
   pressed: {
     opacity: PressedOpacity,
+    transform: [{ scale: 0.96 }],
   },
 });

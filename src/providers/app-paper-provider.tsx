@@ -1,14 +1,10 @@
-import { useColorScheme } from 'react-native';
-import { PaperProvider } from 'react-native-paper';
+import { PaperProvider } from "react-native-paper";
 
-import { PaperDarkTheme, PaperLightTheme } from '@/constants/paper-theme';
+import { PaperDarkTheme, PaperLightTheme } from "@/constants/paper-theme";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
 export function AppPaperProvider({ children }: { children: React.ReactNode }) {
-  const colorScheme = useColorScheme();
+  const { isDark } = useThemeContext();
 
-  return (
-    <PaperProvider theme={colorScheme === 'dark' ? PaperDarkTheme : PaperLightTheme}>
-      {children}
-    </PaperProvider>
-  );
+  return <PaperProvider theme={isDark ? PaperDarkTheme : PaperLightTheme}>{children}</PaperProvider>;
 }

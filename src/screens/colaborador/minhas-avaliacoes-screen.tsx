@@ -75,10 +75,7 @@ export function MinhasAvaliacoesScreen() {
           />
         ) : undefined
       }>
-      <ScreenHeader
-        title="Minhas avaliações"
-        description="Metodologia 360° — você vê suas notas e feedbacks, sem identificação de quem avaliou."
-      />
+      <ScreenHeader title="Minhas avaliações" />
 
       {isLoading ? (
         <View style={styles.centered}>
@@ -94,9 +91,8 @@ export function MinhasAvaliacoesScreen() {
           <EscalaLegenda />
 
           {items.length === 0 ? (
-            <ThemedText themeColor="textSecondary" style={styles.empty}>
-              Nenhuma avaliação registrada ainda. Quando seu supervisor ou gestor concluir um ciclo,
-              os resultados aparecerão aqui.
+            <ThemedText themeColor="textMuted" style={styles.empty}>
+              Nenhuma avaliação registrada ainda.
             </ThemedText>
           ) : (
             items.map((item) => (

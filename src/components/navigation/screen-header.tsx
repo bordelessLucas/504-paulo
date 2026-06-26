@@ -1,25 +1,42 @@
 import { StyleSheet, View, type ViewProps } from 'react-native';
-import { Text } from 'react-native-paper';
 
-import { Spacing } from '@/constants/theme';
+import { Fonts, layout } from '@/constants/theme';
+import { ThemedText } from '@/components/themed-text';
+import { useTheme } from '@/hooks/use-theme';
 
 type ScreenHeaderProps = ViewProps & {
   title: string;
   description?: string;
   accessory?: React.ReactNode;
+  /** `compact` omite descrição longa e reduz espaçamento. */
+  variant?: 'default' | 'compact';
 };
 
-export function ScreenHeader({ title, description, accessory, style, ...rest }: ScreenHeaderProps) {
+export function ScreenHeader({
+  title,
+  description,
+  accessory,
+  variant = 'compact',
+  style,
+  ...rest
+}: ScreenHeaderProps) {
+  const theme = useTheme();
+  const showDescription = variant === 'default' && description;
+
   return (
-    <View style={[styles.header, style]} {...rest}>
+    <View style={[styles.header, variant === 'compact' && styles.headerCompact, style]} {...rest}>
       <View style={styles.textBlock}>
-        <Text variant="headlineMedium" style={styles.title}>
+        <ThemedText
+          style={[
+            variant === 'compact' ? styles.titleCompact : styles.title,
+            { color: theme.accent, fontFamily: Fonts.display },
+          ]}>
           {title}
-        </Text>
-        {description ? (
-          <Text variant="bodyLarge" style={styles.description}>
+        </ThemedText>
+        {showDescription ? (
+          <ThemedText themeColor="textSecondary" style={styles.description}>
             {description}
-          </Text>
+          </ThemedText>
         ) : null}
       </View>
       {accessory}
@@ -29,16 +46,29 @@ export function ScreenHeader({ title, description, accessory, style, ...rest }: 
 
 const styles = StyleSheet.create({
   header: {
-    gap: Spacing.two,
-    marginBottom: Spacing.two,
+    gap: layout.space.sm,
+    marginBottom: layout.space.md,
+  },
+  headerCompact: {
+    marginBottom: layout.space.sm,
   },
   textBlock: {
-    gap: Spacing.two,
+    gap: layout.space.xs,
   },
   title: {
-    fontFamily: 'Korataki_Regular',
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.3,
+    fontWeight: '800',
+  },
+  titleCompact: {
+    fontSize: 20,
+    lineHeight: 26,
+    letterSpacing: -0.3,
+    fontWeight: '800',
   },
   description: {
-    opacity: 0.78,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

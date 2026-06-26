@@ -1,15 +1,21 @@
-import { createContext, useCallback, useContext, useMemo, useRef, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import type { MainTabParamList } from '@/navigation/types';
 
 type NavigateToTab = (routeName: keyof MainTabParamList) => void;
 type OpenDrawer = () => void;
+type ToggleDrawer = () => void;
+export type DrawerStatus = 'open' | 'closed';
 
 type AppNavigationContextValue = {
   registerNavigator: (navigate: NavigateToTab | null) => void;
   registerDrawer: (openDrawer: OpenDrawer | null) => void;
+  registerToggleDrawer: (toggleDrawer: ToggleDrawer | null) => void;
+  setDrawerStatus: (status: DrawerStatus) => void;
   navigateToTab: (routeName: keyof MainTabParamList) => boolean;
   openDrawer: () => void;
+  toggleDrawer: () => void;
+  drawerStatus: DrawerStatus;
 };
 
 const AppNavigationContext = createContext<AppNavigationContextValue | null>(null);
@@ -17,6 +23,8 @@ const AppNavigationContext = createContext<AppNavigationContextValue | null>(nul
 export function AppNavigationProvider({ children }: { children: ReactNode }) {
   const navigatorRef = useRef<NavigateToTab | null>(null);
   const drawerRef = useRef<OpenDrawer | null>(null);
+  const toggleDrawerRef = useRef<ToggleDrawer | null>(null);
+  const [drawerStatus, setDrawerStatus] = useState<DrawerStatus>('closed');
 
   const registerNavigator = useCallback((navigate: NavigateToTab | null) => {
     navigatorRef.current = navigate;
@@ -24,6 +32,10 @@ export function AppNavigationProvider({ children }: { children: ReactNode }) {
 
   const registerDrawer = useCallback((openDrawer: OpenDrawer | null) => {
     drawerRef.current = openDrawer;
+  }, []);
+
+  const registerToggleDrawer = useCallback((toggleDrawer: ToggleDrawer | null) => {
+    toggleDrawerRef.current = toggleDrawer;
   }, []);
 
   const navigateToTab = useCallback((routeName: keyof MainTabParamList) => {
@@ -39,14 +51,22 @@ export function AppNavigationProvider({ children }: { children: ReactNode }) {
     drawerRef.current?.();
   }, []);
 
+  const toggleDrawer = useCallback(() => {
+    toggleDrawerRef.current?.();
+  }, []);
+
   const value = useMemo(
     () => ({
       registerNavigator,
       registerDrawer,
+      registerToggleDrawer,
+      setDrawerStatus,
       navigateToTab,
       openDrawer,
+      toggleDrawer,
+      drawerStatus,
     }),
-    [navigateToTab, openDrawer, registerDrawer, registerNavigator],
+    [drawerStatus, navigateToTab, openDrawer, registerDrawer, registerNavigator, registerToggleDrawer, toggleDrawer],
   );
 
   return <AppNavigationContext.Provider value={value}>{children}</AppNavigationContext.Provider>;

@@ -34,23 +34,14 @@ import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 
 function DashboardCard({
   title,
-  description,
   children,
 }: {
   title: string;
-  description?: string;
   children: ReactNode;
 }) {
   return (
     <Card padding="compact">
-      <View style={styles.cardHeader}>
-        <ThemedText type="subtitle">{title}</ThemedText>
-        {description ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {description}
-          </ThemedText>
-        ) : null}
-      </View>
+      <ThemedText type="subtitle">{title}</ThemedText>
       {children}
     </Card>
   );
@@ -150,16 +141,11 @@ export function DashboardsGerenciaisScreen() {
           onRefresh={() => void loadDashboard({ refreshing: true })}
         />
       }>
-      <ScreenHeader
-        title="Dashboard executivo"
-        description="Visão consolidada offshore: 12 áreas de avaliação, IMA ponderado e ranking completo da equipe."
-      />
+      <ScreenHeader title="Dashboard executivo" />
 
       <View style={[styles.cardsGrid, isDesktopLayout && styles.cardsGridDesktop]}>
             <View style={isDesktopLayout ? styles.cardSlotDesktopWide : undefined}>
-          <DashboardCard
-            title="Exportação de fichas PDF"
-            description="Ficha offshore completa para qualquer colaborador ativo, com filtro por departamento e período.">
+          <DashboardCard title="Exportação de fichas PDF">
             <ExportacaoFichaPanel
               exportingId={exportingId}
               onExportingChange={setExportingId}
@@ -170,9 +156,7 @@ export function DashboardsGerenciaisScreen() {
             </View>
 
             <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
-          <DashboardCard
-            title="Radar offshore (12 eixos)"
-            description="Média geral da empresa por área avaliadora do modelo Excel.">
+          <DashboardCard title="Radar offshore (12 eixos)">
             <RadarDesempenhoChart
               labels={data?.radarOffshore.labels ?? []}
               valores={data?.radarOffshore.valores ?? []}
@@ -181,9 +165,7 @@ export function DashboardsGerenciaisScreen() {
             </View>
 
             <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
-          <DashboardCard
-            title="Radar legado (3 eixos)"
-            description="Média nas perguntas universais — exibido quando o seed offshore ainda não está ativo.">
+          <DashboardCard title="Radar legado (3 eixos)">
             <RadarDesempenhoChart
               labels={data?.radarUniversal.labels ?? []}
               valores={data?.radarUniversal.valores ?? []}
@@ -192,33 +174,25 @@ export function DashboardsGerenciaisScreen() {
             </View>
 
             <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
-          <DashboardCard
-            title="Velocímetro IMA"
-            description="Média global de performance dos colaboradores ativos, com faixas do semáforo na escala 0 a 3.">
+          <DashboardCard title="Velocímetro IMA">
             <ImaGaugeChart ima={data?.ima ?? null} />
           </DashboardCard>
             </View>
 
             <View style={isDesktopLayout ? styles.cardSlotDesktopWide : undefined}>
-          <DashboardCard
-            title="Saúde dos PDIs"
-            description="Planos de desenvolvimento ativos, taxa de conclusão e alertas de vencimento.">
+          <DashboardCard title="Saúde dos PDIs">
             {pdiStats ? <PdiExecutivoCard stats={pdiStats} /> : null}
           </DashboardCard>
             </View>
 
             <View style={isDesktopLayout ? styles.cardSlotDesktopWide : undefined}>
-          <DashboardCard
-            title="Status de preenchimento"
-            description="Acompanhamento das avaliações pendentes por supervisor (quinzena) e gestor (semestre), por departamento.">
+          <DashboardCard title="Status de preenchimento">
             <StatusPreenchimentoList items={data?.statusPreenchimento ?? []} />
           </DashboardCard>
             </View>
 
             <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
-          <DashboardCard
-            title="Top 5 colaboradores"
-            description="Colaboradores com melhor média geral no período.">
+          <DashboardCard title="Top 5 colaboradores">
             <ColaboradorRankingList
               exportingId={exportingId}
               items={data?.top5 ?? []}
@@ -229,9 +203,7 @@ export function DashboardsGerenciaisScreen() {
             </View>
 
             <View style={isDesktopLayout ? styles.cardSlotDesktop : undefined}>
-          <DashboardCard
-            title="Bottom 5 colaboradores"
-            description="Colaboradores com menor média geral — útil para planos de melhoria.">
+          <DashboardCard title="Bottom 5 colaboradores">
             <ColaboradorRankingList
               exportingId={exportingId}
               items={data?.bottom5 ?? []}
@@ -242,9 +214,7 @@ export function DashboardsGerenciaisScreen() {
             </View>
 
             <View style={isDesktopLayout ? styles.cardSlotDesktopWide : undefined}>
-          <DashboardCard
-            title="Ranking completo"
-            description="Todos os colaboradores ativos ordenados por média/IMA no período.">
+          <DashboardCard title="Ranking completo">
             <ColaboradorRankingList
               exportingId={exportingId}
               items={data?.rankingCompleto ?? []}
@@ -283,9 +253,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexBasis: '100%',
     minWidth: 360,
-  },
-  cardHeader: {
-    gap: Spacing.one,
   },
   centered: {
     flex: 1,

@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Badge } from 'react-native-paper';
 
-import { PressedOpacity, Radius } from '@/constants/theme';
+import { layout, PressedOpacity } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type HeaderIconButtonProps = {
@@ -10,10 +10,21 @@ type HeaderIconButtonProps = {
   accessibilityLabel: string;
   onPress: () => void;
   badge?: number;
+  tintColor?: string;
+  variant?: 'filled' | 'ghost';
 };
 
-export function HeaderIconButton({ icon, accessibilityLabel, onPress, badge }: HeaderIconButtonProps) {
+export function HeaderIconButton({
+  icon,
+  accessibilityLabel,
+  onPress,
+  badge,
+  tintColor,
+  variant = 'filled',
+}: HeaderIconButtonProps) {
   const theme = useTheme();
+  const iconColor = tintColor ?? theme.text;
+  const isGhost = variant === 'ghost';
 
   return (
     <Pressable
@@ -22,13 +33,14 @@ export function HeaderIconButton({ icon, accessibilityLabel, onPress, badge }: H
       onPress={onPress}
       style={({ pressed }) => [
         styles.iconButton,
-        {
+        !isGhost && {
           backgroundColor: theme.backgroundElement,
           borderColor: theme.border,
+          borderWidth: 1,
         },
         pressed && styles.pressed,
       ]}>
-      <MaterialCommunityIcons color={theme.text} name={icon} size={22} />
+      <MaterialCommunityIcons color={iconColor} name={icon} size={22} />
       {badge && badge > 0 ? (
         <Badge style={styles.badge} size={18}>
           {badge > 99 ? '99+' : badge}
@@ -72,13 +84,12 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: layout.space.sm,
   },
   iconButton: {
     width: 40,
     height: 40,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
+    borderRadius: layout.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -89,5 +100,6 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: PressedOpacity,
+    transform: [{ scale: 0.96 }],
   },
 });

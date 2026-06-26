@@ -69,10 +69,7 @@ export function VisaoEstrategicaScreen() {
       scrollable
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => void load()} />}>
-      <ScreenHeader
-        title="Visão Estratégica"
-        description="Nine Box, sucessão, riscos de turnover e consolidado de performance."
-      />
+      <ScreenHeader title="Visão Estratégica" />
 
       {error ? (
         <View style={styles.errorBox}>
