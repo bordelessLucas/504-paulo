@@ -1,11 +1,17 @@
-import { StyleSheet, View } from 'react-native';
-
-import { EscalaLegenda } from '@/components/avaliacao/escala-legenda';
+import { ScoreScaleList } from '@/components/avaliacao/score-scale-list';
 import { ScreenHeader } from '@/components/navigation/screen-header';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
-import { Card } from '@/components/ui/card';
+import { StatusBadge } from '@/components/premium/StatusBadge';
+import { ContentSection } from '@/components/ui/content-section';
+import { StructuredRow } from '@/components/ui/structured-row';
 import { ThemedText } from '@/components/themed-text';
-import { Fonts, Spacing } from '@/constants/theme';
+import {
+  CLASSIFICACAO_SHORT_LABELS,
+  CLASSIFICACAO_THRESHOLDS,
+  CLASSIFICACAO_TONES,
+  getPesoTone,
+} from '@/constants/evaluation-colors';
+import { Fonts, layout } from '@/constants/theme';
 import {
   CLASSIFICACAO_DESEMPENHO_LABELS,
   type ClassificacaoDesempenho,
@@ -16,84 +22,162 @@ import {
   MARCOS_TEMPORAIS,
 } from '@/features/avaliacao/governanca';
 import { SECAO_OFFSHORE_LABELS, SECAO_OFFSHORE_PESOS } from '@/features/avaliacao/secoes-offshore';
+import { useTheme } from '@/hooks/use-theme';
+import { StyleSheet, Text, View } from 'react-native';
+import type { SemanticTone } from '@/constants/theme';
 
 export function MetodologiaScreen() {
   return (
     <TabScreenContainer scrollable contentContainerStyle={styles.content}>
       <ScreenHeader title="Metodologia Offshore" />
 
-      <Block title="Marcos temporais">
-        <Bullet text={`${MARCOS_TEMPORAIS.quinzenal.label}: ${MARCOS_TEMPORAIS.quinzenal.descricao}`} />
-        <Bullet
-          text={`${MARCOS_TEMPORAIS.semestral.label} (${MARCOS_TEMPORAIS.semestral.meses}m): ${MARCOS_TEMPORAIS.semestral.descricao}`}
+      <ContentSection eyebrow="Ciclo" title="Marcos temporais">
+        <StructuredRow
+          title={MARCOS_TEMPORAIS.quinzenal.label}
+          description={MARCOS_TEMPORAIS.quinzenal.descricao}
         />
-        <Bullet
-          text={`${MARCOS_TEMPORAIS.anual.label} (${MARCOS_TEMPORAIS.anual.meses}m): ${MARCOS_TEMPORAIS.anual.descricao}`}
+        <StructuredRow
+          title={`${MARCOS_TEMPORAIS.semestral.label} (${MARCOS_TEMPORAIS.semestral.meses}m)`}
+          description={MARCOS_TEMPORAIS.semestral.descricao}
         />
-      </Block>
+        <StructuredRow
+          title={`${MARCOS_TEMPORAIS.anual.label} (${MARCOS_TEMPORAIS.anual.meses}m)`}
+          description={MARCOS_TEMPORAIS.anual.descricao}
+        />
+      </ContentSection>
 
-      <Block title="Escala de notas">
-        <EscalaLegenda />
-      </Block>
+      <ContentSection eyebrow="Avaliação" title="Escala de notas">
+        <ScoreScaleList />
+      </ContentSection>
 
-      <Block title="Matriz de pesos (IMA)">
-        {Object.entries(SECAO_OFFSHORE_LABELS).map(([codigo, label]) => (
-          <ThemedText key={codigo} type="small">
-            · {label} ({codigo}) — peso {SECAO_OFFSHORE_PESOS[codigo as keyof typeof SECAO_OFFSHORE_PESOS]}
-          </ThemedText>
-        ))}
-        <ThemedText type="small" themeColor="textSecondary" style={styles.formula}>
+      <ContentSection eyebrow="Cálculo" title="Matriz de pesos (IMA)">
+        {Object.entries(SECAO_OFFSHORE_LABELS).map(([codigo, label]) => {
+          const peso = SECAO_OFFSHORE_PESOS[codigo as keyof typeof SECAO_OFFSHORE_PESOS];
+          const tone = getPesoTone(peso);
+
+          return (
+            <StructuredRow
+              key={codigo}
+              title={label}
+              description={codigo}
+              trailing={<StatusBadge label={`Peso ${peso}`} tone={tone} size="sm" />}
+            />
+          );
+        })}
+        <ThemedText themeColor="textSecondary" style={styles.formula}>
           IMA = (GO×3 + SB×3 + demais×1) / 16
         </ThemedText>
-      </Block>
+      </ContentSection>
 
-      <Block title="Classificação por faixa">
-        {(Object.keys(CLASSIFICACAO_DESEMPENHO_LABELS) as ClassificacaoDesempenho[]).map(
-          (key) => (
-            <ThemedText key={key} type="small">
-              · {CLASSIFICACAO_DESEMPENHO_LABELS[key]}
-            </ThemedText>
-          ),
-        )}
-      </Block>
+      <ContentSection eyebrow="Resultado" title="Classificação por faixa">
+        {(Object.keys(CLASSIFICACAO_DESEMPENHO_LABELS) as ClassificacaoDesempenho[]).map((key) => (
+          <StructuredRow
+            key={key}
+            title={CLASSIFICACAO_DESEMPENHO_LABELS[key]}
+            description={CLASSIFICACAO_THRESHOLDS[key]}
+            trailing={
+              <StatusBadge
+                label={CLASSIFICACAO_SHORT_LABELS[key]}
+                tone={CLASSIFICACAO_TONES[key]}
+                size="sm"
+              />
+            }
+          />
+        ))}
+      </ContentSection>
 
-      <Block title="Direitos do colaborador">
+      <ContentSection eyebrow="Política" title="Direitos do colaborador">
         {DIREITOS_COLABORADOR.map((text) => (
-          <Bullet key={text} text={text} />
+          <StructuredRow key={text} title={text} />
         ))}
-      </Block>
+      </ContentSection>
 
-      <Block title="Deveres do colaborador">
+      <ContentSection eyebrow="Política" title="Deveres do colaborador">
         {DEVERES_COLABORADOR.map((text) => (
-          <Bullet key={text} text={text} />
+          <StructuredRow key={text} title={text} />
         ))}
-      </Block>
+      </ContentSection>
 
-      <Block title="Regras automáticas">
-        <Bullet text="Nota 0 ou 1: justificativa obrigatória do gestor." />
-        <Bullet text="Nota 3: evidência ou elogio formal obrigatório." />
-        <Bullet text="Média &lt; 1,8: abertura automática de PDI (30 dias)." />
-        <Bullet text="Média &lt; 1,0: alerta crítico à diretoria." />
-      </Block>
+      <ContentSection eyebrow="Governança" title="Regras automáticas">
+        <GovernanceRuleRow
+          icon="⚠️"
+          tone="warning"
+          text="Nota 0 ou 1: justificativa obrigatória do gestor."
+        />
+        <GovernanceRuleRow
+          icon="✅"
+          tone="success"
+          text="Nota 3: evidência ou elogio formal obrigatório."
+        />
+        <GovernanceRuleRow
+          icon="⚠️"
+          tone="warning"
+          text="Média < 1,8: abertura automática de PDI (30 dias)."
+        />
+        <GovernanceRuleRow
+          icon="🔴"
+          tone="danger"
+          text="Média < 1,0: alerta crítico à diretoria."
+        />
+      </ContentSection>
     </TabScreenContainer>
   );
 }
 
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
+function GovernanceRuleRow({
+  icon,
+  tone,
+  text,
+}: {
+  icon: string;
+  tone: SemanticTone;
+  text: string;
+}) {
+  const theme = useTheme();
+  const palette = theme.semantic[tone];
+
   return (
-    <Card padding="compact">
-      <ThemedText type="subtitle">{title}</ThemedText>
-      <View style={styles.blockBody}>{children}</View>
-    </Card>
+    <View
+      style={[
+        styles.ruleRow,
+        {
+          backgroundColor: palette.bg,
+          borderColor: palette.border,
+        },
+      ]}>
+      <Text style={styles.ruleIcon}>{icon}</Text>
+      <ThemedText type="small" style={styles.ruleText}>
+        {text}
+      </ThemedText>
+    </View>
   );
 }
 
-function Bullet({ text }: { text: string }) {
-  return <ThemedText type="small">· {text}</ThemedText>;
-}
-
 const styles = StyleSheet.create({
-  content: { gap: Spacing.four },
-  blockBody: { gap: Spacing.one },
-  formula: { marginTop: Spacing.two, fontFamily: Fonts.sansMedium },
+  content: {
+    gap: layout.space.xxl,
+    paddingBottom: layout.space.xxxl,
+  },
+  formula: {
+    marginTop: layout.space.sm,
+    fontFamily: Fonts.sansMedium,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  ruleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: layout.space.md,
+    paddingHorizontal: layout.space.lg,
+    paddingVertical: layout.space.md,
+    borderRadius: layout.radius.sm,
+    borderWidth: 1,
+  },
+  ruleIcon: {
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  ruleText: {
+    flex: 1,
+  },
 });

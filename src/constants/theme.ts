@@ -10,9 +10,16 @@ export type ThemeColors = {
   text: string;
   textSecondary: string;
   textMuted: string;
+  /** Fundo do app — camada mais profunda */
   background: string;
+  /** Alias semântico de `background` */
+  surfaceBase: string;
   backgroundElement: string;
+  /** Superfície de card — um nível acima do fundo */
+  surfaceCard: string;
   surface: string;
+  /** Superfície elevada (modais, dropdowns) */
+  surfaceElevated: string;
   backgroundSelected: string;
   border: string;
   primary: string;
@@ -39,19 +46,22 @@ export type ThemeMode = "light" | "dark";
 
 export const layout = {
   radius: { sm: 12, md: 16, lg: 20, xl: 24, pill: 999 },
-  space: { xs: 6, sm: 10, md: 16, lg: 24, xl: 32, xxl: 48 },
+  /** Escala 4 / 8 / 12 / 16 / 24 / 32 / 48 */
+  space: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 },
   touchMin: 52,
 } as const;
+
+export { zIndex } from '@/constants/z-index';
 
 /** @deprecated Prefer layout.space */
 export const Spacing = {
   half: 2,
-  one: 4,
-  two: layout.space.xs,
-  three: layout.space.md,
-  four: layout.space.lg,
-  five: layout.space.xl,
-  six: layout.space.xxl,
+  one: layout.space.xs,
+  two: layout.space.sm,
+  three: layout.space.lg,
+  four: layout.space.xl,
+  five: layout.space.xxl,
+  six: layout.space.xxxl,
 } as const;
 
 /** @deprecated Prefer layout.radius */
@@ -69,11 +79,14 @@ export const DisabledOpacity = 0.55;
 
 const darkColors: ThemeColors = {
   text: brand.cream,
-  textSecondary: "#A8B4C4",
-  textMuted: "#6B7A8D",
+  textSecondary: "#B4C0D0",
+  textMuted: "#8A9BB0",
   background: brand.navyDeep,
+  surfaceBase: brand.navyDeep,
   backgroundElement: brand.navy,
+  surfaceCard: brand.navy,
   surface: brand.navy,
+  surfaceElevated: brand.navyMid,
   backgroundSelected: brand.navyMid,
   border: "rgba(240, 237, 228, 0.12)",
   primary: brand.navy,
@@ -98,11 +111,14 @@ const darkColors: ThemeColors = {
 
 const lightColors: ThemeColors = {
   text: "#1A2332",
-  textSecondary: "#5C6570",
-  textMuted: "#8A9199",
+  textSecondary: "#4A5568",
+  textMuted: "#6B7280",
   background: brand.cream,
+  surfaceBase: brand.cream,
   backgroundElement: brand.white,
+  surfaceCard: brand.white,
   surface: brand.white,
+  surfaceElevated: "#F7F5F0",
   backgroundSelected: "#E5E1D6",
   border: brandRgb(brand.navy, 0.1),
   primary: brand.navy,

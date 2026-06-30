@@ -13,6 +13,7 @@ export type ThemedTextProps = TextProps & {
     | 'small'
     | 'smallBold'
     | 'subtitle'
+    | 'sectionTitle'
     | 'link'
     | 'badge';
   themeColor?: ThemeColor;
@@ -33,6 +34,7 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         type === 'small' && styles.small,
         type === 'smallBold' && styles.smallBold,
         type === 'subtitle' && styles.subtitle,
+        type === 'sectionTitle' && styles.sectionTitle,
         type === 'link' && styles.link,
         type === 'badge' && [
           styles.badge,
@@ -80,6 +82,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.display,
     fontSize: 18,
     lineHeight: 26,
+  },
+  sectionTitle: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 17,
+    lineHeight: 24,
+    letterSpacing: -0.2,
   },
   small: {
     fontFamily: Fonts.sans,

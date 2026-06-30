@@ -11,7 +11,7 @@ import React, {
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Fonts, Radius, Spacing, zIndex } from '@/constants/theme';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: Spacing.four,
     right: Spacing.four,
-    zIndex: 999,
+    zIndex: zIndex.toast,
   },
   banner: {
     flexDirection: 'row',

@@ -5,4 +5,16 @@
     monospace;
   --font-rounded: Biko_Regular, ui-sans-serif, system-ui, sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
+
+  /* Z-index semântico */
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-header: 20;
+  --z-modal: 30;
+  --z-toast: 40;
+
+  /* Profundidade de superfície (dark navy) */
+  --surface-base: #011a38;
+  --surface-card: #012d60;
+  --surface-elevated: #023a72;
 }

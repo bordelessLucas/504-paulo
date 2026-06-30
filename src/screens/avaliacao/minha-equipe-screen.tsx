@@ -9,15 +9,18 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+
 import { SyncStatusBar } from '@/components/SyncStatusBar';
+import { ScreenHeader } from '@/components/navigation/screen-header';
+import { StatusBadge } from '@/components/premium/StatusBadge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
-import { SCREEN_PADDING_LEFT, SCREEN_PADDING_RIGHT } from '@/constants/layout';
-import { Colors, Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
+import { EmptyState } from '@/components/ui/empty-state';
+import { SCREEN_PADDING_HORIZONTAL } from '@/constants/layout';
+import { Fonts, layout } from '@/constants/theme';
 import {
   fetchEquipeStatusCiclo,
-  type ColaboradorEquipeStatus,
 } from '@/features/avaliacao/api';
 import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
 import {
@@ -28,7 +31,10 @@ import {
 import { useAuth } from '@/features/auth/auth-context';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useAuthRole } from '@/hooks/use-auth-role';
+import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { useListContentStyle } from '@/lib/layoutPadding';
+import { useTheme } from '@/hooks/use-theme';
 import {
   getCachedEquipe,
   getOfflineAvaliadoIdsForAvaliador,
@@ -37,7 +43,7 @@ import type { MinhaEquipeStackParamList } from '@/navigation/minha-equipe-stack'
 
 type NavigationProp = NativeStackNavigationProp<MinhaEquipeStackParamList, 'MinhaEquipeLista'>;
 
-function StatusBadge({
+function EquipeStatusBadge({
   avaliadoNaQuinzena,
   avaliadoLocalmente,
 }: {
@@ -45,26 +51,14 @@ function StatusBadge({
   avaliadoLocalmente?: boolean;
 }) {
   if (avaliadoLocalmente) {
-    return (
-      <View style={[styles.badge, styles.badgeLocal]}>
-        <ThemedText style={styles.badgeTextLocal}>🕐 Local</ThemedText>
-      </View>
-    );
+    return <StatusBadge label="Local" tone="info" size="sm" />;
   }
 
   if (avaliadoNaQuinzena) {
-    return (
-      <View style={[styles.badge, styles.badgeAvaliado]}>
-        <ThemedText style={styles.badgeTextAvaliado}>Avaliado</ThemedText>
-      </View>
-    );
+    return <StatusBadge label="Avaliado" tone="success" size="sm" />;
   }
 
-  return (
-    <View style={[styles.badge, styles.badgePendente]}>
-      <ThemedText style={styles.badgeTextPendente}>Pendente</ThemedText>
-    </View>
-  );
+  return <StatusBadge label="Pendente" tone="warning" size="sm" />;
 }
 
 function EquipeRow({
@@ -74,6 +68,7 @@ function EquipeRow({
   colaborador: ColaboradorEquipeStatusOffline;
   onPress: () => void;
 }) {
+  const theme = useTheme();
   const isPendente = !colaborador.avaliadoNaQuinzena;
 
   return (
@@ -83,6 +78,7 @@ function EquipeRow({
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,
+        { borderBottomColor: theme.border },
         isPendente && pressed && styles.rowPressed,
       ]}>
       <View style={styles.rowInfo}>
@@ -91,7 +87,7 @@ function EquipeRow({
           {colaborador.departamento?.trim() || 'Sem departamento'}
         </ThemedText>
       </View>
-      <StatusBadge
+      <EquipeStatusBadge
         avaliadoNaQuinzena={colaborador.avaliadoNaQuinzena}
         avaliadoLocalmente={colaborador.avaliadoLocalmente}
       />
@@ -101,9 +97,12 @@ function EquipeRow({
 
 export function MinhaEquipeScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const theme = useTheme();
   const { user } = useAuth();
   const { role } = useAuthRole();
   const { isOnline } = useNetworkStatus();
+  const isDesktopLayout = useIsDesktopLayout();
+  const listInsets = useListContentStyle({ safeTop: !isDesktopLayout, withTabBar: false });
   const cicloLabel =
     role === 'gestor' || role === 'gerente'
       ? TIPO_AVALIACAO_LABELS.semestral
@@ -194,7 +193,7 @@ export function MinhaEquipeScreen() {
   if (!user || isLoading) {
     return (
       <ThemedView style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={theme.accent} />
       </ThemedView>
     );
   }
@@ -213,8 +212,9 @@ export function MinhaEquipeScreen() {
   return (
     <ThemedView style={styles.container}>
       <SyncStatusBar />
-      <View style={styles.safeArea}>
+      <View style={[styles.safeArea, { paddingTop: listInsets.paddingTop }]}>
         <View style={styles.header}>
+          <ScreenHeader title="Minha equipe" variant="compact" />
           {cacheLabel ? (
             <ThemedText themeColor="textSecondary" style={styles.cacheBanner}>
               Visualizando dados em cache de {cacheLabel}
@@ -235,14 +235,22 @@ export function MinhaEquipeScreen() {
         <FlatList
           data={colaboradores}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={[styles.listContent, { paddingBottom: scrollPaddingBottom }]}
+          contentContainerStyle={[
+            styles.listContent,
+            colaboradores.length === 0 && styles.listContentEmpty,
+            { paddingBottom: scrollPaddingBottom },
+          ]}
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={() => void loadEquipe({ refreshing: true })} />
           }
           ListEmptyComponent={
-            <ThemedText themeColor="textSecondary" style={styles.empty}>
-              Nenhum colaborador ativo encontrado.
-            </ThemedText>
+            <EmptyState
+              icon="account-group-outline"
+              title="Nenhum colaborador ativo"
+              message="Não há colaboradores vinculados à sua equipe neste ciclo. Verifique o cadastro no RH ou aguarde a próxima atualização do ciclo de avaliação."
+              actionLabel="Atualizar lista"
+              onAction={() => void loadEquipe({ refreshing: true })}
+            />
           }
           renderItem={({ item }) => (
             <EquipeRow
@@ -265,10 +273,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: SCREEN_PADDING_LEFT,
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.three,
+    paddingHorizontal: SCREEN_PADDING_HORIZONTAL,
+    paddingBottom: layout.space.lg,
     width: '100%',
+    gap: layout.space.md,
   },
   subtitle: {
     fontSize: 14,
@@ -277,27 +285,29 @@ const styles = StyleSheet.create({
   cacheBanner: {
     fontSize: 13,
     lineHeight: 18,
-    marginBottom: Spacing.one,
   },
   listContent: {
     width: '100%',
+  },
+  listContentEmpty: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: Spacing.three,
-    paddingHorizontal: SCREEN_PADDING_LEFT,
-    paddingVertical: Spacing.three,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    gap: layout.space.lg,
+    paddingHorizontal: SCREEN_PADDING_HORIZONTAL,
+    paddingVertical: layout.space.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   rowPressed: {
     opacity: 0.88,
   },
   rowInfo: {
     flex: 1,
-    gap: 2,
+    gap: layout.space.xs,
   },
   rowName: {
     fontFamily: Fonts.sansMedium,
@@ -308,45 +318,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  badge: {
-    borderRadius: 4,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-  },
-  badgeAvaliado: {
-    backgroundColor: '#E8F5E9',
-  },
-  badgePendente: {
-    backgroundColor: '#FFF3E0',
-  },
-  badgeTextAvaliado: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 12,
-    lineHeight: 16,
-    color: '#1B5E20',
-  },
-  badgeLocal: {
-    backgroundColor: '#E3F2FD',
-  },
-  badgeTextLocal: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 12,
-    lineHeight: 16,
-    color: '#1565C0',
-  },
-  badgeTextPendente: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 12,
-    lineHeight: 16,
-    color: '#E65100',
-  },
-  empty: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-    paddingVertical: Spacing.four,
-    paddingHorizontal: Spacing.four,
-  },
   error: {
     fontSize: 14,
     lineHeight: 20,
@@ -356,7 +327,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.four,
-    gap: Spacing.three,
+    padding: layout.space.xl,
+    gap: layout.space.lg,
   },
 });

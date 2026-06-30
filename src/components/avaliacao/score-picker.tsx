@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { SCORE_TONES } from '@/constants/evaluation-colors';
 import { ALLOWED_SCORES } from '@/features/avaliacao/validation';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -17,6 +18,8 @@ export function ScorePicker({ value, onChange }: ScorePickerProps) {
     <View style={styles.row}>
       {ALLOWED_SCORES.map((score) => {
         const isSelected = value === score;
+        const tone = SCORE_TONES[score];
+        const palette = theme.semantic[tone];
 
         return (
           <Pressable
@@ -28,14 +31,14 @@ export function ScorePicker({ value, onChange }: ScorePickerProps) {
             style={[
               styles.block,
               {
-                backgroundColor: isSelected ? theme.primary : theme.backgroundElement,
-                borderColor: isSelected ? theme.primary : theme.border,
+                backgroundColor: isSelected ? palette.bg : theme.surfaceCard,
+                borderColor: isSelected ? palette.border : theme.border,
               },
             ]}>
             <ThemedText
               style={[
                 styles.scoreLabel,
-                { color: isSelected ? theme.textOnPrimary : theme.text },
+                { color: isSelected ? palette.text : theme.text },
               ]}>
               {score}
             </ThemedText>

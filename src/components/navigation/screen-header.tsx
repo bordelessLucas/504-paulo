@@ -47,7 +47,7 @@ export function ScreenHeader({
 const styles = StyleSheet.create({
   header: {
     gap: layout.space.sm,
-    marginBottom: layout.space.md,
+    marginBottom: layout.space.lg,
   },
   headerCompact: {
     marginBottom: layout.space.sm,

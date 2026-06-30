@@ -38,7 +38,7 @@ export function MinhaEquipeStackNavigator() {
       <Stack.Screen
         name="MinhaEquipeLista"
         component={MinhaEquipeScreen}
-        options={{ title: 'Minha equipe' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="FormularioAvaliacao"
