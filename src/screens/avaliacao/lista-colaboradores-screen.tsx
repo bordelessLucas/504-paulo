@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import { ColaboradorRow } from '@/components/avaliacao/colaborador-row';
-import { SyncStatusBar } from '@/components/SyncStatusBar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
@@ -521,7 +520,6 @@ export function ListaColaboradoresScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SyncStatusBar />
       <View style={styles.safeArea}>
         {isExecutiveView ? (
           <>

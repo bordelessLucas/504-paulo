@@ -26,12 +26,7 @@ export function useTabBarHeight() {
     return insets.bottom + layout.space.md;
   }
 
-  return (
-    FLOATING_TAB_BAR.height +
-    FLOATING_TAB_BAR.marginBottom +
-    FLOATING_TAB_BAR.extraClearance +
-    insets.bottom
-  );
+  return TAB_BAR_BASE_HEIGHT + insets.bottom;
 }
 
 type ListContentStyleOptions = {
@@ -71,7 +66,7 @@ export function useFabBottom(withTabBar = true) {
     return insets.bottom + layout.space.lg;
   }
 
-  return tabBarHeight - FLOATING_TAB_BAR.extraClearance;
+  return TAB_BAR_BASE_HEIGHT + insets.bottom - layout.space.sm;
 }
 
 /** @deprecated Use useTabBarHeight — mantém compatibilidade com tab bar clássica */

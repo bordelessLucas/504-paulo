@@ -30,7 +30,7 @@ export default function LoginScreen() {
       return;
     }
 
-    router.replace('/(main)' as Href);
+    router.replace('/(main)/' as Href);
   }
 
   return (

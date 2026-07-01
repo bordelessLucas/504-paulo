@@ -10,12 +10,14 @@ import { Button } from '@/components/ui/button';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
 import { NotificationsProvider } from '@/features/notificacoes/notifications-context';
-import { RoleDrawerNavigator } from '@/navigation/RoleDrawerNavigator';
+import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { AppNavigationProvider } from '@/navigation/app-navigation-context';
 import { NavigationLayoutProvider } from '@/navigation/navigation-layout-context';
+import { RoleHybridNavigator } from '@/navigation/role-hybrid-navigator';
 
 export function AppNavigator() {
   const { user, isLoading, isProfileReady, refetchProfile, signOut } = useAuth();
+  const isDesktopLayout = useIsDesktopLayout();
   const role = user?.role ?? null;
 
   if (isLoading || (user && !isProfileReady)) {
@@ -49,10 +51,10 @@ export function AppNavigator() {
   return (
     <NavigationIndependentTree>
       <NotificationsProvider>
-        <NavigationLayoutProvider hasBottomTabs={false}>
+        <NavigationLayoutProvider hasBottomTabs={!isDesktopLayout}>
           <AppNavigationProvider>
             <View style={styles.appShell}>
-              <RoleDrawerNavigator key={role} role={role} />
+              <RoleHybridNavigator key={role} role={role} />
               <ScreenTopBar />
               <NotificationsPanel />
             </View>

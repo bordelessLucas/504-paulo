@@ -2,7 +2,6 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   RefreshControl,
   StyleSheet,
   View,
@@ -10,14 +9,13 @@ import {
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { BloqueioDeveresHint } from '@/components/colaborador/bloqueio-deveres-hint';
-import { DesempenhoSemaforo } from '@/components/gerencial/desempenho-semaforo';
+import { ColaboradorDashboardHeader } from '@/components/colaborador/colaborador-dashboard-header';
+import { ImaGaugeChart } from '@/components/gerencial/ima-gauge-chart';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { PDICard } from '@/components/pdi/PDICard';
 import {
   CollapsibleSection,
   GlassCard,
-  MetricStrip,
-  PremiumHeader,
   SectionTitle,
   StatusBadge,
 } from '@/components/premium';
@@ -25,6 +23,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 import { useToast } from '@/components/ui/toast';
 import { Fonts, layout } from '@/constants/theme';
 import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
@@ -35,7 +34,6 @@ import { AutoavaliacaoModal } from '@/features/colaborador/autoavaliacao-modal';
 import {
   fetchColaboradorDashboard,
   formatFeedbackDate,
-  formatMediaGeral,
   type AvaliacaoEmAnalise,
   type ColaboradorDashboardData,
 } from '@/features/colaborador/dashboard-api';
@@ -91,8 +89,16 @@ function ListRow({
           {badge}
         </View>
       ) : null}
-      {body ? <ThemedText style={styles.bodyText} numberOfLines={3}>{body}</ThemedText> : null}
-      {meta ? <ThemedText themeColor="textMuted" style={styles.meta}>{meta}</ThemedText> : null}
+      {body ? (
+        <ThemedText style={styles.bodyText} numberOfLines={3}>
+          {body}
+        </ThemedText>
+      ) : null}
+      {meta ? (
+        <ThemedText themeColor="textMuted" style={styles.meta}>
+          {meta}
+        </ThemedText>
+      ) : null}
     </View>
   );
 }
@@ -151,27 +157,6 @@ export function DashboardColaboradorScreen() {
     data?.temIncidentesRecentes ?? false,
   );
 
-  const metrics = useMemo(
-    () => [
-      {
-        label: 'Média',
-        value: formatMediaGeral(data?.mediaGeral ?? null),
-        tone: 'accent' as const,
-      },
-      {
-        label: 'PDIs',
-        value: String(pdisAtivos.length),
-        tone: 'info' as const,
-      },
-      {
-        label: 'Em análise',
-        value: String(data?.avaliacoesEmAnalise.length ?? 0),
-        tone: 'warning' as const,
-      },
-    ],
-    [data?.avaliacoesEmAnalise.length, data?.mediaGeral, pdisAtivos.length],
-  );
-
   const handleAutoavaliacaoSubmit = useCallback(
     async (payload: { qualificacoes: string; investimento: string }) => {
       if (!user) throw new Error('Sessão inválida. Faça login novamente.');
@@ -195,16 +180,19 @@ export function DashboardColaboradorScreen() {
 
   if (isLoading) {
     return (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator color={theme.accent} size="large" />
-      </ThemedView>
+      <TabScreenContainer scrollable contentContainerStyle={styles.content}>
+        <SkeletonLoader variant="card" />
+        <SkeletonLoader variant="chart" height={180} />
+        <SkeletonLoader variant="row" count={2} />
+        <SkeletonLoader variant="list-item" count={3} />
+      </TabScreenContainer>
     );
   }
 
-  if (error) {
+  if (error || !user) {
     return (
       <ThemedView style={styles.centered}>
-        <ThemedText themeColor="danger">{error}</ThemedText>
+        <ThemedText themeColor="danger">{error ?? 'Sessão inválida.'}</ThemedText>
         <Button label="Tentar novamente" variant="secondary" onPress={() => void loadDashboard()} />
       </ThemedView>
     );
@@ -212,16 +200,36 @@ export function DashboardColaboradorScreen() {
 
   const hero = (
     <>
-      <PremiumHeader userName={user?.name ?? 'Colaborador'} role="colaborador" />
-      <MetricStrip metrics={metrics} />
+      <ColaboradorDashboardHeader user={user} />
+
       <GlassCard padding="compact">
-        <SectionTitle title="Desempenho" />
-        <DesempenhoSemaforo
-          status={data?.semaforoStatus ?? 'cinza'}
-          mediaEmpresa={data?.mediaGeral ?? null}
-          scopeLabel={data?.tempoEmpresaLabel ? `Tempo de casa: ${data.tempoEmpresaLabel}` : 'Status atual'}
-        />
+        <SectionTitle title="IMA — Índice de Maturidade Avaliativa" />
+        {data?.tempoEmpresaLabel ? (
+          <ThemedText themeColor="textSecondary" style={styles.tempoEmpresa}>
+            Tempo de casa: {data.tempoEmpresaLabel}
+          </ThemedText>
+        ) : null}
+        <ImaGaugeChart ima={data?.mediaGeral ?? null} size={260} />
       </GlassCard>
+
+      <View style={styles.quickActions}>
+        <Button
+          label="Meu PDI"
+          variant="secondary"
+          style={styles.quickActionButton}
+          onPress={() => navigation.navigate('PDIList')}
+        />
+        <Button
+          label="Autoavaliação"
+          variant="primary"
+          style={styles.quickActionButton}
+          disabled={!isAutoavaliacaoEnabled}
+          onPress={() => setIsAutoavaliacaoModalVisible(true)}
+        />
+      </View>
+
+      {bloqueioMotivo === 'deveres' ? <BloqueioDeveresHint visible /> : null}
+      {bloqueioMotivo === 'tempo_casa' ? <EmptyState message={MENSAGEM_BLOQUEIO_TEMPO_CASA} /> : null}
     </>
   );
 
@@ -248,7 +256,7 @@ export function DashboardColaboradorScreen() {
         {pdisAtivos.length > 0 ? (
           <GlassCard padding="compact">
             <SectionTitle
-              title="PDI"
+              title="PDI em andamento"
               actionLabel="Ver todos"
               onActionPress={() => navigation.navigate('PDIList')}
             />
@@ -315,19 +323,6 @@ export function DashboardColaboradorScreen() {
             ))}
           </CollapsibleSection>
         ) : null}
-
-        <GlassCard padding="compact">
-          <SectionTitle title="Autoavaliação" />
-          {bloqueioMotivo === 'deveres' ? <BloqueioDeveresHint visible /> : null}
-          {bloqueioMotivo === 'tempo_casa' ? (
-            <EmptyState message={MENSAGEM_BLOQUEIO_TEMPO_CASA} />
-          ) : null}
-          <Button
-            label="Nova solicitação"
-            disabled={!isAutoavaliacaoEnabled}
-            onPress={() => setIsAutoavaliacaoModalVisible(true)}
-          />
-        </GlassCard>
       </TabScreenContainer>
 
       <AutoavaliacaoModal
@@ -348,6 +343,18 @@ const styles = StyleSheet.create({
   },
   block: {
     gap: layout.space.md,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    gap: layout.space.md,
+  },
+  quickActionButton: {
+    flex: 1,
+  },
+  tempoEmpresa: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: -layout.space.sm,
   },
   listItem: {
     borderWidth: 1,

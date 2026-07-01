@@ -8,8 +8,14 @@ export type RespostaFormState = {
   evidencia: string;
 };
 
+/** Notas 0 ou 1 exigem justificativa (governança). */
 export function requiresJustificativa(nota: number | null): boolean {
-  return nota !== null;
+  return nota !== null && nota <= 1;
+}
+
+/** Nota 3 exige evidência (governança). */
+export function requiresEvidencia(nota: number | null): boolean {
+  return nota !== null && nota >= 3;
 }
 
 export function isRespostaCompleta(resposta: RespostaFormState): boolean {
@@ -17,7 +23,15 @@ export function isRespostaCompleta(resposta: RespostaFormState): boolean {
     return false;
   }
 
-  return resposta.justificativa.trim().length > 0;
+  if (requiresJustificativa(resposta.nota) && !resposta.justificativa.trim()) {
+    return false;
+  }
+
+  if (requiresEvidencia(resposta.nota) && !resposta.evidencia.trim()) {
+    return false;
+  }
+
+  return true;
 }
 
 export function getRespostaValidationMessage(resposta: RespostaFormState): string | null {
@@ -25,8 +39,12 @@ export function getRespostaValidationMessage(resposta: RespostaFormState): strin
     return 'Selecione uma nota.';
   }
 
-  if (!resposta.justificativa.trim()) {
-    return 'Informe a justificativa da nota atribuída.';
+  if (requiresJustificativa(resposta.nota) && !resposta.justificativa.trim()) {
+    return 'Informe a justificativa para notas 0 ou 1.';
+  }
+
+  if (requiresEvidencia(resposta.nota) && !resposta.evidencia.trim()) {
+    return 'Anexe uma evidência para nota 3.';
   }
 
   return null;

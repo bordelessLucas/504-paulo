@@ -1,48 +1,37 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  RefreshControl,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
+import { Card, Text, useTheme as usePaperTheme } from 'react-native-paper';
 
-import { ScreenHeader } from '@/components/navigation/screen-header';
+import { EstrategicoRankingPanel } from '@/components/gerencial/estrategico-ranking-panel';
+import { ImaGaugeChart } from '@/components/gerencial/ima-gauge-chart';
+import { RadarDesempenhoChart } from '@/components/gerencial/radar-desempenho-chart';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Spacing } from '@/constants/theme';
-import {
-  fetchDashboardExecutivo,
-  NINE_BOX_LABELS,
-  type DashboardExecutivoData,
-} from '@/features/executivo/api';
-import { useTheme } from '@/hooks/use-theme';
+import { SkeletonLoader } from '@/components/ui/skeleton-loader';
+import { layout } from '@/constants/theme';
+import { fetchGerencialDashboard, type GerencialDashboardData } from '@/features/gerencial/dashboard-api';
+import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card padding="compact" style={styles.metricCard}>
-      <ThemedText type="small" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText type="subtitle">{value}</ThemedText>
-    </Card>
-  );
-}
-
+/**
+ * Painel estratégico da diretoria — radar comparativo e rankings Top/Bottom 5.
+ * Rota de navegação: tab `VisaoEstrategica` (CEO / Admin).
+ */
 export function VisaoEstrategicaScreen() {
-  const theme = useTheme();
-  const [data, setData] = useState<DashboardExecutivoData | null>(null);
+  const paperTheme = usePaperTheme();
+  const isDesktopLayout = useIsDesktopLayout();
+  const [data, setData] = useState<GerencialDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
     try {
-      setData(await fetchDashboardExecutivo());
+      setData(await fetchGerencialDashboard());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar visão estratégica.');
     } finally {
@@ -58,8 +47,19 @@ export function VisaoEstrategicaScreen() {
 
   if (isLoading && !data) {
     return (
+      <TabScreenContainer scrollable contentContainerStyle={styles.content}>
+        <SkeletonLoader variant="title" />
+        <SkeletonLoader variant="chart" height={240} />
+        <SkeletonLoader variant="list-item" count={5} />
+      </TabScreenContainer>
+    );
+  }
+
+  if (error && !data) {
+    return (
       <ThemedView style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ThemedText themeColor="danger">{error}</ThemedText>
+        <Button label="Tentar novamente" variant="secondary" onPress={() => void load()} />
       </ThemedView>
     );
   }
@@ -69,108 +69,91 @@ export function VisaoEstrategicaScreen() {
       scrollable
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => void load()} />}>
-      <ScreenHeader title="Visão Estratégica" />
+      <View style={styles.header}>
+        <Text variant="headlineSmall" style={{ color: paperTheme.colors.onBackground, fontWeight: '700' }}>
+          Visão Estratégica
+        </Text>
+        <Text variant="bodyMedium" style={{ color: paperTheme.colors.onSurfaceVariant }}>
+          Comparativo de seções offshore e ranking de desempenho.
+        </Text>
+      </View>
 
-      {error ? (
-        <View style={styles.errorBox}>
-          <ThemedText themeColor="danger">{error}</ThemedText>
-          <Button label="Tentar novamente" variant="secondary" onPress={() => void load()} />
-        </View>
-      ) : null}
+      <Card mode="elevated" style={styles.card}>
+        <Card.Content style={styles.cardContent}>
+          <Text variant="titleMedium" style={{ color: paperTheme.colors.onSurface }}>
+            Radar offshore (12 eixos)
+          </Text>
+          <RadarDesempenhoChart
+            labels={data?.radarOffshore.labels ?? []}
+            valores={data?.radarOffshore.valores ?? []}
+            size={isDesktopLayout ? 320 : 280}
+          />
+        </Card.Content>
+      </Card>
 
-      {data ? (
-        <>
-          <View style={styles.metricsRow}>
-            <MetricCard label="Colaboradores" value={String(data.totalColaboradores)} />
-            <MetricCard
-              label="IMA médio"
-              value={data.imaMedio !== null ? data.imaMedio.toFixed(2) : '—'}
+      <Card mode="elevated" style={styles.card}>
+        <Card.Content style={styles.cardContent}>
+          <Text variant="titleMedium" style={{ color: paperTheme.colors.onSurface }}>
+            IMA consolidado
+          </Text>
+          <ImaGaugeChart ima={data?.ima ?? null} size={isDesktopLayout ? 300 : 260} />
+        </Card.Content>
+      </Card>
+
+      <View style={[styles.rankingsRow, isDesktopLayout && styles.rankingsRowDesktop]}>
+        <Card mode="elevated" style={[styles.card, styles.rankingCard]}>
+          <Card.Content style={styles.cardContent}>
+            <EstrategicoRankingPanel
+              title="Top 5 colaboradores"
+              items={data?.top5 ?? []}
+              tone="top"
             />
-            <MetricCard label="% Alta perf." value={`${data.pctAltaPerformance}%`} />
-            <MetricCard label="% Crítico" value={`${data.pctCritico}%`} />
-          </View>
+          </Card.Content>
+        </Card>
 
-          <Section title="Nine Box — amostra">
-            {data.nineBox.slice(0, 15).map((item) => (
-              <View key={item.id} style={[styles.row, { borderColor: theme.border }]}>
-                <View style={styles.rowMain}>
-                  <ThemedText type="cardTitle">{item.nome}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    IMA {item.ima?.toFixed(2) ?? '—'} · {NINE_BOX_LABELS[item.quadrante]}
-                  </ThemedText>
-                </View>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {item.acao}
-                </ThemedText>
-              </View>
-            ))}
-          </Section>
-
-          <Section title="Riscos de turnover / retenção">
-            {data.riscos.slice(0, 10).map((item) => (
-              <View key={item.id} style={[styles.row, { borderColor: theme.border }]}>
-                <ThemedText type="cardTitle">{item.nome}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  IMA {item.imaAtual?.toFixed(2) ?? '—'} · Risco: {item.risco}
-                </ThemedText>
-              </View>
-            ))}
-          </Section>
-
-          <Section title="Plano de sucessão">
-            {data.sucessao.length === 0 ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                Nenhuma posição cadastrada. Use o painel RH para registrar sucessores.
-              </ThemedText>
-            ) : (
-              data.sucessao.map((item) => (
-                <View key={item.id} style={[styles.row, { borderColor: theme.border }]}>
-                  <ThemedText type="cardTitle">{item.posicaoChave}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    Titular: {item.titularNome ?? '—'} · S1: {item.sucessor1Nome ?? '—'} (
-                    {item.prontidaoS1 ?? '—'})
-                  </ThemedText>
-                </View>
-              ))
-            )}
-          </Section>
-
-          <Section title="Por departamento">
-            {data.porDepartamento.map((dept) => (
-              <View key={dept.departamento} style={[styles.row, { borderColor: theme.border }]}>
-                <ThemedText type="cardTitle">{dept.departamento}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {dept.total} colab. · IMA {dept.imaMedio?.toFixed(2) ?? '—'}
-                </ThemedText>
-              </View>
-            ))}
-          </Section>
-        </>
-      ) : null}
+        <Card mode="elevated" style={[styles.card, styles.rankingCard]}>
+          <Card.Content style={styles.cardContent}>
+            <EstrategicoRankingPanel
+              title="Bottom 5 colaboradores"
+              items={data?.bottom5 ?? []}
+              tone="bottom"
+            />
+          </Card.Content>
+        </Card>
+      </View>
     </TabScreenContainer>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <Card padding="compact">
-      <ThemedText type="subtitle">{title}</ThemedText>
-      <View style={styles.sectionBody}>{children}</View>
-    </Card>
-  );
-}
-
 const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  content: { gap: Spacing.four },
-  metricsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  metricCard: { flex: 1, minWidth: 140 },
-  sectionBody: { gap: Spacing.two },
-  row: {
-    paddingVertical: Spacing.two,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: Spacing.half,
+  content: {
+    gap: layout.space.lg,
   },
-  rowMain: { gap: Spacing.half },
-  errorBox: { gap: Spacing.two },
+  header: {
+    gap: layout.space.xs,
+  },
+  card: {
+    borderRadius: layout.radius.lg,
+  },
+  cardContent: {
+    gap: layout.space.md,
+  },
+  rankingsRow: {
+    gap: layout.space.lg,
+  },
+  rankingsRowDesktop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  rankingCard: {
+    flex: 1,
+    minWidth: 280,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: layout.space.xl,
+    gap: layout.space.md,
+  },
 });

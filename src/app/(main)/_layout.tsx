@@ -1,10 +1,12 @@
-import { Redirect } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 
-import { AppNavigator } from '@/navigation/AppNavigator';
 import { useAuth } from '@/features/auth/auth-context';
-
 import { OfflineBootstrap } from '@/features/offline/offline-bootstrap';
 
+/**
+ * Layout autenticado — guard de sessão + providers offline.
+ * O conteúdo principal fica em `(main)/index.tsx` (padrão Expo Router).
+ */
 export default function MainLayout() {
   const { user, isLoading } = useAuth();
 
@@ -18,7 +20,9 @@ export default function MainLayout() {
 
   return (
     <OfflineBootstrap>
-      <AppNavigator />
+      <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+        <Stack.Screen name="index" />
+      </Stack>
     </OfflineBootstrap>
   );
 }

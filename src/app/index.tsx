@@ -15,7 +15,7 @@ export default function IndexScreen() {
     }
 
     if (user) {
-      router.replace('/(main)' as Href);
+      router.replace('/(main)/' as Href);
       return;
     }
 

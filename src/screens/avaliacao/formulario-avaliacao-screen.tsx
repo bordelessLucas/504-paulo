@@ -1,23 +1,21 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
-import { PDIsAbertoSection } from '@/components/pdi/PDIsAbertoSection';
-import { SyncStatusBar } from '@/components/SyncStatusBar';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+import { AvaliacaoGovernancaFields } from '@/components/avaliacao/avaliacao-governanca-fields';
+import { AvaliacaoScoreSegmented } from '@/components/avaliacao/avaliacao-score-segmented';
+import { AvaliacaoWizardProgress } from '@/components/avaliacao/avaliacao-wizard-progress';
 import { EscalaLegenda } from '@/components/avaliacao/escala-legenda';
-import { PontoMelhoriaAvaliacaoModal } from '@/components/avaliacao/ponto-melhoria-avaliacao-modal';
 import { NotionCheckbox } from '@/components/avaliacao/notion-checkbox';
-import { ScorePicker } from '@/components/avaliacao/score-picker';
+import { PontoMelhoriaAvaliacaoModal } from '@/components/avaliacao/ponto-melhoria-avaliacao-modal';
+import { PDIsAbertoSection } from '@/components/pdi/PDIsAbertoSection';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';
+import { SkeletonLoader } from '@/components/ui/skeleton-loader';
+import { useToast } from '@/components/ui/toast';
 import { SCREEN_PADDING_LEFT, SCREEN_PADDING_RIGHT } from '@/constants/layout';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Fonts, Radius, Spacing, layout } from '@/constants/theme';
 import {
   addPontoMelhoriaAvaliacao,
   fetchPerguntasPorAvaliador,
@@ -25,8 +23,8 @@ import {
   fetchPontosMelhoriaAnteriores,
   submitAvaliacao,
 } from '@/features/avaliacao/api';
-import { SECAO_OFFSHORE_LABELS, type SecaoOffshore } from '@/features/avaliacao/secoes-offshore';
 import { resolveTipoAvaliacaoPorRole, TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
+import { SECAO_OFFSHORE_LABELS, type SecaoOffshore } from '@/features/avaliacao/secoes-offshore';
 import {
   getRespostaValidationMessage,
   isRespostaCompleta,
@@ -42,12 +40,15 @@ import type { PerguntaAvaliacao, PontoMelhoria } from '@/types/supabase';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { getCachedPerguntas, saveAvaliacaoOffline } from '@/services/offlineStorage';
-import { useToast } from '@/components/ui/toast';
 
 type FormularioRoute = RouteProp<AvaliacaoStackParamList, 'FormularioAvaliacao'>;
 
 type RespostasState = Record<string, RespostaFormState>;
 type MelhoriasState = Record<string, boolean>;
+
+type WizardStep =
+  | { kind: 'intro' }
+  | { kind: 'secao'; secao: string; secaoLabel: string; perguntas: PerguntaAvaliacao[] };
 
 function createEmptyResposta(): RespostaFormState {
   return { nota: null, justificativa: '', evidencia: '' };
@@ -65,18 +66,51 @@ export function FormularioAvaliacaoScreen() {
   const { avaliadoId, avaliadoNome } = route.params;
 
   const tipoAvaliacao = resolveTipoAvaliacaoPorRole(role);
-  const { scrollPaddingBottom } = useTabScreenLayout();
+  const { scrollPaddingBottom, footerPaddingBottom } = useTabScreenLayout();
 
   const [perguntas, setPerguntas] = useState<PerguntaAvaliacao[]>([]);
   const [pontosMelhoria, setPontosMelhoria] = useState<PontoMelhoria[]>([]);
   const [respostas, setRespostas] = useState<RespostasState>({});
   const [melhorias, setMelhorias] = useState<MelhoriasState>({});
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [lastAvaliacaoId, setLastAvaliacaoId] = useState<string | null>(null);
   const [isPontoMelhoriaModalVisible, setIsPontoMelhoriaModalVisible] = useState(false);
+  const [touchedPerguntas, setTouchedPerguntas] = useState<Record<string, boolean>>({});
+
+  const wizardSteps = useMemo<WizardStep[]>(() => {
+    const grupos = new Map<string, PerguntaAvaliacao[]>();
+
+    for (const pergunta of perguntas) {
+      const secao = pergunta.secao_departamento ?? 'GERAL';
+      const lista = grupos.get(secao) ?? [];
+      lista.push(pergunta);
+      grupos.set(secao, lista);
+    }
+
+    const secaoSteps: WizardStep[] = [...grupos.entries()].map(([secao, perguntasSecao]) => {
+      const secaoLabel =
+        secao in SECAO_OFFSHORE_LABELS
+          ? SECAO_OFFSHORE_LABELS[secao as SecaoOffshore]
+          : secao;
+
+      return {
+        kind: 'secao' as const,
+        secao,
+        secaoLabel,
+        perguntas: perguntasSecao,
+      };
+    });
+
+    return [{ kind: 'intro' as const }, ...secaoSteps];
+  }, [perguntas]);
+
+  const currentStep = wizardSteps[currentStepIndex] ?? { kind: 'intro' as const };
+  const isLastStep = currentStepIndex >= wizardSteps.length - 1;
+  const isIntroStep = currentStep.kind === 'intro';
 
   const canSubmit = useMemo(() => {
     if (perguntas.length === 0) {
@@ -107,20 +141,17 @@ export function FormularioAvaliacaoScreen() {
             }),
           );
 
-      const pontosPromise = isOnline
-        ? fetchPontosMelhoriaAnteriores(avaliadoId)
-        : Promise.resolve([]);
+      const pontosPromise = isOnline ? fetchPontosMelhoriaAnteriores(avaliadoId) : Promise.resolve([]);
 
       const [perguntasLista, pontos] = await Promise.all([perguntasPromise, pontosPromise]);
 
       if (perguntasLista.length === 0 && !isOnline) {
-        throw new Error(
-          'Perguntas não disponíveis offline. Conecte-se à internet pelo menos uma vez.',
-        );
+        throw new Error('Perguntas não disponíveis offline. Conecte-se à internet pelo menos uma vez.');
       }
 
       setPerguntas(perguntasLista);
       setPontosMelhoria(pontos);
+      setCurrentStepIndex(0);
 
       const initialRespostas: RespostasState = {};
       perguntasLista.forEach((pergunta) => {
@@ -133,6 +164,7 @@ export function FormularioAvaliacaoScreen() {
         initialMelhorias[ponto.id] = false;
       });
       setMelhorias(initialMelhorias);
+      setTouchedPerguntas({});
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Erro ao carregar formulário.');
     } finally {
@@ -145,36 +177,60 @@ export function FormularioAvaliacaoScreen() {
   }, [loadForm]);
 
   function updateResposta(perguntaId: string, patch: Partial<RespostaFormState>) {
-    setRespostas((current) => ({
-      ...current,
-      [perguntaId]: {
-        ...(current[perguntaId] ?? createEmptyResposta()),
-        ...patch,
-      },
-    }));
+    setRespostas((current) => {
+      const previous = current[perguntaId] ?? createEmptyResposta();
+      const nextNota = patch.nota !== undefined ? patch.nota : previous.nota;
+
+      return {
+        ...current,
+        [perguntaId]: {
+          ...previous,
+          ...patch,
+          justificativa: nextNota !== null && nextNota > 1 ? '' : (patch.justificativa ?? previous.justificativa),
+          evidencia: nextNota !== null && nextNota < 3 ? '' : (patch.evidencia ?? previous.evidencia),
+        },
+      };
+    });
     setFeedback(null);
   }
 
-  const perguntasPorSecao = useMemo(() => {
-    const grupos = new Map<string, PerguntaAvaliacao[]>();
-
-    for (const pergunta of perguntas) {
-      const secao = pergunta.secao_departamento ?? 'GERAL';
-      const lista = grupos.get(secao) ?? [];
-      lista.push(pergunta);
-      grupos.set(secao, lista);
+  function validateCurrentStep(): boolean {
+    if (currentStep.kind !== 'secao') {
+      return true;
     }
 
-    return [...grupos.entries()];
-  }, [perguntas]);
+    for (const pergunta of currentStep.perguntas) {
+      const resposta = respostas[pergunta.id] ?? createEmptyResposta();
+      const validationMessage = getRespostaValidationMessage(resposta);
 
-  const subtituloFormulario = useMemo(() => {
-    const total = perguntas.length;
-    if (total <= 3) {
-      return `${TIPO_AVALIACAO_LABELS[tipoAvaliacao]} · ${total} critério(s) · escala 0 a 3`;
+      if (validationMessage) {
+        setTouchedPerguntas((current) => ({ ...current, [pergunta.id]: true }));
+        setFeedback(validationMessage);
+        return false;
+      }
     }
-    return `${TIPO_AVALIACAO_LABELS[tipoAvaliacao]} · ${total} critérios offshore · escala 0 a 3`;
-  }, [perguntas.length, tipoAvaliacao]);
+
+    setFeedback(null);
+    return true;
+  }
+
+  function handleNextStep() {
+    if (!validateCurrentStep()) {
+      return;
+    }
+
+    if (isLastStep) {
+      void handleSubmit();
+      return;
+    }
+
+    setCurrentStepIndex((index) => Math.min(index + 1, wizardSteps.length - 1));
+  }
+
+  function handlePreviousStep() {
+    setFeedback(null);
+    setCurrentStepIndex((index) => Math.max(index - 1, 0));
+  }
 
   async function handleSubmit() {
     if (!user || !canSubmit) {
@@ -182,9 +238,7 @@ export function FormularioAvaliacaoScreen() {
     }
 
     for (const pergunta of perguntas) {
-      const validationMessage = getRespostaValidationMessage(
-        respostas[pergunta.id] ?? createEmptyResposta(),
-      );
+      const validationMessage = getRespostaValidationMessage(respostas[pergunta.id] ?? createEmptyResposta());
 
       if (validationMessage) {
         setFeedback(validationMessage);
@@ -284,10 +338,19 @@ export function FormularioAvaliacaoScreen() {
     [finishAvaliacaoFlow, lastAvaliacaoId],
   );
 
+  const subtituloFormulario = useMemo(() => {
+    const total = perguntas.length;
+    if (total <= 3) {
+      return `${TIPO_AVALIACAO_LABELS[tipoAvaliacao]} · ${total} critério(s) · escala 0 a 3`;
+    }
+    return `${TIPO_AVALIACAO_LABELS[tipoAvaliacao]} · ${total} critérios · uma seção por vez`;
+  }, [perguntas.length, tipoAvaliacao]);
+
   if (isLoading) {
     return (
       <ThemedView style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <SkeletonLoader variant="title" />
+        <SkeletonLoader variant="card" count={2} />
       </ThemedView>
     );
   }
@@ -301,9 +364,11 @@ export function FormularioAvaliacaoScreen() {
     );
   }
 
+  const progressLabel =
+    currentStep.kind === 'secao' ? currentStep.secaoLabel : 'Preparação da avaliação';
+
   return (
     <ThemedView style={styles.container}>
-      <SyncStatusBar />
       <View style={styles.safeArea}>
         <ScrollView
           contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPaddingBottom }]}
@@ -316,132 +381,124 @@ export function FormularioAvaliacaoScreen() {
             </ThemedText>
           </View>
 
-          <EscalaLegenda />
+          <AvaliacaoWizardProgress
+            currentStep={currentStepIndex + 1}
+            totalSteps={wizardSteps.length}
+            sectionLabel={progressLabel}
+          />
 
-          <PDIsAbertoSection colaboradorId={avaliadoId} />
+          {isIntroStep ? (
+            <View style={styles.section}>
+              <EscalaLegenda />
+              <PDIsAbertoSection colaboradorId={avaliadoId} />
 
-          {pontosMelhoria.length > 0 ? (
-            <View style={[styles.section, styles.card, { backgroundColor: theme.backgroundElement }]}>
-              <ThemedText type="subtitle">Pontos da avaliação anterior</ThemedText>
-              <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-                Itens com nota 2 ou 3 na última avaliação do colaborador.
-              </ThemedText>
+              {pontosMelhoria.length > 0 ? (
+                <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+                  <ThemedText type="subtitle">Pontos da avaliação anterior</ThemedText>
+                  <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
+                    Itens com nota 2 ou 3 na última avaliação do colaborador.
+                  </ThemedText>
 
-              {pontosMelhoria.map((ponto) => (
-                <View key={ponto.id} style={styles.melhoriaItem}>
-                  <ThemedText style={styles.melhoriaDescricao}>{ponto.descricao}</ThemedText>
-                  <NotionCheckbox
-                    checked={melhorias[ponto.id] ?? false}
-                    label="O colaborador melhorou neste aspecto?"
-                    onToggle={() =>
-                      setMelhorias((current) => ({
-                        ...current,
-                        [ponto.id]: !current[ponto.id],
-                      }))
-                    }
-                  />
+                  {pontosMelhoria.map((ponto) => (
+                    <View key={ponto.id} style={styles.melhoriaItem}>
+                      <ThemedText style={styles.melhoriaDescricao}>{ponto.descricao}</ThemedText>
+                      <NotionCheckbox
+                        checked={melhorias[ponto.id] ?? false}
+                        label="O colaborador melhorou neste aspecto?"
+                        onToggle={() =>
+                          setMelhorias((current) => ({
+                            ...current,
+                            [ponto.id]: !current[ponto.id],
+                          }))
+                        }
+                      />
+                    </View>
+                  ))}
                 </View>
-              ))}
+              ) : null}
+
+              {perguntas.length === 0 ? (
+                <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
+                  Nenhuma pergunta encontrada para seu papel. Verifique o seed de perguntas no Supabase.
+                </ThemedText>
+              ) : (
+                <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
+                  Toque em &quot;Próxima seção&quot; para iniciar a avaliação.
+                </ThemedText>
+              )}
             </View>
           ) : null}
 
-          <View style={styles.section}>
-            <ThemedText type="subtitle">Perguntas da avaliação</ThemedText>
-
-            {perguntas.length === 0 ? (
-              <ThemedText themeColor="textSecondary" style={styles.sectionHint}>
-                Nenhuma pergunta encontrada para seu papel. Execute a migration offshore no Supabase
-                ou verifique o seed de perguntas.
-              </ThemedText>
-            ) : (
-              perguntasPorSecao.map(([secao, perguntasSecao]) => {
-                const secaoLabel =
-                  secao in SECAO_OFFSHORE_LABELS
-                    ? SECAO_OFFSHORE_LABELS[secao as SecaoOffshore]
-                    : secao;
+          {currentStep.kind === 'secao'
+            ? currentStep.perguntas.map((pergunta, index) => {
+                const resposta = respostas[pergunta.id] ?? createEmptyResposta();
+                const validationMessage = getRespostaValidationMessage(resposta);
+                const showValidation =
+                  Boolean(touchedPerguntas[pergunta.id]) &&
+                  validationMessage !== null &&
+                  !isRespostaCompleta(resposta);
 
                 return (
-                  <View key={secao} style={styles.section}>
-                    <ThemedText type="subtitle">{secaoLabel}</ThemedText>
-                    {perguntasSecao.map((pergunta, index) => {
-                      const resposta = respostas[pergunta.id] ?? createEmptyResposta();
-                      const validationMessage = getRespostaValidationMessage(resposta);
-                      const showValidation =
-                        resposta.nota !== null &&
-                        validationMessage !== null &&
-                        !isRespostaCompleta(resposta);
+                  <View
+                    key={pergunta.id}
+                    style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+                    <ThemedText style={styles.perguntaIndex}>
+                      {pergunta.codigo ?? `Pergunta ${index + 1}`}
+                    </ThemedText>
+                    <ThemedText style={styles.perguntaTexto}>{pergunta.descricao}</ThemedText>
 
-                      return (
-                        <View
-                          key={pergunta.id}
-                          style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
-                          <ThemedText style={styles.perguntaIndex}>
-                            {pergunta.codigo ?? `Pergunta ${index + 1}`}
-                          </ThemedText>
-                          <ThemedText style={styles.perguntaTexto}>{pergunta.descricao}</ThemedText>
+                    <AvaliacaoScoreSegmented
+                      value={resposta.nota}
+                      onChange={(nota) => {
+                        setTouchedPerguntas((current) => ({ ...current, [pergunta.id]: true }));
+                        updateResposta(pergunta.id, { nota });
+                      }}
+                    />
 
-                          <ScorePicker
-                            value={resposta.nota}
-                            onChange={(nota) =>
-                              updateResposta(pergunta.id, {
-                                nota,
-                                evidencia: '',
-                              })
-                            }
-                          />
-
-                          {resposta.nota !== null ? (
-                            <View style={styles.fieldGroup}>
-                              <ThemedText style={styles.fieldLabel}>Justificativa *</ThemedText>
-                              <TextInput
-                                multiline
-                                placeholder="Descreva o motivo da nota atribuída"
-                                placeholderTextColor={theme.placeholder}
-                                style={[
-                                  styles.textInput,
-                                  {
-                                    color: theme.text,
-                                    backgroundColor: theme.background,
-                                    borderColor: showValidation ? theme.danger : theme.border,
-                                  },
-                                ]}
-                                value={resposta.justificativa}
-                                onChangeText={(justificativa) =>
-                                  updateResposta(pergunta.id, { justificativa })
-                                }
-                              />
-                            </View>
-                          ) : null}
-
-                          {showValidation ? (
-                            <ThemedText themeColor="danger" style={styles.fieldError}>
-                              {validationMessage}
-                            </ThemedText>
-                          ) : null}
-                        </View>
-                      );
-                    })}
+                    <AvaliacaoGovernancaFields
+                      resposta={resposta}
+                      showValidation={showValidation}
+                      validationMessage={validationMessage}
+                      onChange={(patch) => updateResposta(pergunta.id, patch)}
+                    />
                   </View>
                 );
               })
-            )}
-          </View>
+            : null}
 
           {feedback ? (
             <ThemedText
-              themeColor={feedback.includes('sucesso') ? 'textSecondary' : 'danger'}
+              themeColor={feedback.includes('enviada') ? 'textSecondary' : 'danger'}
               style={styles.feedback}>
               {feedback}
             </ThemedText>
           ) : null}
-
-          <Button
-            label="Salvar avaliação"
-            isLoading={isSubmitting}
-            disabled={!canSubmit}
-            onPress={() => void handleSubmit()}
-          />
         </ScrollView>
+
+        <View
+          style={[
+            styles.footer,
+            {
+              paddingBottom: footerPaddingBottom,
+              borderTopColor: theme.border,
+              backgroundColor: theme.background,
+            },
+          ]}>
+          <Button
+            label="Voltar"
+            variant="ghost"
+            disabled={currentStepIndex === 0 || isSubmitting}
+            onPress={handlePreviousStep}
+            style={styles.footerButton}
+          />
+          <Button
+            label={isLastStep ? 'Salvar avaliação' : 'Próxima seção'}
+            isLoading={isSubmitting}
+            disabled={isLastStep ? !canSubmit : perguntas.length === 0}
+            onPress={handleNextStep}
+            style={styles.footerButton}
+          />
+        </View>
       </View>
 
       <PontoMelhoriaAvaliacaoModal
@@ -514,32 +571,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  fieldGroup: {
-    gap: Spacing.one,
-  },
-  fieldLabel: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 13,
-    lineHeight: 18,
-    opacity: 0.85,
-  },
-  textInput: {
-    minHeight: 72,
-    borderWidth: 1,
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    fontFamily: Fonts.sans,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlignVertical: 'top',
-  },
-  fieldError: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
   feedback: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  footer: {
+    flexDirection: 'row',
+    gap: layout.space.md,
+    paddingHorizontal: SCREEN_PADDING_LEFT,
+    paddingTop: layout.space.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  footerButton: {
+    flex: 1,
   },
 });

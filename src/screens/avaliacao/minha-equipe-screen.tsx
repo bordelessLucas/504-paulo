@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native';
 
-import { SyncStatusBar } from '@/components/SyncStatusBar';
 import { ScreenHeader } from '@/components/navigation/screen-header';
 import { StatusBadge } from '@/components/premium/StatusBadge';
 import { ThemedText } from '@/components/themed-text';
@@ -211,7 +210,6 @@ export function MinhaEquipeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SyncStatusBar />
       <View style={[styles.safeArea, { paddingTop: listInsets.paddingTop }]}>
         <View style={styles.header}>
           <ScreenHeader title="Minha equipe" variant="compact" />

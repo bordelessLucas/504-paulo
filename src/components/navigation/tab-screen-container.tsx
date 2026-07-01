@@ -41,7 +41,7 @@ export function TabScreenContainer({
 }: TabScreenContainerProps) {
   const { scrollPaddingBottom } = useTabScreenLayout();
   const isDesktopLayout = useIsDesktopLayout();
-  const listInsets = useListContentStyle({ safeTop: !isDesktopLayout, withTabBar: false });
+  const listInsets = useListContentStyle({ safeTop: !isDesktopLayout });
 
   const horizontalInsets = withHorizontalPadding
     ? {
