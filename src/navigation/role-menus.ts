@@ -18,6 +18,18 @@ export type TabMenuItem = {
   icon: TabIconName;
 };
 
+export type MenuSection = {
+  title: string;
+  items: TabMenuItem[];
+};
+
+function menuSection(title: string, ...names: (keyof MainTabParamList)[]): MenuSection {
+  return {
+    title,
+    items: names.map((name) => TAB_DEFINITIONS[name]),
+  };
+}
+
 const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
   DashboardColaborador: {
     name: 'DashboardColaborador',
@@ -210,9 +222,77 @@ export function canAccessTab(role: UserRole, tabName: keyof MainTabParamList): b
   return getTabsForRole(role).some((item) => item.name === tabName);
 }
 
-/** @deprecated Drawer removido — use getTabsForRole */
+/** Sidebar organizada por grupos semânticos — melhora escaneabilidade e hierarquia. */
+export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
+  switch (role) {
+    case 'colaborador':
+      return [
+        menuSection('Principal', 'DashboardColaborador', 'MinhasAvaliacoes'),
+        menuSection('Conta', 'Perfil'),
+      ];
+
+    case 'supervisor':
+      return [
+        menuSection('Operações', 'PainelAvaliacao', 'MinhaEquipe'),
+        menuSection('Referência', 'Metodologia'),
+        menuSection('Conta', 'Perfil'),
+      ];
+
+    case 'gestor':
+      return [
+        menuSection('Operações', 'PainelAvaliacao', 'MinhaEquipe', 'PainelReajuste'),
+        menuSection('Referência', 'Metodologia'),
+        menuSection('Conta', 'Perfil'),
+      ];
+
+    case 'gerente':
+      return [
+        menuSection('Gestão', 'PainelReajuste', 'PainelAnualEstrategico', 'PainelAvaliacao', 'MinhaEquipe'),
+        menuSection('Referência', 'Metodologia'),
+        menuSection('Conta', 'Perfil'),
+      ];
+
+    case 'rh':
+      return [
+        menuSection('Fluxo', 'Aprovacoes', 'PainelAvaliacao'),
+        menuSection('Administração', 'AdminDashboard', 'Compliance', 'PainelAnualEstrategico'),
+        menuSection('Referência', 'Metodologia'),
+        menuSection('Conta', 'Perfil'),
+      ];
+
+    case 'ceo':
+      return [
+        menuSection('Executivo', 'DashboardsGerenciais', 'VisaoEstrategica', 'PainelAnualEstrategico', 'Compliance'),
+        menuSection('Operações', 'PainelAvaliacao', 'AdminDashboard', 'Aprovacoes'),
+        menuSection('Referência', 'Metodologia'),
+        menuSection('Conta', 'Perfil'),
+      ];
+
+    case 'admin':
+      return [
+        menuSection('Fluxo', 'Aprovacoes', 'PainelAvaliacao'),
+        menuSection(
+          'Administração',
+          'AdminDashboard',
+          'DashboardsGerenciais',
+          'VisaoEstrategica',
+          'Compliance',
+          'PainelAnualEstrategico',
+        ),
+        menuSection('Referência', 'Metodologia'),
+        menuSection('Conta', 'Perfil'),
+      ];
+
+    default:
+      return [
+        menuSection('Principal', 'DashboardColaborador'),
+        menuSection('Conta', 'Perfil'),
+      ];
+  }
+}
+
 export function getMenuItemsForRole(role: UserRole) {
-  return getTabsForRole(role);
+  return getMenuSectionsForRole(role).flatMap((section) => section.items);
 }
 
 /** @deprecated Drawer removido — use getPrimaryTabForRole */

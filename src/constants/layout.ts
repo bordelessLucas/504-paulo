@@ -28,7 +28,10 @@ export const TAB_FOOTER_EXTRA_PADDING = Spacing.three;
 export const SPLIT_LAYOUT_MIN_WIDTH = 768;
 
 /** Largura da sidebar fixa no layout desktop. */
-export const DESKTOP_SIDEBAR_WIDTH = 260;
+export const DESKTOP_SIDEBAR_WIDTH = 272;
+
+/** Largura do drawer deslizante no mobile. */
+export const MOBILE_DRAWER_WIDTH = 300;
 
 /** Insets padrão de conteúdo de tela em mobile. */
 export function getScreenContentInsets(options?: { top?: number; bottom?: number }) {

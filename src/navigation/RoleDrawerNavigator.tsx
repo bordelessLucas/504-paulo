@@ -2,7 +2,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 
 import { AppNavigationBridge } from '@/navigation/app-navigation-bridge';
 import { NotionDrawerContent } from '@/components/navigation/notion-drawer-content';
-import { DESKTOP_SIDEBAR_WIDTH } from '@/constants/layout';
+import { DESKTOP_SIDEBAR_WIDTH, MOBILE_DRAWER_WIDTH } from '@/constants/layout';
 import { useAuth } from '@/features/auth/auth-context';
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { brandRgb } from '@/constants/brand';
@@ -59,7 +59,7 @@ export function RoleDrawerNavigator({ role }: RoleDrawerNavigatorProps) {
         lazy: false,
         freezeOnBlur: true,
         drawerStyle: {
-          width: isDesktopLayout ? DESKTOP_SIDEBAR_WIDTH : 300,
+          width: isDesktopLayout ? DESKTOP_SIDEBAR_WIDTH : MOBILE_DRAWER_WIDTH,
           backgroundColor: theme.background,
           borderRightWidth: isDesktopLayout ? 1 : 0,
           borderRightColor: theme.border,

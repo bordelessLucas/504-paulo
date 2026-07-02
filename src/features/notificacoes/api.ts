@@ -74,3 +74,47 @@ export async function markAllNotificationsAsRead(): Promise<void> {
     throw new Error(error.message);
   }
 }
+
+/** Dispara notificação de teste para o usuário logado (dev / QA). */
+export async function sendTestNotification(
+  destinatarioId: string,
+): Promise<Notificacao> {
+  const titulo = 'Notificação de teste';
+  const mensagem =
+    'Alerta simulado para validar o toast em tempo real. Toque em Ver para testar a navegação.';
+  const tipo: TipoNotificacao = 'pdi_vencendo';
+
+  // RPC opcional — migration 20260702120000. Sem ela, usa fallback local.
+  // @ts-expect-error RPC gerada após aplicar migration no Supabase
+  const { data: rpcData, error: rpcError } = await supabase.rpc('enviar_notificacao_teste', {
+    p_titulo: titulo,
+    p_mensagem: mensagem,
+    p_tipo: tipo,
+  });
+
+  const rpcId = typeof rpcData === 'string' ? rpcData : null;
+
+  if (!rpcError && rpcId) {
+    const { data, error } = await supabase
+      .from('notificacoes')
+      .select('id, destinatario_id, tipo, titulo, mensagem, metadata, lida, created_at')
+      .eq('id', rpcId)
+      .single();
+
+    if (!error && data) {
+      return mapNotificacao(data as NotificacaoRow);
+    }
+  }
+
+  // Fallback local quando o RPC ainda não foi aplicado no Supabase.
+  return {
+    id: `local-test-${Date.now()}`,
+    destinatarioId,
+    tipo,
+    titulo,
+    mensagem,
+    metadata: { teste: true, origem: 'local' },
+    lida: false,
+    createdAt: new Date().toISOString(),
+  };
+}

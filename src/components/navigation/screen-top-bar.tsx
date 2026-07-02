@@ -12,7 +12,6 @@ import { useTheme } from '@/hooks/use-theme';
 import { hapticSelection } from '@/lib/haptics';
 import { useNotifications } from '@/features/notificacoes/notifications-context';
 import { useAppNavigation } from '@/navigation/app-navigation-context';
-import { useNavigationLayout } from '@/navigation/navigation-layout-context';
 import { brandRgb } from '@/constants/brand';
 
 export function ScreenTopBar() {
@@ -20,7 +19,6 @@ export function ScreenTopBar() {
   const theme = useTheme();
   const { role } = useAuthRole();
   const isDesktopLayout = useIsDesktopLayout();
-  const { hasBottomTabs } = useNavigationLayout();
   const { toggleDrawer, drawerStatus } = useAppNavigation();
   const { unreadCount, openPanel } = useNotifications();
   const isDrawerOpen = drawerStatus === 'open';
@@ -54,20 +52,16 @@ export function ScreenTopBar() {
             borderColor: brandRgb(theme.accent, isDrawerOpen ? 0.35 : 0.2),
           },
         ]}>
-        {hasBottomTabs ? (
-          <View style={styles.sideSlot} />
-        ) : (
-          <HeaderIconButton
-            accessibilityLabel={isDrawerOpen ? 'Fechar menu de navegação' : 'Abrir menu de navegação'}
-            icon={isDrawerOpen ? 'close' : 'menu'}
-            variant="ghost"
-            onPress={() => {
-              void hapticSelection();
-              toggleDrawer();
-            }}
-            tintColor={isDrawerOpen ? theme.accentSoft : theme.text}
-          />
-        )}
+        <HeaderIconButton
+          accessibilityLabel={isDrawerOpen ? 'Fechar menu de navegação' : 'Abrir menu de navegação'}
+          icon={isDrawerOpen ? 'close' : 'menu'}
+          variant="ghost"
+          onPress={() => {
+            void hapticSelection();
+            toggleDrawer();
+          }}
+          tintColor={isDrawerOpen ? theme.accentSoft : theme.text}
+        />
         {role ? (
           <View style={styles.roleChip} pointerEvents="none">
             <RoleContextChip role={role} />
@@ -121,9 +115,5 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  sideSlot: {
-    width: 44,
-    height: 44,
   },
 });

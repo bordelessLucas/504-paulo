@@ -87,6 +87,7 @@ export function NotificationsPanel() {
     markAsRead,
     markAllAsRead,
     refreshNotifications,
+    fireTestNotification,
   } = useNotifications();
 
   const handleOpen = useCallback(() => {
@@ -174,6 +175,19 @@ export function NotificationsPanel() {
               ))}
             </ScrollView>
           )}
+
+          {__DEV__ ? (
+            <View style={styles.devSection}>
+              <Button
+                label="Enviar notificação de teste"
+                variant="secondary"
+                onPress={() => void fireTestNotification()}
+              />
+              <ThemedText themeColor="textMuted" type="small" style={styles.devHint}>
+                Dev only — dispara o toast sem reiniciar o app.
+              </ThemedText>
+            </View>
+          ) : null}
         </View>
       </View>
     </Modal>
@@ -270,5 +284,16 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.88,
+  },
+  devSection: {
+    gap: Spacing.one,
+    paddingTop: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(128,128,128,0.25)',
+  },
+  devHint: {
+    textAlign: 'center',
+    fontSize: 11,
+    lineHeight: 14,
   },
 });

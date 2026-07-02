@@ -8,15 +8,21 @@ import { useTheme } from '@/hooks/use-theme';
 
 type PdiExecutivoCardProps = {
   stats: PdiEstatisticas;
+  /** Remove borda externa quando embutido em GlassCard do dashboard. */
+  embedded?: boolean;
 };
 
-export function PdiExecutivoCard({ stats }: PdiExecutivoCardProps) {
+export function PdiExecutivoCard({ stats, embedded = false }: PdiExecutivoCardProps) {
   const theme = useTheme();
   const alertaVencidos = stats.percentualVencidos > 10;
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.background, borderColor: theme.border }]}>
-      <ThemedText type="subtitle">Saúde dos PDIs</ThemedText>
+    <View
+      style={[
+        embedded ? styles.embedded : styles.card,
+        !embedded && { backgroundColor: theme.background, borderColor: theme.border },
+      ]}>
+      {!embedded ? <ThemedText type="subtitle">Saúde dos PDIs</ThemedText> : null}
       <ThemedText themeColor="textSecondary" style={styles.description}>
         Planos de desenvolvimento ativos e taxa de conclusão na empresa.
       </ThemedText>
@@ -99,6 +105,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Radius.md,
     padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  embedded: {
     gap: Spacing.three,
   },
   description: {

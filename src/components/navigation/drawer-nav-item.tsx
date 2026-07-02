@@ -31,26 +31,28 @@ export function DrawerNavItem({
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,
-        {
-          backgroundColor: isActive
-            ? brandRgb(theme.accent, 0.16)
-            : brandRgb(theme.primary, 0.35),
-          borderColor: isActive ? brandRgb(theme.accent, 0.45) : theme.border,
+        isActive && {
+          backgroundColor: brandRgb(theme.accent, 0.14),
         },
         pressed && { opacity: PressedOpacity },
       ]}>
       {isActive ? (
         <View style={[styles.activeBar, { backgroundColor: theme.accent }]} />
-      ) : (
-        <View style={styles.activeBarPlaceholder} />
-      )}
+      ) : null}
 
-      <Ionicons
-        color={isActive ? theme.accent : theme.textSecondary}
-        name={icon}
-        size={22}
-        style={styles.icon}
-      />
+      <View
+        style={[
+          styles.iconWrap,
+          isActive && {
+            backgroundColor: brandRgb(theme.accent, 0.18),
+          },
+        ]}>
+        <Ionicons
+          color={isActive ? theme.accent : theme.textSecondary}
+          name={icon}
+          size={20}
+        />
+      </View>
 
       <Text
         numberOfLines={1}
@@ -79,26 +81,30 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 48,
+    minHeight: 44,
     marginHorizontal: layout.space.sm,
-    marginBottom: layout.space.xs,
+    marginBottom: 2,
     paddingRight: layout.space.md,
+    paddingLeft: layout.space.xs,
     borderRadius: layout.radius.md,
-    borderWidth: 1,
+    gap: layout.space.sm,
     overflow: 'hidden',
   },
   activeBar: {
+    position: 'absolute',
+    left: 0,
+    top: 6,
+    bottom: 6,
     width: 3,
-    alignSelf: 'stretch',
-    marginRight: layout.space.sm,
+    borderRadius: 2,
   },
-  activeBarPlaceholder: {
-    width: 3,
-    marginRight: layout.space.sm,
-    opacity: 0,
-  },
-  icon: {
-    marginRight: layout.space.sm,
+  iconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: layout.radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: layout.space.xs,
   },
   label: {
     flex: 1,
@@ -112,7 +118,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
-    marginLeft: layout.space.xs,
   },
   badgeText: {
     fontFamily: Fonts.sansSemiBold,
