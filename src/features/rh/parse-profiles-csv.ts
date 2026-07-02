@@ -1,5 +1,3 @@
-import Papa from 'papaparse';
-
 import {
   normalizeNivelIrata,
   normalizeProfileStatus,
@@ -230,7 +228,8 @@ function mapRawRow(
   };
 }
 
-export function parseProfilesCsv(csvContent: string): ParseProfilesResult {
+export async function parseProfilesCsv(csvContent: string): Promise<ParseProfilesResult> {
+  const Papa = (await import('papaparse')).default;
   const parsed = Papa.parse<Record<string, string>>(csvContent, {
     header: true,
     skipEmptyLines: true,

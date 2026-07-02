@@ -1,5 +1,3 @@
-import * as DocumentPicker from 'expo-document-picker';
-import * as ImagePicker from 'expo-image-picker';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { Button, Text, useTheme as usePaperTheme } from 'react-native-paper';
 
@@ -19,6 +17,7 @@ type AvaliacaoGovernancaFieldsProps = {
 };
 
 async function pickEvidencia(): Promise<string | null> {
+  const ImagePicker = await import('expo-image-picker');
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== 'granted') {
     return null;
@@ -34,6 +33,7 @@ async function pickEvidencia(): Promise<string | null> {
     return `Imagem: ${imageResult.assets[0].fileName ?? imageResult.assets[0].uri.split('/').pop() ?? 'anexo'}`;
   }
 
+  const DocumentPicker = await import('expo-document-picker');
   const docResult = await DocumentPicker.getDocumentAsync({
     copyToCacheDirectory: true,
     multiple: false,

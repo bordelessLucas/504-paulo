@@ -1,10 +1,14 @@
-import * as ImagePicker from 'expo-image-picker';
-
 import { validateChangePassword, type ChangePasswordFieldError } from '@/features/perfil/validation';
 import { supabase } from '@/lib/supabase';
 
 const AVATAR_BUCKET = 'avatars';
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
+type AvatarAsset = {
+  uri: string;
+  fileSize?: number | null;
+  mimeType?: string;
+};
 
 function resolveImageContentType(fileExt: string): string {
   if (fileExt === 'png') {
@@ -24,14 +28,16 @@ function buildAvatarPublicUrl(filePath: string): string {
 }
 
 export async function requestAvatarLibraryPermission(): Promise<boolean> {
+  const ImagePicker = await import('expo-image-picker');
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   return status === 'granted';
 }
 
-export async function pickAvatarImage(): Promise<ImagePicker.ImagePickerAsset | null> {
-  const hasPermission = await requestAvatarLibraryPermission();
+export async function pickAvatarImage(): Promise<AvatarAsset | null> {
+  const ImagePicker = await import('expo-image-picker');
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-  if (!hasPermission) {
+  if (status !== 'granted') {
     throw new Error('Permissão negada para acessar a galeria de fotos.');
   }
 
@@ -51,7 +57,7 @@ export async function pickAvatarImage(): Promise<ImagePicker.ImagePickerAsset | 
 
 export async function uploadProfileAvatar(
   userId: string,
-  asset: ImagePicker.ImagePickerAsset,
+  asset: AvatarAsset,
 ): Promise<string> {
   if (asset.fileSize && asset.fileSize > MAX_AVATAR_BYTES) {
     throw new Error('A imagem deve ter no máximo 5 MB.');

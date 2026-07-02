@@ -1,6 +1,3 @@
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-
 import { STATUS_SOLICITACAO_LABELS } from '@/features/colaborador/solicitacoes-api';
 import type { ColaboradorFichaData } from '@/features/gerencial/ficha-colaborador-api';
 import { getSemaforoItem, SEMAFORO_ITENS } from '@/features/gerencial/semaforo';
@@ -337,6 +334,7 @@ function buildLoteHtml(fichas: ColaboradorFichaData[], titulo: string, departame
 }
 
 async function sharePdf(uri: string, dialogTitle: string) {
+  const Sharing = await import('expo-sharing');
   const canShare = await Sharing.isAvailableAsync();
 
   if (canShare) {
@@ -352,6 +350,7 @@ async function sharePdf(uri: string, dialogTitle: string) {
 }
 
 export async function exportColaboradorFichaPdf(ficha: ColaboradorFichaData) {
+  const Print = await import('expo-print');
   const html = buildFichaHtml(ficha);
   const { uri } = await Print.printToFileAsync({ html });
   await sharePdf(uri, `Ficha — ${ficha.profile.nome}`);
@@ -367,6 +366,7 @@ export async function exportFichasLotePdf(params: {
     throw new Error('Nenhuma ficha para exportar.');
   }
 
+  const Print = await import('expo-print');
   const html = buildLoteHtml(params.fichas, params.titulo, params.departamento);
   const { uri } = await Print.printToFileAsync({ html });
   const label = params.departamento

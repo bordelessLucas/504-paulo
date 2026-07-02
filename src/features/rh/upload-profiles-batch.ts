@@ -62,7 +62,7 @@ export type UploadProfilesResult = {
 };
 
 export async function uploadProfilesFromCsv(csvContent: string): Promise<UploadProfilesResult> {
-  const { rows, errors: parseErrors } = parseProfilesCsv(csvContent);
+  const { rows, errors: parseErrors } = await parseProfilesCsv(csvContent);
   const lineErrors = [...parseErrors];
 
   if (rows.length === 0) {

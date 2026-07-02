@@ -33,7 +33,6 @@ export function RoleDrawerNavigator({ role }: RoleDrawerNavigatorProps) {
 
   return (
     <Drawer.Navigator
-      detachInactiveScreens={false}
       initialRouteName={initialRouteName}
       drawerContent={(props) => (
         <NotionDrawerContent
@@ -56,7 +55,7 @@ export function RoleDrawerNavigator({ role }: RoleDrawerNavigatorProps) {
         headerShown: false,
         swipeEnabled: !isDesktopLayout,
         overlayColor: brandRgb(theme.primary, 0.55),
-        lazy: false,
+        lazy: true,
         freezeOnBlur: true,
         drawerStyle: {
           width: isDesktopLayout ? DESKTOP_SIDEBAR_WIDTH : MOBILE_DRAWER_WIDTH,

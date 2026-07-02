@@ -3,35 +3,62 @@ import type { ComponentType } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { BrandColors } from '@/constants/theme';
+import { createLazyNamedScreen } from '@/navigation/lazy-tab-screen';
 import type { MainTabParamList, TabIconName } from '@/navigation/types';
-import { AdminDashboardScreen } from '@/screens/admin/admin-dashboard-screen';
-import { ComplianceScreen } from '@/screens/admin/compliance-screen';
-import { DashboardsGerenciaisScreen } from '@/screens/admin/dashboards-gerenciais-screen';
-import { VisaoEstrategicaScreen } from '@/screens/admin/visao-estrategica-screen';
-import { AprovacoesScreen } from '@/screens/admin/aprovacoes-screen';
-import { PainelAnualEstrategicoScreen } from '@/screens/admin/painel-anual-estrategico';
-import { PainelAvaliacaoScreen } from '@/screens/avaliacao/painel-screen';
-import { MinhaEquipeTabScreen } from '@/screens/avaliacao/minha-equipe-tab-screen';
-import { ColaboradorTabScreen } from '@/screens/colaborador/colaborador-tab-screen';
-import { MinhasAvaliacoesScreen } from '@/screens/colaborador/minhas-avaliacoes-screen';
-import { PainelReajusteScreen } from '@/screens/gerente/painel-reajuste-screen';
-import { PerfilScreen } from '@/screens/shared/perfil-screen';
-import { MetodologiaScreen } from '@/screens/shared/metodologia-screen';
 
 export const TAB_SCREENS: Record<keyof MainTabParamList, ComponentType> = {
-  DashboardColaborador: ColaboradorTabScreen,
-  MinhasAvaliacoes: MinhasAvaliacoesScreen,
-  PainelAvaliacao: PainelAvaliacaoScreen,
-  MinhaEquipe: MinhaEquipeTabScreen,
-  PainelReajuste: PainelReajusteScreen,
-  AdminDashboard: AdminDashboardScreen,
-  DashboardsGerenciais: DashboardsGerenciaisScreen,
-  VisaoEstrategica: VisaoEstrategicaScreen,
-  Compliance: ComplianceScreen,
-  Metodologia: MetodologiaScreen,
-  Aprovacoes: AprovacoesScreen,
-  PainelAnualEstrategico: PainelAnualEstrategicoScreen,
-  Perfil: PerfilScreen,
+  DashboardColaborador: createLazyNamedScreen(
+    () => import('@/screens/colaborador/colaborador-tab-screen'),
+    'ColaboradorTabScreen',
+  ),
+  MinhasAvaliacoes: createLazyNamedScreen(
+    () => import('@/screens/colaborador/minhas-avaliacoes-screen'),
+    'MinhasAvaliacoesScreen',
+  ),
+  PainelAvaliacao: createLazyNamedScreen(
+    () => import('@/screens/avaliacao/painel-screen'),
+    'PainelAvaliacaoScreen',
+  ),
+  MinhaEquipe: createLazyNamedScreen(
+    () => import('@/screens/avaliacao/minha-equipe-tab-screen'),
+    'MinhaEquipeTabScreen',
+  ),
+  PainelReajuste: createLazyNamedScreen(
+    () => import('@/screens/gerente/painel-reajuste-screen'),
+    'PainelReajusteScreen',
+  ),
+  AdminDashboard: createLazyNamedScreen(
+    () => import('@/screens/admin/painel-admin-screen'),
+    'PainelAdminScreen',
+  ),
+  DashboardsGerenciais: createLazyNamedScreen(
+    () => import('@/screens/admin/dashboards-gerenciais-screen'),
+    'DashboardsGerenciaisScreen',
+  ),
+  VisaoEstrategica: createLazyNamedScreen(
+    () => import('@/screens/admin/visao-estrategica-screen'),
+    'VisaoEstrategicaScreen',
+  ),
+  Compliance: createLazyNamedScreen(
+    () => import('@/screens/admin/compliance-screen'),
+    'ComplianceScreen',
+  ),
+  Metodologia: createLazyNamedScreen(
+    () => import('@/screens/shared/metodologia-screen'),
+    'MetodologiaScreen',
+  ),
+  Aprovacoes: createLazyNamedScreen(
+    () => import('@/screens/admin/aprovacoes-screen'),
+    'AprovacoesScreen',
+  ),
+  PainelAnualEstrategico: createLazyNamedScreen(
+    () => import('@/screens/admin/painel-anual-estrategico'),
+    'PainelAnualEstrategicoScreen',
+  ),
+  Perfil: createLazyNamedScreen(
+    () => import('@/screens/shared/perfil-screen'),
+    'PerfilScreen',
+  ),
 };
 
 type TabIconProps = {

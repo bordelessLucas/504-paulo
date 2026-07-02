@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as DocumentPicker from 'expo-document-picker';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -42,6 +41,7 @@ export function UploadPlanilhaRH({ embedded = false, onImported }: UploadPlanilh
       setMessage(null);
       setLineErrors([]);
 
+      const DocumentPicker = await import('expo-document-picker');
       const result = await DocumentPicker.getDocumentAsync({
         type: Platform.OS === 'web' ? ['text/csv', 'text/plain', 'application/vnd.ms-excel', '*/*'] : '*/*',
         copyToCacheDirectory: true,
