@@ -13,6 +13,7 @@ import { ThemedView } from '@/components/themed-view';
 import { ToastProvider } from '@/components/ui/toast';
 import { ThemeProvider, useThemeContext } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
+import { SubscriptionProvider } from '@/features/subscription/subscription-context';
 import { AppPaperProvider } from '@/providers/app-paper-provider';
 
 SplashScreen.preventAutoHideAsync();
@@ -65,6 +66,7 @@ function RootNavigator() {
       <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(paywall)" />
         <Stack.Screen name="(main)" />
       </Stack>
     </NavigationThemeProvider>
@@ -96,7 +98,9 @@ export default function RootLayout() {
         <AppPaperProvider>
           <ToastProvider>
             <AuthProvider>
-              <RootNavigator />
+              <SubscriptionProvider>
+                <RootNavigator />
+              </SubscriptionProvider>
             </AuthProvider>
           </ToastProvider>
         </AppPaperProvider>

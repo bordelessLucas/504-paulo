@@ -11,27 +11,28 @@ import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
 
 export default function RegisterScreen() {
-  const { register, isSubmitting } = useAuth();
+  const { beginRegistration, pendingRegistration } = useAuth();
   const { showToast } = useToast();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState(pendingRegistration?.name ?? '');
+  const [email, setEmail] = useState(pendingRegistration?.email ?? '');
+  const [password, setPassword] = useState(pendingRegistration?.password ?? '');
+  const [confirmPassword, setConfirmPassword] = useState(
+    pendingRegistration?.confirmPassword ?? '',
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  async function handleSubmit() {
+  function handleSubmit() {
     setErrors({});
 
-    const result = await register({
+    // A conta só é criada de fato após a assinatura de um plano (no paywall).
+    const error = beginRegistration({
       name,
       email,
       password,
       confirmPassword,
     });
 
-    if (result.status === 'error') {
-      const { error } = result;
-
+    if (error) {
       if (error.field && error.field !== 'general') {
         setErrors({ [error.field]: error.message });
         return;
@@ -41,13 +42,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (result.status === 'email_confirmation') {
-      showToast('Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
-      router.replace('/(auth)/login' as Href);
-      return;
-    }
-
-    router.replace('/(main)/' as Href);
+    router.push('/(paywall)/planos' as Href);
   }
 
   return (
@@ -106,7 +101,7 @@ export default function RegisterScreen() {
         value={confirmPassword}
       />
 
-      <Button label="Criar conta" isLoading={isSubmitting} onPress={() => void handleSubmit()} />
+      <Button label="Continuar" onPress={handleSubmit} />
     </AuthLayout>
   );
 }

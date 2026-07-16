@@ -29,6 +29,8 @@ export type AuthError = {
 };
 
 export type RegisterResult =
-  | { status: 'authenticated' }
+  | { status: 'authenticated'; userId: string }
   | { status: 'email_confirmation' }
   | { status: 'error'; error: AuthError };
+
+export type PendingRegistration = RegisterCredentials;

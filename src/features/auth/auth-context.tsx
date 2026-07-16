@@ -16,17 +16,45 @@ import type {
   AuthError,
   AuthUser,
   LoginCredentials,
+  PendingRegistration,
   RegisterCredentials,
   RegisterResult,
 } from '@/types/auth';
+import type { UserRole } from '@/types/supabase';
+
+/**
+ * Papel atribuído a quem se cadastra sozinho: o dono da conta, responsável por
+ * gerar os demais acessos. `ceo` é o nível mais alto do enum de papéis.
+ */
+const OWNER_ROLE: UserRole = 'ceo';
+
+const UNIQUE_VIOLATION_CODE = '23505';
+
+async function ensureOwnerProfile(userId: string, nome: string): Promise<void> {
+  const { error } = await supabase.from('profiles').insert({
+    id: userId,
+    nome,
+    role: OWNER_ROLE,
+  });
+
+  // 23505 = profile já existe; qualquer outro erro é apenas logado para não
+  // travar o cadastro (o papel também vai no metadata como fallback).
+  if (error && error.code !== UNIQUE_VIOLATION_CODE) {
+    console.warn('[Auth] Falha ao criar profile do dono da conta:', error.message);
+  }
+}
 
 type AuthContextValue = {
   user: AuthUser | null;
   isLoading: boolean;
   isProfileReady: boolean;
   isSubmitting: boolean;
+  pendingRegistration: PendingRegistration | null;
   login: (credentials: LoginCredentials) => Promise<AuthError | null>;
   register: (credentials: RegisterCredentials) => Promise<RegisterResult>;
+  beginRegistration: (credentials: RegisterCredentials) => AuthError | null;
+  completeRegistration: () => Promise<RegisterResult>;
+  clearPendingRegistration: () => void;
   signOut: () => Promise<void>;
   refetchProfile: () => Promise<void>;
 };
@@ -116,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isProfileReady, setIsProfileReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingRegistration, setPendingRegistration] = useState<PendingRegistration | null>(null);
 
   const syncSession = useCallback(async (session: Session | null) => {
     if (!session) {
@@ -271,13 +300,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [syncSession]);
 
-  const register = useCallback(
+  const performSignUp = useCallback(
     async (credentials: RegisterCredentials): Promise<RegisterResult> => {
-      const validationError = validateRegister(credentials);
-      if (validationError) {
-        return { status: 'error', error: validationError };
-      }
-
       setIsSubmitting(true);
 
       try {
@@ -288,7 +312,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email,
           password: credentials.password,
           options: {
-            data: { nome },
+            data: { nome, role: OWNER_ROLE },
           },
         });
 
@@ -301,16 +325,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (data.session) {
+          await ensureOwnerProfile(data.session.user.id, nome);
           await syncSession(data.session);
+          return { status: 'authenticated', userId: data.session.user.id };
         }
 
-        return { status: 'authenticated' };
+        return {
+          status: 'error',
+          error: { message: 'Falha inesperada ao criar a conta. Tente novamente.' },
+        };
       } finally {
         setIsSubmitting(false);
       }
     },
     [syncSession],
   );
+
+  const register = useCallback(
+    async (credentials: RegisterCredentials): Promise<RegisterResult> => {
+      const validationError = validateRegister(credentials);
+      if (validationError) {
+        return { status: 'error', error: validationError };
+      }
+
+      return performSignUp(credentials);
+    },
+    [performSignUp],
+  );
+
+  const beginRegistration = useCallback(
+    (credentials: RegisterCredentials): AuthError | null => {
+      const validationError = validateRegister(credentials);
+      if (validationError) {
+        return validationError;
+      }
+
+      setPendingRegistration(credentials);
+      return null;
+    },
+    [],
+  );
+
+  const completeRegistration = useCallback(async (): Promise<RegisterResult> => {
+    if (!pendingRegistration) {
+      return {
+        status: 'error',
+        error: { message: 'Nenhum cadastro pendente encontrado.' },
+      };
+    }
+
+    const result = await performSignUp(pendingRegistration);
+
+    if (result.status === 'authenticated') {
+      setPendingRegistration(null);
+    }
+
+    return result;
+  }, [pendingRegistration, performSignUp]);
+
+  const clearPendingRegistration = useCallback(() => {
+    setPendingRegistration(null);
+  }, []);
 
   const signOut = useCallback(async () => {
     try {
@@ -321,6 +396,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(null);
     setIsProfileReady(true);
+    setPendingRegistration(null);
     router.replace('/(auth)/login');
   }, []);
 
@@ -330,12 +406,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       isProfileReady,
       isSubmitting,
+      pendingRegistration,
       login,
       register,
+      beginRegistration,
+      completeRegistration,
+      clearPendingRegistration,
       signOut,
       refetchProfile,
     }),
-    [user, isLoading, isProfileReady, isSubmitting, login, register, signOut, refetchProfile],
+    [
+      user,
+      isLoading,
+      isProfileReady,
+      isSubmitting,
+      pendingRegistration,
+      login,
+      register,
+      beginRegistration,
+      completeRegistration,
+      clearPendingRegistration,
+      signOut,
+      refetchProfile,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
