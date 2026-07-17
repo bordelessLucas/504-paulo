@@ -2,15 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 
-export const MODAL_BACKDROP = 'rgba(0, 0, 0, 0.65)';
-export const MODAL_SURFACE_LIGHT = '#FFFFFF';
-export const MODAL_SURFACE_DARK = '#1E1E1E';
 export const MODAL_SHEET_RADIUS = 16;
-
-/** @deprecated Use BaseModal — mantido para NotificationsPanel até migração completa */
-export function getModalOverlayStyle() {
-  return { backgroundColor: MODAL_BACKDROP };
-}
 
 export const modalSheetStyles = StyleSheet.create({
   keyboard: {

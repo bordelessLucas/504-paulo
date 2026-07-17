@@ -8,10 +8,18 @@ import { ChangePasswordForm } from '@/components/perfil/change-password-form';
 import { ProfileAvatarPicker } from '@/components/perfil/profile-avatar-picker';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
+import { SegmentedControl, type SegmentOption } from '@/components/ui/segmented-control';
 import { Fonts, Spacing } from '@/constants/theme';
+import type { ThemePreference } from '@/contexts/ThemeContext';
 import { useAuth } from '@/features/auth/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { ROLE_LABELS } from '@/navigation/role-menus';
+
+const APPEARANCE_OPTIONS: SegmentOption<ThemePreference>[] = [
+  { value: 'light', label: 'Claro' },
+  { value: 'dark', label: 'Escuro' },
+  { value: 'system', label: 'Sistema' },
+];
 
 type ProfileInfoRowProps = {
   label: string;
@@ -85,12 +93,14 @@ export function PerfilScreen() {
       <Card>
         <ThemedText type="subtitle">Aparência</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.appearanceHint}>
-          Modo {theme.isDark ? 'escuro' : 'claro'} ativo.
+          {theme.preference === 'system'
+            ? `Seguindo o sistema (${theme.isDark ? 'escuro' : 'claro'}).`
+            : `Modo ${theme.isDark ? 'escuro' : 'claro'} ativo.`}
         </ThemedText>
-        <Button
-          label={theme.isDark ? 'Usar tema claro' : 'Usar tema escuro'}
-          variant="outline"
-          onPress={theme.toggleLightMode}
+        <SegmentedControl
+          options={APPEARANCE_OPTIONS}
+          value={theme.preference}
+          onChange={theme.setPreference}
         />
       </Card>
 

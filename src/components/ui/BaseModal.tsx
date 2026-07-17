@@ -16,14 +16,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import {
-  MODAL_BACKDROP,
-  MODAL_SHEET_RADIUS,
-  MODAL_SURFACE_DARK,
-  MODAL_SURFACE_LIGHT,
-} from '@/constants/modal';
+import { brand, brandRgb } from '@/constants/brand';
+import { MODAL_SHEET_RADIUS } from '@/constants/modal';
 import { Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 
 const SHEET_RADIUS = MODAL_SHEET_RADIUS;
@@ -97,10 +92,9 @@ export function BaseModal({
 }: BaseModalProps) {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
-  const colorScheme = useColorScheme();
   const theme = useTheme();
-  const isDark = colorScheme === 'dark';
-  const surfaceColor = isDark ? MODAL_SURFACE_DARK : MODAL_SURFACE_LIGHT;
+  const isDark = theme.isDark;
+  const surfaceColor = theme.surfaceElevated;
   const borderColor = theme.border;
 
   const isSheet = variant === 'sheet';
@@ -133,7 +127,7 @@ export function BaseModal({
         ]}>
         <Pressable
           accessibilityRole="button"
-          style={[styles.backdrop, { backgroundColor: MODAL_BACKDROP }]}
+          style={[styles.backdrop, { backgroundColor: theme.overlay }]}
           onPress={handleBackdropPress}
         />
 
@@ -147,7 +141,7 @@ export function BaseModal({
               maxHeight: maxScrollHeight,
               ...Platform.select({
                 ios: {
-                  shadowColor: '#000',
+                  shadowColor: brand.navyDeep,
                   shadowOffset: { width: 0, height: isSheet ? -4 : 8 },
                   shadowOpacity: isDark ? 0.45 : 0.18,
                   shadowRadius: isSheet ? 16 : 24,
@@ -156,9 +150,7 @@ export function BaseModal({
                   elevation: 16,
                 },
                 web: {
-                  boxShadow: isDark
-                    ? '0 16px 48px rgba(0, 0, 0, 0.55)'
-                    : '0 16px 48px rgba(0, 0, 0, 0.16)',
+                  boxShadow: `0 16px 48px ${brandRgb(brand.navyDeep, isDark ? 0.55 : 0.16)}`,
                 },
               }),
             },
@@ -205,7 +197,7 @@ export function BaseModal({
                       { backgroundColor: theme.backgroundSelected },
                       pressed && styles.pressed,
                     ]}>
-                    <Ionicons color={isDark ? '#CFCFCF' : '#5C5C5A'} name="close" size={20} />
+                    <Ionicons color={theme.textSecondary} name="close" size={20} />
                   </Pressable>
                 ) : null}
               </View>

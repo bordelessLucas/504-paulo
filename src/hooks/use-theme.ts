@@ -1,4 +1,4 @@
-import { useThemeContext } from "@/contexts/ThemeContext";
+import { useThemeContext, type ThemePreference } from "@/contexts/ThemeContext";
 import type { ThemeColors } from "@/constants/theme";
 
 export type ThemeHook = ThemeColors & {
@@ -8,6 +8,8 @@ export type ThemeHook = ThemeColors & {
   shadow: ReturnType<typeof import("@/constants/theme").createShadow>;
   layout: typeof import("@/constants/theme").layout;
   semantic: ReturnType<typeof import("@/constants/theme").getSemanticColors>;
+  preference: ThemePreference;
+  setPreference: (preference: ThemePreference) => void;
   toggleLightMode: () => void;
   setMode: (mode: "light" | "dark") => void;
 };
@@ -26,6 +28,8 @@ export function useTheme(): ThemeHook {
     shadow: ctx.shadow,
     layout: ctx.layout,
     semantic: ctx.semantic,
+    preference: ctx.preference,
+    setPreference: ctx.setPreference,
     toggleLightMode: ctx.toggleLightMode,
     setMode: ctx.setMode,
   };

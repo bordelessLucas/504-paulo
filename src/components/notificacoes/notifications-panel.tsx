@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
-import { getModalOverlayStyle, modalSheetStyles } from '@/constants/modal';
+import { modalSheetStyles } from '@/constants/modal';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import type { Notificacao } from '@/features/notificacoes/types';
 import { resolveNotificationTab } from '@/features/notificacoes/resolve-notification-tab';
@@ -117,7 +117,7 @@ export function NotificationsPanel() {
       transparent
       visible={isPanelOpen}>
       <View style={[styles.overlay, { paddingTop: insets.top }]}>
-        <Pressable style={[styles.backdrop, getModalOverlayStyle()]} onPress={closePanel} />
+        <Pressable style={[styles.backdrop, { backgroundColor: theme.overlay }]} onPress={closePanel} />
 
         <View
           style={[
@@ -177,7 +177,7 @@ export function NotificationsPanel() {
           )}
 
           {__DEV__ ? (
-            <View style={styles.devSection}>
+            <View style={[styles.devSection, { borderTopColor: theme.border }]}>
               <Button
                 label="Enviar notificação de teste"
                 variant="secondary"
@@ -289,7 +289,6 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
     paddingTop: Spacing.two,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(128,128,128,0.25)',
   },
   devHint: {
     textAlign: 'center',

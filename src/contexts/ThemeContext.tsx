@@ -21,6 +21,9 @@ import {
   type ThemeShadows,
 } from "@/constants/theme";
 
+/** Preferência escolhida pelo usuário. `system` segue o esquema do SO. */
+export type ThemePreference = "light" | "dark" | "system";
+
 type ThemeContextValue = {
   colors: ThemeColors;
   mode: ThemeMode;
@@ -29,6 +32,9 @@ type ThemeContextValue = {
   layout: typeof layout;
   semantic: ReturnType<typeof getSemanticColors>;
   isReady: boolean;
+  /** Preferência persistida (`light` | `dark` | `system`). */
+  preference: ThemePreference;
+  setPreference: (preference: ThemePreference) => void;
   toggleLightMode: () => void;
   setMode: (mode: ThemeMode) => void;
 };
@@ -37,27 +43,32 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 type ThemeProviderProps = {
   children: ReactNode;
-  /** Segue preferência do sistema quando não há valor salvo. */
-  followSystem?: boolean;
 };
 
-export function ThemeProvider({ children, followSystem = false }: ThemeProviderProps) {
+function isValidPreference(value: string | null): value is ThemePreference {
+  return value === "light" || value === "dark" || value === "system";
+}
+
+function resolveMode(preference: ThemePreference, systemScheme: "light" | "dark" | null | undefined): ThemeMode {
+  if (preference === "system") {
+    return systemScheme === "light" ? "light" : "dark";
+  }
+  return preference;
+}
+
+export function ThemeProvider({ children }: ThemeProviderProps) {
   const systemScheme = useSystemColorScheme();
-  const [mode, setModeState] = useState<ThemeMode>("dark");
+  const [preference, setPreferenceState] = useState<ThemePreference>("dark");
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
-    async function loadMode() {
+    async function loadPreference() {
       try {
         const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-        if (!mounted) return;
-
-        if (stored === "light" || stored === "dark") {
-          setModeState(stored);
-        } else if (followSystem && systemScheme) {
-          setModeState(systemScheme === "dark" ? "dark" : "light");
+        if (mounted && isValidPreference(stored)) {
+          setPreferenceState(stored);
         }
       } finally {
         if (mounted) {
@@ -66,21 +77,30 @@ export function ThemeProvider({ children, followSystem = false }: ThemeProviderP
       }
     }
 
-    void loadMode();
+    void loadPreference();
 
     return () => {
       mounted = false;
     };
-  }, [followSystem, systemScheme]);
+  }, []);
 
-  const setMode = useCallback((next: ThemeMode) => {
-    setModeState(next);
+  const setPreference = useCallback((next: ThemePreference) => {
+    setPreferenceState(next);
     void AsyncStorage.setItem(THEME_STORAGE_KEY, next);
   }, []);
 
+  const mode = resolveMode(preference, systemScheme);
+
+  const setMode = useCallback(
+    (next: ThemeMode) => {
+      setPreference(next);
+    },
+    [setPreference],
+  );
+
   const toggleLightMode = useCallback(() => {
-    setMode(mode === "dark" ? "light" : "dark");
-  }, [mode, setMode]);
+    setPreference(mode === "dark" ? "light" : "dark");
+  }, [mode, setPreference]);
 
   const value = useMemo<ThemeContextValue>(() => {
     const colors = Colors[mode];
@@ -92,10 +112,12 @@ export function ThemeProvider({ children, followSystem = false }: ThemeProviderP
       layout,
       semantic: getSemanticColors(mode),
       isReady,
+      preference,
+      setPreference,
       toggleLightMode,
       setMode,
     };
-  }, [isReady, mode, setMode, toggleLightMode]);
+  }, [isReady, mode, preference, setMode, setPreference, toggleLightMode]);
 
   return (
     <ThemeContext.Provider value={value}>
