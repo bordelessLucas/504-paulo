@@ -1,7 +1,8 @@
 import { SegmentedButtons } from 'react-native-paper';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { Spacing } from '@/constants/theme';
+import { layout } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export type SegmentOption<T extends string> = {
   value: T;
@@ -19,30 +20,46 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
 }: SegmentedControlProps<T>) {
+  const theme = useTheme();
+
   return (
-    <SegmentedButtons
-      style={styles.control}
-      density="medium"
-      value={value}
-      onValueChange={(nextValue) => {
-        if (nextValue) {
-          onChange(nextValue as T);
-        }
-      }}
-      buttons={options.map((option) => ({
-        value: option.value,
-        label: option.label,
-        style: styles.segment,
-      }))}
-    />
+    <View style={styles.wrap}>
+      <SegmentedButtons
+        style={styles.control}
+        density="medium"
+        value={value}
+        onValueChange={(nextValue) => {
+          if (nextValue) {
+            onChange(nextValue as T);
+          }
+        }}
+        buttons={options.map((option) => ({
+          value: option.value,
+          label: option.label,
+          style: [
+            styles.segment,
+            {
+              backgroundColor:
+                value === option.value ? theme.accentMuted : theme.surfaceElevated,
+              borderColor: theme.border,
+            },
+          ],
+        }))}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    width: '100%',
+    alignSelf: 'stretch',
+  },
   control: {
-    gap: Spacing.two,
+    width: '100%',
   },
   segment: {
     minHeight: 40,
+    flex: 1,
   },
 });

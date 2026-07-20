@@ -23,24 +23,60 @@ import type {
 import type { UserRole } from '@/types/supabase';
 
 /**
- * Papel atribuído a quem se cadastra sozinho: o dono da conta, responsável por
- * gerar os demais acessos. `ceo` é o nível mais alto do enum de papéis.
+ * Papel atribuído a quem se cadastra sozinho e paga: dono da conta (CEO),
+ * responsável por gerar os demais acessos (RH, gestores, colaboradores, etc.).
  */
 const OWNER_ROLE: UserRole = 'ceo';
 
 const UNIQUE_VIOLATION_CODE = '23505';
 
 async function ensureOwnerProfile(userId: string, nome: string): Promise<void> {
-  const { error } = await supabase.from('profiles').insert({
+  const payload = {
     id: userId,
     nome,
     role: OWNER_ROLE,
+  } as const;
+
+  const { error: upsertError } = await supabase.from('profiles').upsert(payload, {
+    onConflict: 'id',
   });
 
-  // 23505 = profile já existe; qualquer outro erro é apenas logado para não
-  // travar o cadastro (o papel também vai no metadata como fallback).
-  if (error && error.code !== UNIQUE_VIOLATION_CODE) {
-    console.warn('[Auth] Falha ao criar profile do dono da conta:', error.message);
+  if (upsertError) {
+    // Fallback: tenta insert e, se já existir, atualiza o papel para CEO.
+    const { error: insertError } = await supabase.from('profiles').insert(payload);
+
+    if (insertError && insertError.code !== UNIQUE_VIOLATION_CODE) {
+      throw new Error(
+        insertError.message || 'Não foi possível criar o perfil do dono da conta.',
+      );
+    }
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ nome, role: OWNER_ROLE })
+      .eq('id', userId);
+
+    if (updateError) {
+      throw new Error(
+        updateError.message || 'Não foi possível definir o papel de CEO da conta.',
+      );
+    }
+  }
+
+  const { data: profile, error: verifyError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (verifyError) {
+    throw new Error(verifyError.message);
+  }
+
+  if (profile?.role !== OWNER_ROLE) {
+    throw new Error(
+      'Conta criada, mas o papel de CEO não foi aplicado. Contate o suporte.',
+    );
   }
 }
 
@@ -325,7 +361,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (data.session) {
-          await ensureOwnerProfile(data.session.user.id, nome);
+          try {
+            await ensureOwnerProfile(data.session.user.id, nome);
+          } catch (profileError) {
+            const message =
+              profileError instanceof Error
+                ? profileError.message
+                : 'Não foi possível configurar o perfil de CEO.';
+            return { status: 'error', error: { message } };
+          }
           await syncSession(data.session);
           return { status: 'authenticated', userId: data.session.user.id };
         }

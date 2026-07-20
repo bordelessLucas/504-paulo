@@ -1,6 +1,10 @@
 import type { ComponentProps } from 'react';
 import type Ionicons from '@expo/vector-icons/Ionicons';
 
+/**
+ * Rotas canônicas DNA PERFORMANCE (Excel Rev Jul 20 2026).
+ * Menus por papel apontam para estas telas sem duplicar 101 screens.
+ */
 export type MainTabParamList = {
   DashboardColaborador: undefined;
   MinhasAvaliacoes: undefined;
@@ -12,8 +16,22 @@ export type MainTabParamList = {
   VisaoEstrategica: undefined;
   Compliance: undefined;
   Metodologia: undefined;
+  Regras: undefined;
   Aprovacoes: undefined;
   PainelAnualEstrategico: undefined;
+  RelatorioIndividual: undefined;
+  HistoricoQuinzenal: undefined;
+  HistoricoSemestral: undefined;
+  HistoricoDesligados: undefined;
+  ListaAtivos: undefined;
+  CadastroCliente: undefined;
+  CadastroAvaliadores: undefined;
+  StatusSolicitacoes: undefined;
+  AnaliseAvaliadores: undefined;
+  HistoricoReajuste: undefined;
+  ImpactoCaixa: undefined;
+  RankingPerformance: undefined;
+  AnalisePerfil: undefined;
   Perfil: undefined;
 };
 

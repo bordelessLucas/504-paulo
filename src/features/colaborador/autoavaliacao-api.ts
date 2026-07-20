@@ -2,6 +2,7 @@ import {
   isElegivelParaAutoavaliacao,
   MENSAGEM_BLOQUEIO_DEVERES,
 } from '@/features/colaborador/eligibility';
+import type { AutoavaliacaoSubmitPayload } from '@/features/colaborador/autoavaliacao-modal';
 import { hasIncidentesRecentes } from '@/features/incidentes/api';
 import { supabase } from '@/lib/supabase';
 
@@ -25,6 +26,7 @@ export async function createAutoavaliacaoSolicitacao(params: {
   colaboradorId: string;
   qualificacoes: string;
   investimento: string;
+  extra?: AutoavaliacaoSubmitPayload;
 }): Promise<void> {
   const qualificacoesTexto = params.qualificacoes.trim();
   const investimentoTexto = params.investimento.trim();
@@ -51,12 +53,20 @@ export async function createAutoavaliacaoSolicitacao(params: {
   }
 
   const justificativa = buildAutoavaliacaoJustificativa(qualificacoesTexto, investimentoTexto);
+  const valorEstimado = params.extra?.valorEstimado
+    ? Number(params.extra.valorEstimado.replace(',', '.'))
+    : null;
 
   const { error } = await supabase.from('melhorias_salariais').insert({
     colaborador_id: params.colaboradorId,
     gerente_id: null,
     justificativa,
     status: 'pendente_rh',
+    tipo_solicitacao: params.extra?.tipoSolicitacao ?? 'autoavaliacao',
+    valor_estimado: Number.isFinite(valorEstimado) ? valorEstimado : null,
+    curso_nome: params.extra?.cursoNome?.trim() || null,
+    curso_instituicao: params.extra?.cursoInstituicao?.trim() || null,
+    checklist: params.extra?.checklist ?? {},
   });
 
   if (error) {

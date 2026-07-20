@@ -22,6 +22,7 @@ const VARIANT_BY_TIPO: Record<TipoNotificacao, ToastVariant> = {
   pdi_vencendo: 'info',
   pdi_vencido: 'error',
   pdi_concluido: 'success',
+  ima_critico: 'error',
 };
 
 export function getNotificationToastConfig(notification: Notificacao): NotificationToastConfig {

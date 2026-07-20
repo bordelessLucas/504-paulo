@@ -4,9 +4,9 @@ import type { UserRole } from '@/types/supabase';
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   colaborador: 'Colaborador',
-  supervisor: 'Supervisor',
-  gestor: 'Gestor',
-  gerente: 'Gerente',
+  supervisor: 'Supervisor de Bordo',
+  gestor: 'Gestores de Base',
+  gerente: 'Gerente Offshore',
   rh: 'RH',
   ceo: 'CEO',
   admin: 'Administrador',
@@ -43,22 +43,22 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
   },
   PainelAvaliacao: {
     name: 'PainelAvaliacao',
-    label: 'Avaliação',
+    label: 'Painel de Avaliações',
     icon: 'clipboard-outline',
   },
   MinhaEquipe: {
     name: 'MinhaEquipe',
-    label: 'Equipe',
+    label: 'Lista de Colaboradores',
     icon: 'people-outline',
   },
   PainelReajuste: {
     name: 'PainelReajuste',
-    label: 'Reajuste',
+    label: 'Reajuste Salarial',
     icon: 'trending-up-outline',
   },
   AdminDashboard: {
     name: 'AdminDashboard',
-    label: 'Admin',
+    label: 'Cadastros / Admin',
     icon: 'grid-outline',
   },
   DashboardsGerenciais: {
@@ -69,17 +69,22 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
   VisaoEstrategica: {
     name: 'VisaoEstrategica',
     label: 'Estratégico',
-    icon: 'grid-outline',
+    icon: 'analytics-outline',
   },
   Compliance: {
     name: 'Compliance',
-    label: 'Compliance',
-    icon: 'shield-checkmark-outline',
+    label: 'Registro de Incidente',
+    icon: 'warning-outline',
   },
   Metodologia: {
     name: 'Metodologia',
-    label: 'Metodologia',
+    label: 'Metodologia de Escala',
     icon: 'book-outline',
+  },
+  Regras: {
+    name: 'Regras',
+    label: 'Regras / Direitos / Deveres',
+    icon: 'shield-checkmark-outline',
   },
   Aprovacoes: {
     name: 'Aprovacoes',
@@ -88,30 +93,85 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
   },
   PainelAnualEstrategico: {
     name: 'PainelAnualEstrategico',
-    label: 'Anual',
+    label: 'Análise Anual',
     icon: 'calendar-outline',
+  },
+  RelatorioIndividual: {
+    name: 'RelatorioIndividual',
+    label: 'Relatório Individual',
+    icon: 'person-outline',
+  },
+  HistoricoQuinzenal: {
+    name: 'HistoricoQuinzenal',
+    label: 'Histórico Quinzenal',
+    icon: 'time-outline',
+  },
+  HistoricoSemestral: {
+    name: 'HistoricoSemestral',
+    label: 'Histórico Semestral',
+    icon: 'calendar-outline',
+  },
+  HistoricoDesligados: {
+    name: 'HistoricoDesligados',
+    label: 'Colaboradores Desligados',
+    icon: 'exit-outline',
+  },
+  ListaAtivos: {
+    name: 'ListaAtivos',
+    label: 'Colaboradores Ativos',
+    icon: 'people-circle-outline',
+  },
+  CadastroCliente: {
+    name: 'CadastroCliente',
+    label: 'Cadastro de Cliente',
+    icon: 'business-outline',
+  },
+  CadastroAvaliadores: {
+    name: 'CadastroAvaliadores',
+    label: 'Cadastro de Avaliadores',
+    icon: 'ribbon-outline',
+  },
+  StatusSolicitacoes: {
+    name: 'StatusSolicitacoes',
+    label: 'Status das Solicitações',
+    icon: 'list-outline',
+  },
+  AnaliseAvaliadores: {
+    name: 'AnaliseAvaliadores',
+    label: 'Análise dos Avaliadores',
+    icon: 'bar-chart-outline',
+  },
+  HistoricoReajuste: {
+    name: 'HistoricoReajuste',
+    label: 'Histórico de Reajuste',
+    icon: 'cash-outline',
+  },
+  ImpactoCaixa: {
+    name: 'ImpactoCaixa',
+    label: 'Impacto no Caixa',
+    icon: 'wallet-outline',
+  },
+  RankingPerformance: {
+    name: 'RankingPerformance',
+    label: 'Ranking de Performance',
+    icon: 'trophy-outline',
+  },
+  AnalisePerfil: {
+    name: 'AnalisePerfil',
+    label: 'Análise de Perfil',
+    icon: 'pulse-outline',
   },
   Perfil: {
     name: 'Perfil',
     label: 'Perfil',
-    icon: 'person-outline',
+    icon: 'person-circle-outline',
   },
 };
 
 const { Perfil: PERFIL_TAB } = TAB_DEFINITIONS;
 
 /**
- * Tabs por papel — alinhado ao fluxo RH valida → CEO aprova.
- *
- * | Papel        | Responsabilidade principal                          |
- * |--------------|-----------------------------------------------------|
- * | colaborador  | Dashboard, histórico próprio, autoavaliação         |
- * | supervisor   | Avaliar equipe (quinzenal)                          |
- * | gestor       | Avaliar equipe (semestral) + reajuste               |
- * | gerente      | Reajuste, painel anual, avaliação, equipe           |
- * | rh           | Validar solicitações/avaliações, cadastro, incidentes |
- * | admin        | Como RH + dashboard gerencial + cadastros             |
- * | ceo          | Aprovação final, visão executiva, gerar acessos     |
+ * Tabs por papel — alinhado ao DNA PERFORMANCE (Excel Rev Jul 20 2026).
  */
 export function getPrimaryTabForRole(role: UserRole): keyof MainTabParamList {
   switch (role) {
@@ -141,153 +201,155 @@ export function getTabLabelForRole(tabName: keyof MainTabParamList, role: UserRo
 }
 
 export function getTabsForRole(role: UserRole): TabMenuItem[] {
-  switch (role) {
-    case 'colaborador':
-      return [
-        TAB_DEFINITIONS.DashboardColaborador,
-        TAB_DEFINITIONS.MinhasAvaliacoes,
-        PERFIL_TAB,
-      ];
+  const seen = new Set<keyof MainTabParamList>();
+  const tabs: TabMenuItem[] = [];
 
-    case 'supervisor':
-      return [
-        TAB_DEFINITIONS.PainelAvaliacao,
-        TAB_DEFINITIONS.MinhaEquipe,
-        TAB_DEFINITIONS.Metodologia,
-        PERFIL_TAB,
-      ];
-
-    case 'gestor':
-      return [
-        TAB_DEFINITIONS.PainelAvaliacao,
-        TAB_DEFINITIONS.MinhaEquipe,
-        TAB_DEFINITIONS.PainelReajuste,
-        TAB_DEFINITIONS.Metodologia,
-        PERFIL_TAB,
-      ];
-
-    case 'gerente':
-      return [
-        TAB_DEFINITIONS.PainelReajuste,
-        TAB_DEFINITIONS.PainelAnualEstrategico,
-        TAB_DEFINITIONS.PainelAvaliacao,
-        TAB_DEFINITIONS.MinhaEquipe,
-        TAB_DEFINITIONS.Metodologia,
-        PERFIL_TAB,
-      ];
-
-    case 'rh':
-      return [
-        TAB_DEFINITIONS.Aprovacoes,
-        TAB_DEFINITIONS.AdminDashboard,
-        TAB_DEFINITIONS.Compliance,
-        TAB_DEFINITIONS.PainelAnualEstrategico,
-        TAB_DEFINITIONS.PainelAvaliacao,
-        TAB_DEFINITIONS.Metodologia,
-        PERFIL_TAB,
-      ];
-
-    case 'ceo':
-      return [
-        TAB_DEFINITIONS.DashboardsGerenciais,
-        TAB_DEFINITIONS.VisaoEstrategica,
-        TAB_DEFINITIONS.PainelAnualEstrategico,
-        TAB_DEFINITIONS.Compliance,
-        TAB_DEFINITIONS.PainelAvaliacao,
-        TAB_DEFINITIONS.AdminDashboard,
-        TAB_DEFINITIONS.Aprovacoes,
-        TAB_DEFINITIONS.Metodologia,
-        PERFIL_TAB,
-      ];
-
-    case 'admin':
-      return [
-        TAB_DEFINITIONS.Aprovacoes,
-        TAB_DEFINITIONS.AdminDashboard,
-        TAB_DEFINITIONS.DashboardsGerenciais,
-        TAB_DEFINITIONS.VisaoEstrategica,
-        TAB_DEFINITIONS.Compliance,
-        TAB_DEFINITIONS.PainelAnualEstrategico,
-        TAB_DEFINITIONS.PainelAvaliacao,
-        TAB_DEFINITIONS.Metodologia,
-        PERFIL_TAB,
-      ];
-
-    default:
-      return [TAB_DEFINITIONS.DashboardColaborador, PERFIL_TAB];
+  for (const section of getMenuSectionsForRole(role)) {
+    for (const item of section.items) {
+      if (seen.has(item.name)) {
+        continue;
+      }
+      seen.add(item.name);
+      tabs.push(item);
+    }
   }
+
+  return tabs;
 }
 
 export function canAccessTab(role: UserRole, tabName: keyof MainTabParamList): boolean {
   return getTabsForRole(role).some((item) => item.name === tabName);
 }
 
-/** Sidebar organizada por grupos semânticos — melhora escaneabilidade e hierarquia. */
+/** Sidebar DNA PERFORMANCE — grupos semânticos por papel. */
 export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
   switch (role) {
     case 'colaborador':
       return [
-        menuSection('Principal', 'DashboardColaborador', 'MinhasAvaliacoes'),
+        menuSection('DNA-TEK', 'Regras', 'Metodologia'),
+        menuSection('Autoavaliação', 'DashboardColaborador', 'StatusSolicitacoes', 'MinhasAvaliacoes'),
         menuSection('Conta', 'Perfil'),
       ];
 
     case 'supervisor':
       return [
-        menuSection('Operações', 'PainelAvaliacao', 'MinhaEquipe'),
-        menuSection('Referência', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection(
+          'Avaliação Quinzenal',
+          'MinhaEquipe',
+          'RelatorioIndividual',
+          'HistoricoQuinzenal',
+          'HistoricoSemestral',
+          'HistoricoDesligados',
+        ),
+        menuSection('Autoavaliação', 'StatusSolicitacoes'),
         menuSection('Conta', 'Perfil'),
       ];
 
     case 'gestor':
       return [
-        menuSection('Operações', 'PainelAvaliacao', 'MinhaEquipe', 'PainelReajuste'),
-        menuSection('Referência', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection(
+          'Avaliação Semestral',
+          'MinhaEquipe',
+          'RelatorioIndividual',
+          'HistoricoQuinzenal',
+          'HistoricoSemestral',
+          'HistoricoDesligados',
+        ),
+        menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Conta', 'Perfil'),
       ];
 
     case 'gerente':
       return [
-        menuSection('Gestão', 'PainelReajuste', 'PainelAnualEstrategico', 'PainelAvaliacao', 'MinhaEquipe'),
-        menuSection('Referência', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection(
+          'Avaliação Semestral',
+          'MinhaEquipe',
+          'RelatorioIndividual',
+          'HistoricoQuinzenal',
+          'HistoricoSemestral',
+          'HistoricoDesligados',
+        ),
+        menuSection('Autoavaliação', 'Aprovacoes'),
+        menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste'),
+        menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Conta', 'Perfil'),
       ];
 
     case 'rh':
       return [
-        menuSection('Fluxo', 'Aprovacoes', 'PainelAvaliacao'),
-        menuSection('Administração', 'AdminDashboard', 'Compliance', 'PainelAnualEstrategico'),
-        menuSection('Referência', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection('Cadastro', 'AdminDashboard', 'CadastroCliente', 'Compliance'),
+        menuSection('Dashboard', 'HistoricoReajuste', 'RankingPerformance', 'AnalisePerfil'),
+        menuSection(
+          'Avaliação Semestral',
+          'MinhaEquipe',
+          'RelatorioIndividual',
+          'HistoricoQuinzenal',
+          'HistoricoSemestral',
+          'HistoricoDesligados',
+        ),
+        menuSection('Autoavaliação', 'StatusSolicitacoes', 'Aprovacoes'),
+        menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste'),
+        menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Conta', 'Perfil'),
       ];
 
     case 'ceo':
       return [
-        menuSection('Executivo', 'DashboardsGerenciais', 'VisaoEstrategica', 'PainelAnualEstrategico', 'Compliance'),
-        menuSection('Operações', 'PainelAvaliacao', 'AdminDashboard', 'Aprovacoes'),
-        menuSection('Referência', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection(
+          'Dashboard',
+          'DashboardsGerenciais',
+          'AnaliseAvaliadores',
+          'HistoricoReajuste',
+          'ImpactoCaixa',
+          'VisaoEstrategica',
+        ),
+        menuSection(
+          'Avaliações',
+          'RelatorioIndividual',
+          'HistoricoQuinzenal',
+          'HistoricoSemestral',
+          'Aprovacoes',
+        ),
+        menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste'),
+        menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
+        menuSection('Admin', 'AdminDashboard', 'Compliance'),
         menuSection('Conta', 'Perfil'),
       ];
 
     case 'admin':
       return [
-        menuSection('Fluxo', 'Aprovacoes', 'PainelAvaliacao'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'Compliance'),
+        menuSection('Cadastro', 'AdminDashboard', 'CadastroCliente', 'CadastroAvaliadores'),
         menuSection(
-          'Administração',
-          'AdminDashboard',
+          'Dashboard',
           'DashboardsGerenciais',
+          'AnaliseAvaliadores',
+          'HistoricoReajuste',
+          'ImpactoCaixa',
+          'RankingPerformance',
           'VisaoEstrategica',
-          'Compliance',
-          'PainelAnualEstrategico',
         ),
-        menuSection('Referência', 'Metodologia'),
+        menuSection(
+          'Avaliações',
+          'MinhaEquipe',
+          'RelatorioIndividual',
+          'HistoricoQuinzenal',
+          'HistoricoSemestral',
+          'HistoricoDesligados',
+          'Aprovacoes',
+        ),
+        menuSection('Melhoria Salarial', 'PainelReajuste', 'StatusSolicitacoes'),
+        menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Conta', 'Perfil'),
       ];
 
     default:
-      return [
-        menuSection('Principal', 'DashboardColaborador'),
-        menuSection('Conta', 'Perfil'),
-      ];
+      return [menuSection('Principal', 'DashboardColaborador'), menuSection('Conta', 'Perfil')];
   }
 }
 

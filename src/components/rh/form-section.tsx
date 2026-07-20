@@ -25,12 +25,10 @@ export function FormSection({
     <View
       style={[
         embedded ? styles.sectionEmbedded : styles.section,
-        embedded
-          ? { backgroundColor: theme.backgroundElement }
-          : {
-              backgroundColor: theme.background,
-              borderColor: theme.border,
-            },
+        {
+          backgroundColor: theme.surfaceCard,
+          borderColor: theme.border,
+        },
       ]}>
       <Pressable
         accessibilityRole="button"
@@ -60,8 +58,8 @@ export function FormSection({
 
 const styles = StyleSheet.create({
   section: {
-    borderWidth: 1,
-    borderRadius: Radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.lg,
     overflow: 'hidden',
   },
   sectionEmbedded: {

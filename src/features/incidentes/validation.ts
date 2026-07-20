@@ -5,6 +5,16 @@ export type CreateIncidenteInput = {
   tipoIncidente: TipoIncidente;
   dataOcorrencia: string;
   descricao: string;
+  horarioAproximado?: string;
+  reincidencia?: boolean;
+  onOffshore?: 'OnShore' | 'Offshore' | '';
+  diasEmbarcados?: string;
+  prevMob?: string;
+  prevDemob?: string;
+  plataformaTexto?: string;
+  relatanteNome?: string;
+  acaoTomada?: string;
+  comentarioCliente?: string;
 };
 
 export type IncidenteValidationError = {
@@ -16,6 +26,7 @@ const TIPO_INCIDENTE_VALUES: readonly TipoIncidente[] = [
   'acidente_sms',
   'no_show',
   'advertencia',
+  'desvio_comportamental',
 ] as const;
 
 function parseDataBrasileira(value: string): Date | null {

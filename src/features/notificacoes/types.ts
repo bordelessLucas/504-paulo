@@ -11,7 +11,8 @@ export type TipoNotificacao =
   | 'pdi_atualizado'
   | 'pdi_vencendo'
   | 'pdi_vencido'
-  | 'pdi_concluido';
+  | 'pdi_concluido'
+  | 'ima_critico';
 
 export type Notificacao = {
   id: string;
@@ -38,4 +39,5 @@ export const TIPO_NOTIFICACAO_ICON: Record<TipoNotificacao, string> = {
   pdi_vencendo: 'time-outline',
   pdi_vencido: 'alert-circle-outline',
   pdi_concluido: 'trophy-outline',
+  ima_critico: 'alert-circle-outline',
 };

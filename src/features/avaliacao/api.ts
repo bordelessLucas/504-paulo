@@ -438,6 +438,15 @@ export async function submitAvaliacao(params: {
     });
   }
 
+  if (governanca.acoes.includes('alerta_critico') && mediaSimples !== null) {
+    const { notificarImaCritico } = await import('@/features/avaliacao/ima-alerta');
+    await notificarImaCritico({
+      colaboradorId: params.avaliadoId,
+      media: mediaSimples,
+      avaliacaoId: avaliacao.id,
+    });
+  }
+
   await registrarAuditLog({
     acao: 'CRIACAO',
     tabela: 'avaliacoes',

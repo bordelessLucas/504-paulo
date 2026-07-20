@@ -20,7 +20,7 @@ export function AppNavigationBridge() {
 
   useEffect(() => {
     registerNavigator((routeName) => {
-      navigation.navigate(routeName);
+      navigation.navigate(routeName as never);
     });
 
     registerDrawer(() => {

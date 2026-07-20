@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ColaboradorRow } from '@/components/avaliacao/colaborador-row';
+import { NotionCheckbox } from '@/components/avaliacao/notion-checkbox';
 import { OptionChips } from '@/components/rh/option-chips';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
@@ -25,12 +26,23 @@ const TIPOS_INCIDENTE: readonly TipoIncidente[] = [
   'acidente_sms',
   'no_show',
   'advertencia',
+  'desvio_comportamental',
 ] as const;
 
 const INITIAL_FORM = {
   tipoIncidente: 'acidente_sms' as TipoIncidente,
   dataOcorrencia: '',
   descricao: '',
+  horarioAproximado: '',
+  reincidencia: false,
+  onOffshore: '' as '' | 'OnShore' | 'Offshore',
+  diasEmbarcados: '',
+  prevMob: '',
+  prevDemob: '',
+  plataformaTexto: '',
+  relatanteNome: '',
+  acaoTomada: '',
+  comentarioCliente: '',
 };
 
 type RegistroIncidenteProps = {
@@ -92,6 +104,16 @@ export function RegistroIncidente({ embedded = false }: RegistroIncidenteProps) 
       tipoIncidente: form.tipoIncidente,
       dataOcorrencia: form.dataOcorrencia,
       descricao: form.descricao,
+      horarioAproximado: form.horarioAproximado,
+      reincidencia: form.reincidencia,
+      onOffshore: form.onOffshore,
+      diasEmbarcados: form.diasEmbarcados,
+      prevMob: form.prevMob,
+      prevDemob: form.prevDemob,
+      plataformaTexto: form.plataformaTexto,
+      relatanteNome: form.relatanteNome,
+      acaoTomada: form.acaoTomada,
+      comentarioCliente: form.comentarioCliente,
     };
 
     try {
@@ -201,6 +223,83 @@ export function RegistroIncidente({ embedded = false }: RegistroIncidenteProps) 
         value={form.dataOcorrencia}
         variant={embedded ? 'soft' : 'default'}
         onChangeText={(value) => setForm((current) => ({ ...current, dataOcorrencia: value }))}
+      />
+
+      <Input
+        label="Horário aproximado"
+        placeholder="06:00"
+        value={form.horarioAproximado}
+        variant={embedded ? 'soft' : 'default'}
+        onChangeText={(value) => setForm((current) => ({ ...current, horarioAproximado: value }))}
+      />
+
+      <View style={styles.field}>
+        <ThemedText themeColor="textSecondary" style={styles.fieldLabel}>
+          On / Offshore
+        </ThemedText>
+        <OptionChips
+          options={['', 'OnShore', 'Offshore'] as const}
+          labels={{ '': 'N/A', OnShore: 'OnShore', Offshore: 'Offshore' }}
+          value={form.onOffshore}
+          onChange={(value) => setForm((current) => ({ ...current, onOffshore: value }))}
+        />
+      </View>
+
+      <View style={styles.field}>
+        <NotionCheckbox
+          checked={form.reincidencia}
+          label="Reincidência"
+          onToggle={() =>
+            setForm((current) => ({ ...current, reincidencia: !current.reincidencia }))
+          }
+        />
+      </View>
+
+      <Input
+        label="Dias embarcados"
+        placeholder="0"
+        keyboardType="number-pad"
+        value={form.diasEmbarcados}
+        variant={embedded ? 'soft' : 'default'}
+        onChangeText={(value) => setForm((current) => ({ ...current, diasEmbarcados: value }))}
+      />
+      <Input
+        label="Prev. MOB"
+        placeholder="DD/MM/AAAA"
+        value={form.prevMob}
+        variant={embedded ? 'soft' : 'default'}
+        onChangeText={(value) => setForm((current) => ({ ...current, prevMob: value }))}
+      />
+      <Input
+        label="Prev. DEMOB"
+        placeholder="DD/MM/AAAA"
+        value={form.prevDemob}
+        variant={embedded ? 'soft' : 'default'}
+        onChangeText={(value) => setForm((current) => ({ ...current, prevDemob: value }))}
+      />
+      <Input
+        label="Plataforma"
+        value={form.plataformaTexto}
+        variant={embedded ? 'soft' : 'default'}
+        onChangeText={(value) => setForm((current) => ({ ...current, plataformaTexto: value }))}
+      />
+      <Input
+        label="Nome do relatante"
+        value={form.relatanteNome}
+        variant={embedded ? 'soft' : 'default'}
+        onChangeText={(value) => setForm((current) => ({ ...current, relatanteNome: value }))}
+      />
+      <Input
+        label="Ação tomada"
+        value={form.acaoTomada}
+        variant={embedded ? 'soft' : 'default'}
+        onChangeText={(value) => setForm((current) => ({ ...current, acaoTomada: value }))}
+      />
+      <Input
+        label="Comentário do cliente"
+        value={form.comentarioCliente}
+        variant={embedded ? 'soft' : 'default'}
+        onChangeText={(value) => setForm((current) => ({ ...current, comentarioCliente: value }))}
       />
 
       <View style={styles.field}>

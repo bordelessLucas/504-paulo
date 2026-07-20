@@ -93,10 +93,11 @@ const styles = StyleSheet.create({
   activeBar: {
     position: 'absolute',
     left: 0,
-    top: 6,
-    bottom: 6,
+    top: 8,
+    bottom: 8,
     width: 3,
-    borderRadius: 2,
+    borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
   },
   iconWrap: {
     width: 32,
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
     borderRadius: layout.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: layout.space.xs,
+    marginLeft: layout.space.sm,
   },
   label: {
     flex: 1,

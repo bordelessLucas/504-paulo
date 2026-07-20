@@ -37,7 +37,7 @@ export type StatusValidacaoEnum =
   | "recusada"
   | "devolvida";
 
-export type TipoIncidenteEnum = "acidente_sms" | "no_show" | "advertencia";
+export type TipoIncidenteEnum = "acidente_sms" | "no_show" | "advertencia" | "desvio_comportamental";
 
 export type TipoNotificacaoEnum =
   | "avaliacao_registrada"
@@ -52,7 +52,8 @@ export type TipoNotificacaoEnum =
   | "pdi_atualizado"
   | "pdi_vencendo"
   | "pdi_vencido"
-  | "pdi_concluido";
+  | "pdi_concluido"
+  | "ima_critico";
 
 export type PdiEixoEnum = "P1" | "P2" | "P3" | "geral";
 
@@ -89,6 +90,24 @@ export type Database = {
           status: string | null;
           avatar_url: string | null;
           role: UserRoleEnum;
+          telefone_2: string | null;
+          endereco: string | null;
+          cidade_uf: string | null;
+          telefone_emergencia: string | null;
+          tipo_contrato: string | null;
+          especialidade: string | null;
+          aceita_dobra: boolean;
+          total_no_show: number;
+          total_bafometro_positivo: number;
+          total_toxicologico_positivo: number;
+          trocas_plataforma_avaliacao_baixa: number;
+          perfil_risco: string | null;
+          observacoes: string | null;
+          data_demissao: string | null;
+          motivo_demissao: string | null;
+          tipo_demissao: string | null;
+          apto_recontratacao: boolean | null;
+          salario_base: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -152,6 +171,108 @@ export type Database = {
         ];
       };
 
+      clientes: {
+        Row: {
+          id: string;
+          codigo: string | null;
+          cnpj: string | null;
+          razao_social: string;
+          nome_fantasia: string | null;
+          endereco: string | null;
+          cidade: string | null;
+          uf: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          codigo?: string | null;
+          cnpj?: string | null;
+          razao_social: string;
+          nome_fantasia?: string | null;
+          endereco?: string | null;
+          cidade?: string | null;
+          uf?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          codigo?: string | null;
+          cnpj?: string | null;
+          razao_social?: string;
+          nome_fantasia?: string | null;
+          endereco?: string | null;
+          cidade?: string | null;
+          uf?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      cliente_unidades: {
+        Row: {
+          id: string;
+          cliente_id: string;
+          nome: string;
+          aeroporto_embarque: string | null;
+          cidade: string | null;
+          contato_base_nome: string | null;
+          contato_base_telefone: string | null;
+          contato_base_email: string | null;
+          contato_base_depto: string | null;
+          contato_bordo_nome: string | null;
+          contato_bordo_telefone: string | null;
+          contato_bordo_email: string | null;
+          contato_bordo_depto: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          cliente_id: string;
+          nome: string;
+          aeroporto_embarque?: string | null;
+          cidade?: string | null;
+          contato_base_nome?: string | null;
+          contato_base_telefone?: string | null;
+          contato_base_email?: string | null;
+          contato_base_depto?: string | null;
+          contato_bordo_nome?: string | null;
+          contato_bordo_telefone?: string | null;
+          contato_bordo_email?: string | null;
+          contato_bordo_depto?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          cliente_id?: string;
+          nome?: string;
+          aeroporto_embarque?: string | null;
+          cidade?: string | null;
+          contato_base_nome?: string | null;
+          contato_base_telefone?: string | null;
+          contato_base_email?: string | null;
+          contato_base_depto?: string | null;
+          contato_bordo_nome?: string | null;
+          contato_bordo_telefone?: string | null;
+          contato_bordo_email?: string | null;
+          contato_bordo_depto?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cliente_unidades_cliente_id_fkey";
+            columns: ["cliente_id"];
+            referencedRelation: "clientes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
       perguntas: {
         Row: {
           id: string;
@@ -187,6 +308,11 @@ export type Database = {
           avaliado_id: string;
           tipo: TipoAvaliacaoEnum;
           status: StatusValidacaoEnum;
+          periodo_inicio: string | null;
+          periodo_fim: string | null;
+          quinzena: string | null;
+          cliente_id: string | null;
+          unidade_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -195,6 +321,11 @@ export type Database = {
           avaliado_id: string;
           tipo: TipoAvaliacaoEnum;
           status?: StatusValidacaoEnum;
+          periodo_inicio?: string | null;
+          periodo_fim?: string | null;
+          quinzena?: string | null;
+          cliente_id?: string | null;
+          unidade_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -203,6 +334,11 @@ export type Database = {
           avaliado_id?: string;
           tipo?: TipoAvaliacaoEnum;
           status?: StatusValidacaoEnum;
+          periodo_inicio?: string | null;
+          periodo_fim?: string | null;
+          quinzena?: string | null;
+          cliente_id?: string | null;
+          unidade_id?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -216,6 +352,18 @@ export type Database = {
             foreignKeyName: "avaliacoes_avaliado_id_fkey";
             columns: ["avaliado_id"];
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "avaliacoes_cliente_id_fkey";
+            columns: ["cliente_id"];
+            referencedRelation: "clientes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "avaliacoes_unidade_id_fkey";
+            columns: ["unidade_id"];
+            referencedRelation: "cliente_unidades";
             referencedColumns: ["id"];
           },
         ];
@@ -332,6 +480,18 @@ export type Database = {
           tipo_incidente: TipoIncidenteEnum;
           data_ocorrencia: string;
           descricao: string;
+          horario_aproximado: string | null;
+          reincidencia: boolean | null;
+          on_offshore: string | null;
+          dias_embarcados: number | null;
+          prev_mob: string | null;
+          prev_demob: string | null;
+          cliente_id: string | null;
+          unidade_id: string | null;
+          plataforma_texto: string | null;
+          relatante_nome: string | null;
+          acao_tomada: string | null;
+          comentario_cliente: string | null;
           created_at: string;
         };
         Insert: {
@@ -341,6 +501,18 @@ export type Database = {
           tipo_incidente: TipoIncidenteEnum;
           data_ocorrencia: string;
           descricao: string;
+          horario_aproximado?: string | null;
+          reincidencia?: boolean | null;
+          on_offshore?: string | null;
+          dias_embarcados?: number | null;
+          prev_mob?: string | null;
+          prev_demob?: string | null;
+          cliente_id?: string | null;
+          unidade_id?: string | null;
+          plataforma_texto?: string | null;
+          relatante_nome?: string | null;
+          acao_tomada?: string | null;
+          comentario_cliente?: string | null;
           created_at?: string;
         };
         Update: {
@@ -350,6 +522,18 @@ export type Database = {
           tipo_incidente?: TipoIncidenteEnum;
           data_ocorrencia?: string;
           descricao?: string;
+          horario_aproximado?: string | null;
+          reincidencia?: boolean | null;
+          on_offshore?: string | null;
+          dias_embarcados?: number | null;
+          prev_mob?: string | null;
+          prev_demob?: string | null;
+          cliente_id?: string | null;
+          unidade_id?: string | null;
+          plataforma_texto?: string | null;
+          relatante_nome?: string | null;
+          acao_tomada?: string | null;
+          comentario_cliente?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -416,6 +600,14 @@ export type Database = {
           gerente_id: string | null;
           justificativa: string;
           status: StatusSolicitacaoSalarialEnum;
+          tipo_solicitacao: string | null;
+          valor_estimado: number | null;
+          percentual_reajuste: number | null;
+          curso_nome: string | null;
+          curso_instituicao: string | null;
+          checklist: Json;
+          parecer_gestor: string | null;
+          parecer_rh: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -425,6 +617,14 @@ export type Database = {
           gerente_id?: string | null;
           justificativa: string;
           status?: StatusSolicitacaoSalarialEnum;
+          tipo_solicitacao?: string | null;
+          valor_estimado?: number | null;
+          percentual_reajuste?: number | null;
+          curso_nome?: string | null;
+          curso_instituicao?: string | null;
+          checklist?: Json;
+          parecer_gestor?: string | null;
+          parecer_rh?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -434,18 +634,26 @@ export type Database = {
           gerente_id?: string | null;
           justificativa?: string;
           status?: StatusSolicitacaoSalarialEnum;
+          tipo_solicitacao?: string | null;
+          valor_estimado?: number | null;
+          percentual_reajuste?: number | null;
+          curso_nome?: string | null;
+          curso_instituicao?: string | null;
+          checklist?: Json;
+          parecer_gestor?: string | null;
+          parecer_rh?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "melhorias_colaborador_id_fkey";
+            foreignKeyName: "melhorias_salariais_colaborador_id_fkey";
             columns: ["colaborador_id"];
             referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "melhorias_gerente_id_fkey";
+            foreignKeyName: "melhorias_salariais_gerente_id_fkey";
             columns: ["gerente_id"];
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -1010,6 +1218,7 @@ export const TIPO_INCIDENTE_LABELS: Record<TipoIncidente, string> = {
   acidente_sms: "Acidente SMS",
   no_show: "Falta (No-show)",
   advertencia: "Advertência",
+  desvio_comportamental: "Desvio Comportamental",
 };
 
 export const TIPO_BENEFICIO_ANUAL_LABELS: Record<TipoBeneficioAnual, string> = {

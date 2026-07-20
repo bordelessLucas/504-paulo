@@ -20,9 +20,8 @@ export function StatCard({ label, value, hint, tone }: StatCardProps) {
     <View
       style={[
         styles.card,
-        theme.shadow.card,
         {
-          backgroundColor: palette?.bg ?? theme.backgroundElement,
+          backgroundColor: palette?.bg ?? theme.surfaceCard,
           borderColor: palette?.border ?? theme.border,
         },
       ]}>
@@ -30,10 +29,7 @@ export function StatCard({ label, value, hint, tone }: StatCardProps) {
         {value}
       </Text>
       <ThemedText
-        style={[
-          styles.label,
-          palette ? { color: palette.text } : undefined,
-        ]}
+        style={[styles.label, palette ? { color: palette.text } : undefined]}
         themeColor={palette ? undefined : "textSecondary"}>
         {label}
       </ThemedText>
@@ -48,11 +44,10 @@ export function StatCard({ label, value, hint, tone }: StatCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
-    minWidth: 100,
+    width: 132,
     borderRadius: layout.radius.md,
-    borderWidth: 1,
-    padding: layout.space.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: layout.space.md,
     paddingVertical: layout.space.md,
     gap: 2,
   },
@@ -68,7 +63,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansMedium,
   },
   hint: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 14,
   },
 });

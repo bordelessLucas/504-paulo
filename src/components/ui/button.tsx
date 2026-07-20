@@ -44,7 +44,9 @@ export function Button({
         ? theme.danger
         : variant === "secondary"
           ? theme.backgroundSelected
-          : "transparent";
+          : variant === "outline"
+            ? theme.surfaceCard
+            : "transparent";
 
   const textColor =
     variant === "primary" || variant === "danger"
@@ -57,6 +59,7 @@ export function Button({
 
   const borderWidth = variant === "outline" || variant === "secondary" ? 1 : 0;
   const borderColor = variant === "outline" ? theme.border : theme.border;
+  const hasElevation = variant === "primary" || variant === "danger";
 
   return (
     <Pressable
@@ -70,7 +73,7 @@ export function Button({
       }}
       style={({ pressed }) => [
         styles.base,
-        theme.shadow.button,
+        hasElevation ? theme.shadow.button : null,
         {
           minHeight: metrics.minHeight,
           paddingHorizontal: metrics.paddingHorizontal,

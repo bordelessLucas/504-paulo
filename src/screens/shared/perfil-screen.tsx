@@ -9,7 +9,7 @@ import { ProfileAvatarPicker } from '@/components/perfil/profile-avatar-picker';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { SegmentedControl, type SegmentOption } from '@/components/ui/segmented-control';
-import { Fonts, Spacing } from '@/constants/theme';
+import { Fonts, layout } from '@/constants/theme';
 import type { ThemePreference } from '@/contexts/ThemeContext';
 import { useAuth } from '@/features/auth/auth-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -24,13 +24,18 @@ const APPEARANCE_OPTIONS: SegmentOption<ThemePreference>[] = [
 type ProfileInfoRowProps = {
   label: string;
   value: string;
+  isLast?: boolean;
 };
 
-function ProfileInfoRow({ label, value }: ProfileInfoRowProps) {
+function ProfileInfoRow({ label, value, isLast = false }: ProfileInfoRowProps) {
   const theme = useTheme();
 
   return (
-    <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
+    <View
+      style={[
+        styles.infoRow,
+        !isLast && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
+      ]}>
       <ThemedText themeColor="textSecondary" style={styles.infoLabel}>
         {label}
       </ThemedText>
@@ -60,6 +65,14 @@ export function PerfilScreen() {
     return null;
   }
 
+  const rows = [
+    { label: 'Nome', value: user.name },
+    { label: 'E-mail', value: user.email },
+    user.role ? { label: 'Papel', value: ROLE_LABELS[user.role] } : null,
+    user.departamento ? { label: 'Departamento', value: user.departamento } : null,
+    user.funcao ? { label: 'Função', value: user.funcao } : null,
+  ].filter(Boolean) as Array<{ label: string; value: string }>;
+
   return (
     <TabScreenContainer scrollable contentContainerStyle={styles.content}>
       <ScreenHeader title="Perfil" />
@@ -73,19 +86,14 @@ export function PerfilScreen() {
 
       <Card>
         <ThemedText type="subtitle">Minha conta</ThemedText>
-
-        <ProfileInfoRow label="Nome" value={user.name} />
-        <ProfileInfoRow label="E-mail" value={user.email} />
-
-        {user.role ? (
-          <ProfileInfoRow label="Papel" value={ROLE_LABELS[user.role]} />
-        ) : null}
-
-        {user.departamento ? (
-          <ProfileInfoRow label="Departamento" value={user.departamento} />
-        ) : null}
-
-        {user.funcao ? <ProfileInfoRow label="Função" value={user.funcao} /> : null}
+        {rows.map((row, index) => (
+          <ProfileInfoRow
+            key={row.label}
+            label={row.label}
+            value={row.value}
+            isLast={index === rows.length - 1}
+          />
+        ))}
       </Card>
 
       <ChangePasswordForm email={user.email} />
@@ -104,19 +112,19 @@ export function PerfilScreen() {
         />
       </Card>
 
-      <Button label="Sair da conta" variant="secondary" onPress={() => void signOut()} />
+      <Button label="Sair da conta" variant="danger" onPress={() => void signOut()} />
     </TabScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    gap: Spacing.four,
+    gap: layout.space.lg,
+    paddingBottom: layout.space.xl,
   },
   infoRow: {
-    gap: Spacing.one,
-    paddingBottom: Spacing.two,
-    borderBottomWidth: 1,
+    gap: layout.space.xs,
+    paddingVertical: layout.space.sm,
   },
   infoLabel: {
     fontSize: 12,

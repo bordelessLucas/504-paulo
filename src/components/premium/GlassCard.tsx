@@ -1,9 +1,8 @@
-import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, type ReactNode } from "react";
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 
 import { brandRgb } from "@/constants/brand";
-import { Fonts, PressedOpacity, layout } from "@/constants/theme";
+import { PressedOpacity, layout } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { hapticLightImpact } from "@/lib/haptics";
 
@@ -16,6 +15,11 @@ type GlassCardProps = {
   accessibilityLabel?: string;
 };
 
+/**
+ * Card de superfície sólida.
+ * Shadow fica no wrapper (overflow visible); o miolo usa overflow hidden
+ * para cantos limpos — sem gradiente semi-transparente (bug “caixa na caixa”).
+ */
 export function GlassCard({
   children,
   style,
@@ -27,25 +31,30 @@ export function GlassCard({
   const theme = useTheme();
   const paddingValue = padding === "compact" ? layout.space.md : layout.space.lg;
 
-  const cardStyle = useMemo(
+  const shadowStyle = useMemo<ViewStyle>(
     () => ({
       borderRadius: layout.radius.lg,
-      borderWidth: 1,
-      borderColor: theme.isDark ? brandRgb(theme.colors.accent, 0.12) : theme.border,
-      overflow: "hidden" as const,
-      ...(glow ? theme.shadow.glow : theme.shadow.card),
+      ...theme.shadow.card,
+    }),
+    [theme],
+  );
+
+  const surfaceStyle = useMemo<ViewStyle>(
+    () => ({
+      borderRadius: layout.radius.lg,
+      borderWidth: glow ? 1 : StyleSheet.hairlineWidth,
+      borderColor: glow ? brandRgb(theme.accent, 0.4) : theme.border,
+      backgroundColor: theme.surfaceCard,
+      overflow: "hidden",
     }),
     [glow, theme],
   );
 
-  const gradientColors = (theme.isDark
-    ? [brandRgb(theme.colors.backgroundElement, 0.95), brandRgb(theme.colors.backgroundSelected, 0.85)]
-    : [theme.colors.backgroundElement, brandRgb(theme.colors.background, 0.6)]) as [string, string];
-
   const content = (
-    <View style={[cardStyle, style]}>
-      <LinearGradient colors={gradientColors} style={StyleSheet.absoluteFill} />
-      <View style={{ padding: paddingValue, gap: layout.space.md }}>{children}</View>
+    <View style={[shadowStyle, style]}>
+      <View style={surfaceStyle}>
+        <View style={{ padding: paddingValue, gap: layout.space.md }}>{children}</View>
+      </View>
     </View>
   );
 
@@ -58,7 +67,9 @@ export function GlassCard({
           void hapticLightImpact();
           onPress();
         }}
-        style={({ pressed }) => [pressed && { opacity: PressedOpacity, transform: [{ scale: 0.98 }] }]}>
+        style={({ pressed }) => [
+          pressed && { opacity: PressedOpacity, transform: [{ scale: 0.98 }] },
+        ]}>
         {content}
       </Pressable>
     );

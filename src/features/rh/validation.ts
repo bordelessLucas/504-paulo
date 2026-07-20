@@ -32,6 +32,15 @@ export type CreateColaboradorInput = {
   senha_temporaria?: string;
   role?: UserRole;
   status?: ProfileStatusValue;
+  telefone_2?: string;
+  endereco?: string;
+  cidade_uf?: string;
+  telefone_emergencia?: string;
+  tipo_contrato?: string;
+  especialidade?: string;
+  aceita_dobra?: boolean;
+  perfil_risco?: string;
+  observacoes?: string;
 };
 
 /** Senha padrão ao importar colaboradores via CSV (contas novas). */
@@ -153,5 +162,14 @@ export function normalizeCreateColaboradorInput(input: CreateColaboradorInput): 
     senha_temporaria: input.senha_temporaria?.trim() || undefined,
     role: input.role,
     status: normalizeProfileStatus(input.status) ?? 'ativo',
+    telefone_2: sanitizeTelefoneDigits(input.telefone_2),
+    endereco: input.endereco?.trim() || undefined,
+    cidade_uf: input.cidade_uf?.trim() || undefined,
+    telefone_emergencia: input.telefone_emergencia?.trim() || undefined,
+    tipo_contrato: input.tipo_contrato?.trim() || undefined,
+    especialidade: input.especialidade?.trim() || undefined,
+    aceita_dobra: input.aceita_dobra ?? false,
+    perfil_risco: input.perfil_risco?.trim() || undefined,
+    observacoes: input.observacoes?.trim() || undefined,
   };
 }

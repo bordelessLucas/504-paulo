@@ -48,7 +48,7 @@ export default function RegisterScreen() {
   return (
     <AuthLayout
       title="Criar sua conta"
-      subtitle="Cadastre-se para participar das avaliações internas de desempenho."
+      subtitle="Cadastre-se para gerenciar avaliações da sua empresa. Após assinar um plano, você será o CEO da conta."
       footer={
         <View style={styles.footerRow}>
           <ThemedText themeColor="textSecondary">Já possui conta?</ThemedText>

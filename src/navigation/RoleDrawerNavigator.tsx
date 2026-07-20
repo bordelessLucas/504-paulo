@@ -5,7 +5,6 @@ import { NotionDrawerContent } from '@/components/navigation/notion-drawer-conte
 import { DESKTOP_SIDEBAR_WIDTH, MOBILE_DRAWER_WIDTH } from '@/constants/layout';
 import { useAuth } from '@/features/auth/auth-context';
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
-import { brandRgb } from '@/constants/brand';
 import { useTheme } from '@/hooks/use-theme';
 import { usePendingApprovalCount } from '@/hooks/use-pending-approval-count';
 import { getPrimaryTabForRole, getTabLabelForRole, getTabsForRole } from '@/navigation/role-menus';
@@ -54,7 +53,7 @@ export function RoleDrawerNavigator({ role }: RoleDrawerNavigatorProps) {
         drawerType: isDesktopLayout ? 'permanent' : 'front',
         headerShown: false,
         swipeEnabled: !isDesktopLayout,
-        overlayColor: brandRgb(theme.primary, 0.55),
+        overlayColor: 'rgba(1, 26, 56, 0.45)',
         lazy: true,
         freezeOnBlur: true,
         drawerStyle: {

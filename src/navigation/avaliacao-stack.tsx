@@ -2,11 +2,13 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Fonts } from '@/constants/theme';
 import { FormularioAvaliacaoScreen } from '@/screens/avaliacao/formulario-avaliacao-screen';
+import { FormularioLoteScreen } from '@/screens/avaliacao/formulario-lote-screen';
 import { HistoricoAvaliacoesScreen } from '@/screens/avaliacao/historico-avaliacoes-screen';
 import { ListaColaboradoresScreen } from '@/screens/avaliacao/lista-colaboradores-screen';
 import { useTheme } from '@/hooks/use-theme';
 
 export type AvaliacaoStackParamList = {
+  FormularioLote: undefined;
   ListaColaboradores: undefined;
   FormularioAvaliacao: {
     avaliadoId: string;
@@ -26,6 +28,7 @@ export function AvaliacaoStackNavigator() {
 
   return (
     <Stack.Navigator
+      initialRouteName="FormularioLote"
       screenOptions={{
         headerShown: true,
         headerStyle: { backgroundColor: theme.background },
@@ -38,10 +41,17 @@ export function AvaliacaoStackNavigator() {
         contentStyle: { backgroundColor: theme.background },
       }}>
       <Stack.Screen
+        name="FormularioLote"
+        component={FormularioLoteScreen}
+        options={{
+          title: 'Avaliação em lote',
+        }}
+      />
+      <Stack.Screen
         name="ListaColaboradores"
         component={ListaColaboradoresScreen}
         options={{
-          title: 'Painel de avaliação',
+          title: 'Avaliação individual',
         }}
       />
       <Stack.Screen

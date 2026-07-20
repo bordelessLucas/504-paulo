@@ -1,8 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { brandRgb } from '@/constants/brand';
+import { brand, brandRgb } from '@/constants/brand';
 import { Fonts, layout } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
 type DrawerProfileCardProps = {
   userName: string;
@@ -10,7 +9,6 @@ type DrawerProfileCardProps = {
 };
 
 export function DrawerProfileCard({ userName, roleLabel }: DrawerProfileCardProps) {
-  const theme = useTheme();
   const firstName = userName.split(' ')[0] ?? userName;
   const initials = userName
     .split(' ')
@@ -23,20 +21,24 @@ export function DrawerProfileCard({ userName, roleLabel }: DrawerProfileCardProp
       style={[
         styles.card,
         {
-          backgroundColor: brandRgb(theme.primary, 0.55),
-          borderColor: brandRgb(theme.accent, 0.2),
+          backgroundColor: brand.navy,
+          borderColor: brandRgb(brand.green, 0.35),
         },
       ]}>
-      <View style={[styles.avatar, { backgroundColor: brandRgb(theme.accent, 0.2) }]}>
-        <Text style={[styles.avatarText, { color: theme.accent, fontFamily: Fonts.sansBold }]}>
+      <View style={[styles.avatar, { backgroundColor: brandRgb(brand.green, 0.22) }]}>
+        <Text style={[styles.avatarText, { color: brand.greenSoft, fontFamily: Fonts.sansBold }]}>
           {initials}
         </Text>
       </View>
       <View style={styles.info}>
-        <Text style={[styles.userName, { color: theme.text, fontFamily: Fonts.sansSemiBold }]}>
+        <Text style={[styles.userName, { color: brand.cream, fontFamily: Fonts.sansSemiBold }]}>
           {firstName}
         </Text>
-        <Text style={[styles.roleLabel, { color: theme.textMuted, fontFamily: Fonts.sansMedium }]}>
+        <Text
+          style={[
+            styles.roleLabel,
+            { color: brandRgb(brand.cream, 0.72), fontFamily: Fonts.sansMedium },
+          ]}>
           {roleLabel}
         </Text>
       </View>

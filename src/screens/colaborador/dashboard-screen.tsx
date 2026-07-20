@@ -158,13 +158,14 @@ export function DashboardColaboradorScreen() {
   );
 
   const handleAutoavaliacaoSubmit = useCallback(
-    async (payload: { qualificacoes: string; investimento: string }) => {
+    async (payload: import('@/features/colaborador/autoavaliacao-modal').AutoavaliacaoSubmitPayload) => {
       if (!user) throw new Error('Sessão inválida. Faça login novamente.');
 
       await createAutoavaliacaoSolicitacao({
         colaboradorId: user.id,
         qualificacoes: payload.qualificacoes,
         investimento: payload.investimento,
+        extra: payload,
       });
 
       showToast('Solicitação enviada com sucesso.', 'success');

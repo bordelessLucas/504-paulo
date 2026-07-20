@@ -256,9 +256,8 @@ function CicloTimeline() {
             <View
               style={[
                 styles.timelineCard,
-                theme.shadow.card,
                 {
-                  backgroundColor: palette.bg,
+                  backgroundColor: theme.surfaceCard,
                   borderColor: palette.border,
                 },
               ]}>
@@ -268,10 +267,14 @@ function CicloTimeline() {
               <ThemedText style={[styles.timelinePeriodo, { color: palette.text }]}>
                 {marco.periodo}
               </ThemedText>
-              <ThemedText type="smallBold" style={styles.timelineLabel}>
+              <ThemedText type="smallBold" style={styles.timelineLabel} numberOfLines={2}>
                 {dados.label}
               </ThemedText>
-              <ThemedText themeColor="textSecondary" type="small" style={styles.timelineDesc}>
+              <ThemedText
+                themeColor="textSecondary"
+                type="small"
+                style={styles.timelineDesc}
+                numberOfLines={3}>
                 {dados.descricao}
               </ThemedText>
             </View>
@@ -535,10 +538,11 @@ const styles = StyleSheet.create({
   },
   timelineCard: {
     width: 200,
+    minHeight: 168,
     gap: layout.space.sm,
     padding: layout.space.lg,
     borderRadius: layout.radius.lg,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   timelineIconWrap: {
     width: 40,
@@ -559,12 +563,15 @@ const styles = StyleSheet.create({
   },
   timelineDesc: {
     lineHeight: 18,
+    flexShrink: 1,
   },
   timelineConnector: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: layout.space.xs,
     gap: 2,
+    height: 40,
   },
   timelineLine: {
     width: 12,

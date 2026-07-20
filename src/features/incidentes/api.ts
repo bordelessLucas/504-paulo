@@ -49,6 +49,18 @@ export async function createIncidente(
     tipo_incidente: input.tipoIncidente,
     data_ocorrencia: dataOcorrencia,
     descricao: input.descricao.trim(),
+    horario_aproximado: input.horarioAproximado?.trim() || null,
+    reincidencia: input.reincidencia ?? null,
+    on_offshore: input.onOffshore?.trim() || null,
+    dias_embarcados: input.diasEmbarcados?.trim()
+      ? Number(input.diasEmbarcados)
+      : null,
+    prev_mob: input.prevMob ? normalizeDataOcorrencia(input.prevMob) : null,
+    prev_demob: input.prevDemob ? normalizeDataOcorrencia(input.prevDemob) : null,
+    plataforma_texto: input.plataformaTexto?.trim() || null,
+    relatante_nome: input.relatanteNome?.trim() || null,
+    acao_tomada: input.acaoTomada?.trim() || null,
+    comentario_cliente: input.comentarioCliente?.trim() || null,
   });
 
   if (error) {

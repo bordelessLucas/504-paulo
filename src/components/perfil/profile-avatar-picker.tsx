@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { Fonts, layout } from '@/constants/theme';
 import { pickAvatarImage, uploadProfileAvatar } from '@/features/perfil/profile-api';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -81,20 +81,29 @@ export function ProfileAvatarPicker({
           styles.avatarButton,
           pressed && !isUploading && styles.pressed,
         ]}>
-        <View
-          style={[
-            styles.avatarCircle,
-            { backgroundColor: theme.accentMuted, borderColor: theme.border },
-          ]}>
-          {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-          ) : (
-            <ThemedText style={[styles.initials, { color: theme.accent }]}>
-              {getInitials(name)}
-            </ThemedText>
-          )}
+        <View style={styles.avatarWrap}>
+          <View
+            style={[
+              styles.avatarCircle,
+              { backgroundColor: theme.accentMuted, borderColor: theme.border },
+            ]}>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            ) : (
+              <ThemedText style={[styles.initials, { color: theme.accent }]}>
+                {getInitials(name)}
+              </ThemedText>
+            )}
+          </View>
 
-          <View style={[styles.editBadge, { backgroundColor: theme.primary, borderColor: theme.backgroundElement }]}>
+          <View
+            style={[
+              styles.editBadge,
+              {
+                backgroundColor: theme.primary,
+                borderColor: theme.background,
+              },
+            ]}>
             {isUploading ? (
               <ActivityIndicator color={theme.textOnPrimary} size="small" />
             ) : (
@@ -118,14 +127,22 @@ export function ProfileAvatarPicker({
 }
 
 const AVATAR_SIZE = 112;
+const BADGE_SIZE = 32;
 
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    gap: Spacing.two,
+    gap: layout.space.sm,
+    paddingTop: layout.space.sm,
   },
   avatarButton: {
     alignItems: 'center',
+  },
+  avatarWrap: {
+    width: AVATAR_SIZE + 8,
+    height: AVATAR_SIZE + 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarCircle: {
     width: AVATAR_SIZE,
@@ -147,11 +164,11 @@ const styles = StyleSheet.create({
   },
   editBadge: {
     position: 'absolute',
-    right: 4,
-    bottom: 4,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    right: 0,
+    bottom: 0,
+    width: BADGE_SIZE,
+    height: BADGE_SIZE,
+    borderRadius: BADGE_SIZE / 2,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',

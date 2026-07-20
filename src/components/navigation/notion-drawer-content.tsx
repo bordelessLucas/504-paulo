@@ -54,7 +54,7 @@ export function NotionDrawerContent({
     void hapticSelection();
 
     if (activeRoute !== routeName) {
-      navigation.jumpTo(routeName);
+      (navigation as { jumpTo: (name: string) => void }).jumpTo(routeName);
     }
 
     if (closeOnNavigate) {

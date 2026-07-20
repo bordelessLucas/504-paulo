@@ -91,11 +91,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
+    alignSelf: 'center',
   },
   countText: {
     fontSize: 12,
     fontWeight: '700',
-    lineHeight: 16,
+    lineHeight: 14,
+    textAlign: 'center',
   },
   body: {
     marginTop: layout.space.md,

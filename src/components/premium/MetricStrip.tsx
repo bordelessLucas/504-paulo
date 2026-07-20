@@ -39,5 +39,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: layout.space.sm,
     paddingVertical: layout.space.xs,
+    paddingRight: layout.space.sm,
   },
 });

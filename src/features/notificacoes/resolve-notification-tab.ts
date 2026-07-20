@@ -36,6 +36,7 @@ export function resolveNotificationTab(
       return isPainelAnualEstrategicoRole(role) ? 'PainelAnualEstrategico' : null;
 
     case 'incidente_registrado':
+    case 'ima_critico':
       if (role === 'colaborador') {
         return 'DashboardColaborador';
       }

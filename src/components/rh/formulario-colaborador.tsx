@@ -48,6 +48,15 @@ const INITIAL_FORM: CreateColaboradorInput = {
   certificacao_edn: false,
   senha_temporaria: '',
   status: 'ativo',
+  telefone_2: '',
+  endereco: '',
+  cidade_uf: '',
+  telefone_emergencia: '',
+  tipo_contrato: '',
+  especialidade: '',
+  aceita_dobra: false,
+  perfil_risco: '',
+  observacoes: '',
 };
 
 export function FormularioColaborador({ embedded = false, onCreated }: FormularioColaboradorProps) {
@@ -233,6 +242,59 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           value={form.plataforma ?? ''}
           variant={inputVariant}
         />
+        <Input
+          label="Tipo de contrato"
+          onChangeText={(value) => updateField('tipo_contrato', value)}
+          placeholder="Fixo / Spot / Docagem / Extra"
+          value={form.tipo_contrato ?? ''}
+          variant={inputVariant}
+        />
+        <Input
+          label="Especialidade"
+          onChangeText={(value) => updateField('especialidade', value)}
+          placeholder="Ex.: Soldador TIG"
+          value={form.especialidade ?? ''}
+          variant={inputVariant}
+        />
+        <Input
+          label="Endereço"
+          onChangeText={(value) => updateField('endereco', value)}
+          value={form.endereco ?? ''}
+          variant={inputVariant}
+        />
+        <Input
+          label="Cidade/UF"
+          onChangeText={(value) => updateField('cidade_uf', value)}
+          placeholder="Macaé / RJ"
+          value={form.cidade_uf ?? ''}
+          variant={inputVariant}
+        />
+        <Input
+          label="Tel. emergência"
+          onChangeText={(value) => updateField('telefone_emergencia', value)}
+          value={form.telefone_emergencia ?? ''}
+          variant={inputVariant}
+        />
+        <Input
+          label="Segundo telefone"
+          onChangeText={(value) => updateField('telefone_2', value)}
+          value={form.telefone_2 ?? ''}
+          variant={inputVariant}
+        />
+        <Input
+          label="Perfil de risco comportamental"
+          onChangeText={(value) => updateField('perfil_risco', value)}
+          placeholder="Baixo / Médio / Crítico"
+          value={form.perfil_risco ?? ''}
+          variant={inputVariant}
+        />
+        <View style={styles.fieldGroup}>
+          <NotionCheckbox
+            checked={Boolean(form.aceita_dobra)}
+            label="Aceita dobra"
+            onToggle={() => updateField('aceita_dobra', !form.aceita_dobra)}
+          />
+        </View>
         <Input
           error={errors.funcao}
           label="Função / cargo"
