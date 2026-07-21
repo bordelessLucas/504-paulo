@@ -173,13 +173,15 @@ export function FormularioLoteScreen() {
         <ThemedText type="smallBold">Filtros e configuração</ThemedText>
         <View style={styles.form}>
           <Input
-            label="Período início (AAAA-MM-DD)"
+            label="Período início"
+            mask="isoDate"
             value={periodoInicio}
             onChangeText={setPeriodoInicio}
             placeholder="2026-06-01"
           />
           <Input
-            label="Período fim (AAAA-MM-DD)"
+            label="Período fim"
+            mask="isoDate"
             value={periodoFim}
             onChangeText={setPeriodoFim}
             placeholder="2026-06-15"

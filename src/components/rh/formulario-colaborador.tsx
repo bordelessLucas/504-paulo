@@ -183,6 +183,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
         <Input
           error={errors.data_nascimento}
           label="Data de nascimento"
+          mask="date"
           onChangeText={(value) => updateField('data_nascimento', value)}
           placeholder="DD/MM/AAAA"
           value={form.data_nascimento ?? ''}
@@ -192,9 +193,8 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           <View style={styles.half}>
             <Input
               error={errors.ddd}
-              keyboardType="number-pad"
               label="DDD"
-              maxLength={2}
+              mask="ddd"
               onChangeText={(value) => updateField('ddd', value)}
               placeholder="21"
               value={form.ddd ?? ''}
@@ -204,10 +204,10 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           <View style={styles.half}>
             <Input
               error={errors.telefone}
-              keyboardType="phone-pad"
               label="Telefone"
+              mask="phone"
               onChangeText={(value) => updateField('telefone', value)}
-              placeholder="999999999"
+              placeholder="99999-9999"
               value={form.telefone ?? ''}
               variant={inputVariant}
             />
@@ -271,13 +271,17 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
         />
         <Input
           label="Tel. emergência"
+          mask="phoneFull"
           onChangeText={(value) => updateField('telefone_emergencia', value)}
+          placeholder="(21) 99999-9999"
           value={form.telefone_emergencia ?? ''}
           variant={inputVariant}
         />
         <Input
           label="Segundo telefone"
+          mask="phoneFull"
           onChangeText={(value) => updateField('telefone_2', value)}
+          placeholder="(21) 99999-9999"
           value={form.telefone_2 ?? ''}
           variant={inputVariant}
         />
@@ -337,6 +341,7 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
         <Input
           error={errors.data_admissao}
           label="Data de admissão"
+          mask="date"
           onChangeText={(value) => updateField('data_admissao', value)}
           placeholder="DD/MM/AAAA"
           value={form.data_admissao ?? ''}

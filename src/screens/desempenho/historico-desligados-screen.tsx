@@ -57,7 +57,7 @@ export function HistoricoDesligadosScreen() {
         description="Desligamentos do período com motivo e aptidão à recontratação."
       />
 
-      <Input label="Ano" onChangeText={setAno} value={ano} keyboardType="number-pad" />
+      <Input label="Ano" mask="year" onChangeText={setAno} placeholder="2026" value={ano} />
       <MetricStrip metrics={metrics} />
 
       {isLoading ? <SkeletonLoader /> : null}

@@ -2,16 +2,45 @@ import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-na
 
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { applyMask, MASK_MAX_LENGTH, type InputMask } from '@/lib/input-masks';
 
 type InputProps = TextInputProps & {
   label: string;
   error?: string;
   variant?: 'default' | 'soft';
+  mask?: InputMask;
 };
 
-export function Input({ label, error, variant = 'default', style, ...rest }: InputProps) {
+const MASK_KEYBOARD: Partial<Record<InputMask, TextInputProps['keyboardType']>> = {
+  date: 'number-pad',
+  isoDate: 'number-pad',
+  time: 'number-pad',
+  ddd: 'number-pad',
+  phone: 'phone-pad',
+  phoneFull: 'phone-pad',
+  cnpj: 'number-pad',
+  currency: 'number-pad',
+  year: 'number-pad',
+};
+
+export function Input({
+  label,
+  error,
+  variant = 'default',
+  mask,
+  style,
+  onChangeText,
+  keyboardType,
+  maxLength,
+  autoCapitalize,
+  ...rest
+}: InputProps) {
   const theme = useTheme();
   const isSoft = variant === 'soft';
+
+  const handleChangeText = (value: string) => {
+    onChangeText?.(mask ? applyMask(mask, value) : value);
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -28,6 +57,10 @@ export function Input({ label, error, variant = 'default', style, ...rest }: Inp
           },
           style,
         ]}
+        autoCapitalize={mask === 'uf' ? 'characters' : autoCapitalize}
+        keyboardType={keyboardType ?? (mask ? MASK_KEYBOARD[mask] : undefined)}
+        maxLength={maxLength ?? (mask ? MASK_MAX_LENGTH[mask] : undefined)}
+        onChangeText={handleChangeText}
         {...rest}
       />
       {error ? <Text style={[styles.error, { color: theme.danger }]}>{error}</Text> : null}

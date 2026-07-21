@@ -137,14 +137,15 @@ export function AuthLayout({
       {showStarBackground ? <GalaxyStarBackground pointerX={pointerX} pointerY={pointerY} /> : null}
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.keyboardView}>
           <ScrollView
             contentContainerStyle={[
               styles.scrollContent,
               showStarBackground ? styles.scrollContentAuth : styles.scrollContentCentered,
             ]}
+            automaticallyAdjustKeyboardInsets
+            keyboardDismissMode="on-drag"
             keyboardShouldPersistTaps="handled"
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}

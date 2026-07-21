@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import {
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   View,
@@ -59,20 +61,28 @@ export function TabScreenContainer({
     contentContainerStyle,
   ];
 
+  const content = scrollable ? (
+    <ScrollView
+      automaticallyAdjustKeyboardInsets
+      contentContainerStyle={[styles.scrollGrow, paddedContentStyle]}
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps={keyboardShouldPersistTaps}
+      refreshControl={refreshControl}
+      showsVerticalScrollIndicator={false}>
+      {children}
+    </ScrollView>
+  ) : (
+    <View style={[styles.fill, paddedContentStyle]}>{children}</View>
+  );
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={edges}>
-        {scrollable ? (
-          <ScrollView
-            contentContainerStyle={[styles.scrollGrow, paddedContentStyle]}
-            keyboardShouldPersistTaps={keyboardShouldPersistTaps}
-            refreshControl={refreshControl}
-            showsVerticalScrollIndicator={false}>
-            {children}
-          </ScrollView>
-        ) : (
-          <View style={[styles.fill, paddedContentStyle]}>{children}</View>
-        )}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.fill}>
+          {content}
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ThemedView>
   );

@@ -203,9 +203,10 @@ export function AutoavaliacaoModal({ visible, onClose, onSubmit }: Autoavaliacao
           />
           <Input
             label="Valor estimado (R$)"
+            mask="currency"
+            placeholder="0,00"
             value={valorEstimado}
             onChangeText={setValorEstimado}
-            keyboardType="decimal-pad"
           />
         </View>
       ) : null}

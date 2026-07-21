@@ -219,6 +219,7 @@ export function RegistroIncidente({ embedded = false }: RegistroIncidenteProps) 
 
       <Input
         label="Data da ocorrência"
+        mask="date"
         placeholder="DD/MM/AAAA"
         value={form.dataOcorrencia}
         variant={embedded ? 'soft' : 'default'}
@@ -227,6 +228,7 @@ export function RegistroIncidente({ embedded = false }: RegistroIncidenteProps) 
 
       <Input
         label="Horário aproximado"
+        mask="time"
         placeholder="06:00"
         value={form.horarioAproximado}
         variant={embedded ? 'soft' : 'default'}
@@ -265,6 +267,7 @@ export function RegistroIncidente({ embedded = false }: RegistroIncidenteProps) 
       />
       <Input
         label="Prev. MOB"
+        mask="date"
         placeholder="DD/MM/AAAA"
         value={form.prevMob}
         variant={embedded ? 'soft' : 'default'}
@@ -272,6 +275,7 @@ export function RegistroIncidente({ embedded = false }: RegistroIncidenteProps) 
       />
       <Input
         label="Prev. DEMOB"
+        mask="date"
         placeholder="DD/MM/AAAA"
         value={form.prevDemob}
         variant={embedded ? 'soft' : 'default'}

@@ -4,6 +4,7 @@ import {
 } from '@/features/colaborador/eligibility';
 import type { AutoavaliacaoSubmitPayload } from '@/features/colaborador/autoavaliacao-modal';
 import { hasIncidentesRecentes } from '@/features/incidentes/api';
+import { parseCurrency } from '@/lib/input-masks';
 import { supabase } from '@/lib/supabase';
 
 export function buildAutoavaliacaoJustificativa(
@@ -54,7 +55,7 @@ export async function createAutoavaliacaoSolicitacao(params: {
 
   const justificativa = buildAutoavaliacaoJustificativa(qualificacoesTexto, investimentoTexto);
   const valorEstimado = params.extra?.valorEstimado
-    ? Number(params.extra.valorEstimado.replace(',', '.'))
+    ? parseCurrency(params.extra.valorEstimado)
     : null;
 
   const { error } = await supabase.from('melhorias_salariais').insert({
@@ -63,7 +64,7 @@ export async function createAutoavaliacaoSolicitacao(params: {
     justificativa,
     status: 'pendente_rh',
     tipo_solicitacao: params.extra?.tipoSolicitacao ?? 'autoavaliacao',
-    valor_estimado: Number.isFinite(valorEstimado) ? valorEstimado : null,
+    valor_estimado: valorEstimado,
     curso_nome: params.extra?.cursoNome?.trim() || null,
     curso_instituicao: params.extra?.cursoInstituicao?.trim() || null,
     checklist: params.extra?.checklist ?? {},

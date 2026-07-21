@@ -51,9 +51,11 @@ export function GlassCard({
   );
 
   const content = (
-    <View style={[shadowStyle, style]}>
-      <View style={surfaceStyle}>
-        <View style={{ padding: paddingValue, gap: layout.space.md }}>{children}</View>
+    <View style={[shadowStyle, styles.wrapper]}>
+      <View style={[surfaceStyle, styles.surface]}>
+        <View style={[styles.body, { padding: paddingValue, gap: layout.space.md }, style]}>
+          {children}
+        </View>
       </View>
     </View>
   );
@@ -68,6 +70,7 @@ export function GlassCard({
           onPress();
         }}
         style={({ pressed }) => [
+          styles.wrapper,
           pressed && { opacity: PressedOpacity, transform: [{ scale: 0.98 }] },
         ]}>
         {content}
@@ -77,3 +80,16 @@ export function GlassCard({
 
   return content;
 }
+
+const styles = StyleSheet.create({
+  wrapper: {
+    width: "100%",
+    alignSelf: "stretch",
+  },
+  surface: {
+    width: "100%",
+  },
+  body: {
+    width: "100%",
+  },
+});

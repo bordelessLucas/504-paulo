@@ -1,7 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useCallback } from 'react';
 import {
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -19,6 +18,7 @@ import { ThemedText } from '@/components/themed-text';
 import { brand, brandRgb } from '@/constants/brand';
 import { MODAL_SHEET_RADIUS } from '@/constants/modal';
 import { Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
+import { useKeyboardHeight } from '@/hooks/use-keyboard-height';
 import { useTheme } from '@/hooks/use-theme';
 
 const SHEET_RADIUS = MODAL_SHEET_RADIUS;
@@ -92,6 +92,7 @@ export function BaseModal({
 }: BaseModalProps) {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
+  const keyboardHeight = useKeyboardHeight();
   const theme = useTheme();
   const isDark = theme.isDark;
   const surfaceColor = theme.surfaceElevated;
@@ -109,8 +110,11 @@ export function BaseModal({
   }, [dismissOnBackdropPress, onClose]);
 
   const verticalChrome = isSheet ? insets.bottom + Spacing.two : insets.top + insets.bottom + Spacing.six;
-  const maxScrollHeight = Math.round(windowHeight * (isSheet ? SHEET_HEIGHT_RATIO : CENTERED_HEIGHT_RATIO) - verticalChrome);
-  const scrollPaddingBottom = insets.bottom + Spacing.five;
+  const availableHeight = Math.max(windowHeight - keyboardHeight, 0);
+  const maxScrollHeight = Math.round(
+    availableHeight * (isSheet ? SHEET_HEIGHT_RATIO : CENTERED_HEIGHT_RATIO) - verticalChrome,
+  );
+  const scrollPaddingBottom = insets.bottom + Spacing.five + (keyboardHeight > 0 ? Spacing.two : 0);
 
   return (
     <Modal
@@ -119,11 +123,11 @@ export function BaseModal({
       statusBarTranslucent
       transparent
       visible={visible}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <View
         style={[
-          styles.keyboardRoot,
-          isSheet ? styles.keyboardSheet : styles.keyboardCentered,
+          styles.root,
+          isSheet ? styles.sheetRoot : styles.centeredRoot,
+          keyboardHeight > 0 ? { paddingBottom: keyboardHeight } : null,
         ]}>
         <Pressable
           accessibilityRole="button"
@@ -138,7 +142,7 @@ export function BaseModal({
               backgroundColor: surfaceColor,
               borderColor,
               maxWidth: resolvedMaxWidth,
-              maxHeight: maxScrollHeight,
+              maxHeight: Math.max(maxScrollHeight, 180),
               ...Platform.select({
                 ios: {
                   shadowColor: brand.navyDeep,
@@ -158,10 +162,12 @@ export function BaseModal({
           <ScrollView
             bounces
             alwaysBounceVertical={false}
+            automaticallyAdjustKeyboardInsets
+            keyboardDismissMode="on-drag"
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
             showsVerticalScrollIndicator={Platform.OS !== 'web'}
-            style={[styles.scroll, { maxHeight: maxScrollHeight }]}
+            style={[styles.scroll, { maxHeight: Math.max(maxScrollHeight, 180) }]}
             contentContainerStyle={[
               styles.scrollContent,
               { paddingBottom: scrollPaddingBottom },
@@ -207,19 +213,19 @@ export function BaseModal({
             {footer}
           </ScrollView>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboardRoot: {
+  root: {
     flex: 1,
   },
-  keyboardSheet: {
+  sheetRoot: {
     justifyContent: 'flex-end',
   },
-  keyboardCentered: {
+  centeredRoot: {
     justifyContent: 'center',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,

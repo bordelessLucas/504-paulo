@@ -60,7 +60,7 @@ function HistoricoAvaliacoesBase({ tipo, title, description }: Props) {
       <GlassCard padding="compact">
         <ThemedText type="smallBold">Filtros</ThemedText>
         <View style={styles.filters}>
-          <Input label="Ano" onChangeText={setAno} value={ano} keyboardType="number-pad" />
+          <Input label="Ano" mask="year" onChangeText={setAno} placeholder="2026" value={ano} />
           <Input label="Cliente" onChangeText={setCliente} value={cliente} placeholder="PRIO" />
           <Input label="Unidade" onChangeText={setUnidade} value={unidade} placeholder="POLVO A" />
           <Input

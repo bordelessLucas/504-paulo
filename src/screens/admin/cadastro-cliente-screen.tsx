@@ -98,6 +98,8 @@ export function CadastroClienteScreen() {
             />
             <Input
               label="CNPJ"
+              mask="cnpj"
+              placeholder="00.000.000/0000-00"
               value={form.cnpj}
               onChangeText={(cnpj) => setForm((c) => ({ ...c, cnpj }))}
             />
@@ -122,7 +124,10 @@ export function CadastroClienteScreen() {
               onChangeText={(cidade) => setForm((c) => ({ ...c, cidade }))}
             />
             <Input
+              autoCapitalize="characters"
               label="UF"
+              mask="uf"
+              placeholder="RJ"
               value={form.uf}
               onChangeText={(uf) => setForm((c) => ({ ...c, uf }))}
             />
