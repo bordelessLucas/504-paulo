@@ -33,6 +33,15 @@ export const DESKTOP_SIDEBAR_WIDTH = 272;
 /** Largura do drawer deslizante no mobile. */
 export const MOBILE_DRAWER_WIDTH = 300;
 
+/** Padding horizontal do conteúdo no desktop (área ao lado da sidebar). */
+export const DESKTOP_CONTENT_PADDING_HORIZONTAL = 40;
+
+/** Padding superior do conteúdo no desktop (sem top bar móvel). */
+export const DESKTOP_CONTENT_PADDING_TOP = Spacing.four;
+
+/** Largura máxima do conteúdo principal no desktop — evita cards “esticados”. */
+export const DESKTOP_CONTENT_MAX_WIDTH = 960;
+
 /** Insets padrão de conteúdo de tela em mobile. */
 export function getScreenContentInsets(options?: { top?: number; bottom?: number }) {
   return {

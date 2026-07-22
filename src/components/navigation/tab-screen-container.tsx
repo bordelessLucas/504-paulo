@@ -11,8 +11,13 @@ import {
 } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
-import { SCREEN_CONTENT_TOP_OFFSET, SCREEN_PADDING_HORIZONTAL } from '@/constants/layout';
-import { layout } from '@/constants/theme';
+import {
+  DESKTOP_CONTENT_MAX_WIDTH,
+  DESKTOP_CONTENT_PADDING_HORIZONTAL,
+  DESKTOP_CONTENT_PADDING_TOP,
+  SCREEN_CONTENT_TOP_OFFSET,
+  SCREEN_PADDING_HORIZONTAL,
+} from '@/constants/layout';
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useListContentStyle } from '@/lib/layoutPadding';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
@@ -24,6 +29,11 @@ type TabScreenContainerProps = {
   scrollable?: boolean;
   keyboardShouldPersistTaps?: 'handled' | 'always' | 'never';
   contentContainerStyle?: StyleProp<ViewStyle>;
+  /**
+   * Largura máxima do conteúdo.
+   * No desktop, o padrão é DESKTOP_CONTENT_MAX_WIDTH.
+   * Passe `0` para ocupar toda a largura disponível.
+   */
   maxContentWidth?: number;
   withHorizontalPadding?: boolean;
   /** @deprecated Barra superior global já reserva o espaço; mantido por compatibilidade. */
@@ -45,19 +55,38 @@ export function TabScreenContainer({
   const isDesktopLayout = useIsDesktopLayout();
   const listInsets = useListContentStyle({ safeTop: !isDesktopLayout });
 
+  const resolvedMaxWidth =
+    maxContentWidth !== undefined
+      ? maxContentWidth
+      : isDesktopLayout
+        ? DESKTOP_CONTENT_MAX_WIDTH
+        : undefined;
+
   const horizontalInsets = withHorizontalPadding
     ? {
-        paddingHorizontal: SCREEN_PADDING_HORIZONTAL,
-        paddingTop: isDesktopLayout ? layout.space.lg : listInsets.paddingTop ?? SCREEN_CONTENT_TOP_OFFSET,
+        paddingHorizontal: isDesktopLayout
+          ? DESKTOP_CONTENT_PADDING_HORIZONTAL
+          : SCREEN_PADDING_HORIZONTAL,
+        paddingTop: isDesktopLayout
+          ? DESKTOP_CONTENT_PADDING_TOP
+          : (listInsets.paddingTop ?? SCREEN_CONTENT_TOP_OFFSET),
       }
     : null;
+
+  const widthConstraint =
+    resolvedMaxWidth != null && resolvedMaxWidth > 0
+      ? {
+          maxWidth: resolvedMaxWidth,
+          width: '100%' as const,
+          alignSelf: 'center' as const,
+          ...(!scrollable ? { flex: 1 } : null),
+        }
+      : styles.fullWidth;
 
   const paddedContentStyle = [
     horizontalInsets,
     { paddingBottom: scrollPaddingBottom },
-    maxContentWidth != null && maxContentWidth > 0
-      ? { maxWidth: maxContentWidth, alignSelf: 'center' as const, flex: 1 }
-      : styles.fullWidth,
+    widthConstraint,
     contentContainerStyle,
   ];
 

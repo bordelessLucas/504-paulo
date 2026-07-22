@@ -1,6 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, {
-  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -12,6 +11,13 @@ import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
+import { getToastContext } from '@/components/ui/toast-context';
+import type {
+  DefaultToastPayload,
+  NotificationToastPayload,
+  ToastPayload,
+  ToastVariant,
+} from '@/components/ui/toast-types';
 import { getScreenTopChromeHeight } from '@/constants/screen-chrome';
 import { brandRgb } from '@/constants/brand';
 import { Fonts, layout, zIndex, type SemanticTone } from '@/constants/theme';
@@ -19,36 +25,10 @@ import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useTabScreenLayout } from '@/hooks/use-tab-screen-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { hapticLightImpact } from '@/lib/haptics';
-import type { TabIconName } from '@/navigation/types';
 
-export type ToastVariant = 'success' | 'error' | 'info';
+export type { NotificationToastPayload, ToastVariant } from '@/components/ui/toast-types';
 
-type ToastKind = 'default' | 'notification';
-
-type DefaultToastPayload = {
-  kind: 'default';
-  message: string;
-  variant: ToastVariant;
-};
-
-export type NotificationToastPayload = {
-  kind: 'notification';
-  id: string;
-  title: string;
-  message: string;
-  icon: TabIconName;
-  variant: ToastVariant;
-  onPress?: () => void;
-};
-
-type ToastPayload = DefaultToastPayload | NotificationToastPayload;
-
-type ToastContextValue = {
-  showToast: (message: string, variant?: ToastVariant) => void;
-  showNotificationToast: (payload: Omit<NotificationToastPayload, 'kind'>) => void;
-};
-
-const ToastContext = createContext<ToastContextValue | null>(null);
+const ToastContext = getToastContext();
 
 const DEFAULT_TOAST_DURATION_MS = 3800;
 const NOTIFICATION_TOAST_DURATION_MS = 5500;

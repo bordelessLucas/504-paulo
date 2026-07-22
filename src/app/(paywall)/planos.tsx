@@ -14,13 +14,17 @@ import { useAuth } from '@/features/auth/auth-context';
 import { SUBSCRIPTION_PLANS } from '@/features/subscription/plans';
 import { useSubscription } from '@/features/subscription/subscription-context';
 import type { PlanId } from '@/features/subscription/types';
+import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useTheme } from '@/hooks/use-theme';
+
+const DESKTOP_PLANS_MAX_WIDTH = 1080;
 
 const DEFAULT_PLAN_ID: PlanId =
   SUBSCRIPTION_PLANS.find((plan) => plan.isFeatured)?.id ?? SUBSCRIPTION_PLANS[0].id;
 
 export default function PlanosScreen() {
   const theme = useTheme();
+  const isDesktop = useIsDesktopLayout();
   const { showToast } = useToast();
   const { subscribe } = useSubscription();
   const { user, signOut, pendingRegistration, completeRegistration, clearPendingRegistration } =
@@ -90,9 +94,12 @@ export default function PlanosScreen() {
     <View style={[styles.container, { backgroundColor: brand.navyDeep }]}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            isDesktop && styles.scrollContentDesktop,
+          ]}
           showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
+          <View style={[styles.header, isDesktop && styles.headerDesktop]}>
             <View style={styles.brandRow}>
               <ThemedText style={[styles.brandVertek, { color: brand.white }]}>Vertek</ThemedText>
               <ThemedText style={[styles.brandAvalia, { color: brand.greenSoft }]}>
@@ -108,7 +115,7 @@ export default function PlanosScreen() {
             </ThemedText>
           </View>
 
-          <View style={styles.plansList}>
+          <View style={[styles.plansList, isDesktop && styles.plansListDesktop]}>
             {SUBSCRIPTION_PLANS.map((plan) => {
               const isSelected = plan.id === selectedPlanId;
               const borderColor = isSelected ? brand.greenBright : brandRgb(brand.cream, 0.14);
@@ -119,8 +126,15 @@ export default function PlanosScreen() {
                   accessibilityRole="radio"
                   accessibilityState={{ selected: isSelected }}
                   onPress={() => setSelectedPlanId(plan.id)}
-                  style={({ pressed }) => [pressed && styles.cardPressed]}>
-                  <GlassCard style={[styles.planCard, { borderColor, borderWidth: isSelected ? 2 : 1 }]}>
+                  style={({ pressed }) => [
+                    isDesktop && styles.planPressableDesktop,
+                    pressed && styles.cardPressed,
+                  ]}>
+                  <GlassCard
+                    style={[
+                      styles.planCard,
+                      { borderColor, borderWidth: isSelected ? 2 : 1 },
+                    ]}>
                     <View style={styles.planHeaderRow}>
                       <View style={styles.planTitleGroup}>
                         <ThemedText type="sectionTitle">{plan.name}</ThemedText>
@@ -217,8 +231,17 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     gap: layout.space.xl,
   },
+  scrollContentDesktop: {
+    maxWidth: DESKTOP_PLANS_MAX_WIDTH,
+    paddingHorizontal: layout.space.xl,
+  },
   header: {
     gap: layout.space.sm,
+  },
+  headerDesktop: {
+    alignItems: 'center',
+    maxWidth: 640,
+    alignSelf: 'center',
   },
   brandRow: {
     flexDirection: 'row',
@@ -245,6 +268,16 @@ const styles = StyleSheet.create({
   },
   plansList: {
     gap: layout.space.md,
+  },
+  plansListDesktop: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: layout.space.lg,
+  },
+  planPressableDesktop: {
+    flex: 1,
+    minWidth: 0,
+    alignSelf: 'stretch',
   },
   cardPressed: {
     opacity: 0.92,

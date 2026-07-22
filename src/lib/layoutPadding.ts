@@ -2,6 +2,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { StyleProp, ViewStyle } from "react-native";
 
 import {
+  DESKTOP_CONTENT_PADDING_HORIZONTAL,
+  DESKTOP_CONTENT_PADDING_TOP,
   SCREEN_CONTENT_TOP_OFFSET,
   SCREEN_PADDING_HORIZONTAL,
   TAB_BAR_BASE_HEIGHT,
@@ -49,10 +51,16 @@ export function useListContentStyle(options: ListContentStyleOptions = {}) {
     (withTabBar ? tabBarHeight : TAB_CONTENT_EXTRA_PADDING + insets.bottom) +
     (withFab ? layout.space.xxl : 0);
 
-  const paddingTop = safeTop ? SCREEN_CONTENT_TOP_OFFSET : layout.space.lg;
+  const paddingTop = safeTop
+    ? SCREEN_CONTENT_TOP_OFFSET
+    : isDesktop
+      ? DESKTOP_CONTENT_PADDING_TOP
+      : layout.space.lg;
 
   return {
-    paddingHorizontal: SCREEN_PADDING_HORIZONTAL,
+    paddingHorizontal: isDesktop
+      ? DESKTOP_CONTENT_PADDING_HORIZONTAL
+      : SCREEN_PADDING_HORIZONTAL,
     paddingTop,
     paddingBottom,
   } satisfies StyleProp<ViewStyle>;
