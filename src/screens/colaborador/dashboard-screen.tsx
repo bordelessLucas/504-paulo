@@ -13,12 +13,10 @@ import { ColaboradorDashboardHeader } from '@/components/colaborador/colaborador
 import { ImaGaugeChart } from '@/components/gerencial/ima-gauge-chart';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { PDICard } from '@/components/pdi/PDICard';
-import {
-  CollapsibleSection,
-  GlassCard,
-  SectionTitle,
-  StatusBadge,
-} from '@/components/premium';
+import { CollapsibleSection } from '@/components/premium/CollapsibleSection';
+import { GlassCard } from '@/components/premium/GlassCard';
+import { SectionTitle } from '@/components/premium/SectionTitle';
+import { StatusBadge } from '@/components/premium/StatusBadge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/components/ui/button';

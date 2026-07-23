@@ -1,9 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Fonts } from '@/constants/theme';
-import { DashboardColaboradorScreen } from '@/screens/colaborador/dashboard-screen';
-import { PDIDetailScreen } from '@/screens/pdi/PDIDetailScreen';
-import { PDIListColaboradorScreen } from '@/screens/pdi/PDIListColaboradorScreen';
+import { createLazyNamedScreen } from '@/navigation/lazy-tab-screen';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ColaboradorStackParamList = {
@@ -11,6 +9,19 @@ export type ColaboradorStackParamList = {
   PDIList: undefined;
   PDIDetail: { pdiId: string };
 };
+
+const DashboardColaboradorScreen = createLazyNamedScreen(
+  () => import('@/screens/colaborador/dashboard-screen'),
+  'DashboardColaboradorScreen',
+);
+const PDIListColaboradorScreen = createLazyNamedScreen(
+  () => import('@/screens/pdi/PDIListColaboradorScreen'),
+  'PDIListColaboradorScreen',
+);
+const PDIDetailScreen = createLazyNamedScreen(
+  () => import('@/screens/pdi/PDIDetailScreen'),
+  'PDIDetailRouteScreen',
+);
 
 const Stack = createNativeStackNavigator<ColaboradorStackParamList>();
 
@@ -42,9 +53,9 @@ export function ColaboradorStackNavigator() {
       />
       <Stack.Screen
         name="PDIDetail"
-        options={{ title: 'Detalhe do PDI', headerBackTitle: 'Voltar' }}>
-        {({ route }) => <PDIDetailScreen pdiId={route.params.pdiId} />}
-      </Stack.Screen>
+        component={PDIDetailScreen}
+        options={{ title: 'Detalhe do PDI', headerBackTitle: 'Voltar' }}
+      />
     </Stack.Navigator>
   );
 }

@@ -1,10 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Fonts } from '@/constants/theme';
-import { FormularioAvaliacaoScreen } from '@/screens/avaliacao/formulario-avaliacao-screen';
-import { MinhaEquipeScreen } from '@/screens/avaliacao/minha-equipe-screen';
-import { PDIDetailScreen } from '@/screens/pdi/PDIDetailScreen';
-import { PDIEquipeScreen } from '@/screens/pdi/PDIEquipeScreen';
+import { createLazyNamedScreen } from '@/navigation/lazy-tab-screen';
 import { useTheme } from '@/hooks/use-theme';
 
 export type MinhaEquipeStackParamList = {
@@ -16,6 +13,23 @@ export type MinhaEquipeStackParamList = {
   PDIEquipe: undefined;
   PDIDetail: { pdiId: string };
 };
+
+const MinhaEquipeScreen = createLazyNamedScreen(
+  () => import('@/screens/avaliacao/minha-equipe-screen'),
+  'MinhaEquipeScreen',
+);
+const FormularioAvaliacaoScreen = createLazyNamedScreen(
+  () => import('@/screens/avaliacao/formulario-avaliacao-screen'),
+  'FormularioAvaliacaoScreen',
+);
+const PDIEquipeScreen = createLazyNamedScreen(
+  () => import('@/screens/pdi/PDIEquipeScreen'),
+  'PDIEquipeScreen',
+);
+const PDIDetailScreen = createLazyNamedScreen(
+  () => import('@/screens/pdi/PDIDetailScreen'),
+  'PDIDetailRouteScreen',
+);
 
 const Stack = createNativeStackNavigator<MinhaEquipeStackParamList>();
 
@@ -55,9 +69,9 @@ export function MinhaEquipeStackNavigator() {
       />
       <Stack.Screen
         name="PDIDetail"
-        options={{ title: 'Detalhe do PDI', headerBackTitle: 'Voltar' }}>
-        {({ route }) => <PDIDetailScreen pdiId={route.params.pdiId} />}
-      </Stack.Screen>
+        component={PDIDetailScreen}
+        options={{ title: 'Detalhe do PDI', headerBackTitle: 'Voltar' }}
+      />
     </Stack.Navigator>
   );
 }

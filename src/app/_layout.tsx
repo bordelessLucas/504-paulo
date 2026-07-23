@@ -76,7 +76,7 @@ function RootNavigator() {
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     ...Ionicons.font,
-    Korataki_Regular: require('../../assets/fonts/Korataki-Regular.ttf'),
+    Korataki_Regular: require('../../assets/fonts/Biko-Bold.ttf'),
     Biko_Regular: require('../../assets/fonts/Biko-Regular.ttf'),
     Biko_Medium: require('../../assets/fonts/Biko-Medium.ttf'),
     Biko_Bold: require('../../assets/fonts/Biko-Bold.ttf'),

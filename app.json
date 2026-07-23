@@ -35,18 +35,7 @@
           }
         }
       ],
-      "expo-secure-store",
-      [
-        "expo-font",
-        {
-          "fonts": [
-            "./assets/fonts/Korataki-Regular.ttf",
-            "./assets/fonts/Biko-Regular.ttf",
-            "./assets/fonts/Biko-Medium.ttf",
-            "./assets/fonts/Biko-Bold.ttf"
-          ]
-        }
-      ],
+      "expo-font",
       [
         "expo-splash-screen",
         {
@@ -58,7 +47,16 @@
         }
       ],
       "expo-sqlite",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Vertek Avalia precisa acessar suas fotos para avatar e evidências.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      "expo-document-picker"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -72,9 +70,9 @@
         }
       },
       "eas": {
-        "projectId": "3983676c-f69b-4af6-ad60-6111013f0b77"
+        "projectId": "5b94b2b8-dc3f-44ac-8954-5f2d4ee3b03d"
       }
     },
-    "owner": "borderlesspc7"
+    "owner": "borderlesspc12"
   }
 }

@@ -1,10 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { Fonts } from '@/constants/theme';
-import { FormularioAvaliacaoScreen } from '@/screens/avaliacao/formulario-avaliacao-screen';
-import { FormularioLoteScreen } from '@/screens/avaliacao/formulario-lote-screen';
-import { HistoricoAvaliacoesScreen } from '@/screens/avaliacao/historico-avaliacoes-screen';
-import { ListaColaboradoresScreen } from '@/screens/avaliacao/lista-colaboradores-screen';
+import { createLazyNamedScreen } from '@/navigation/lazy-tab-screen';
 import { useTheme } from '@/hooks/use-theme';
 
 export type AvaliacaoStackParamList = {
@@ -20,6 +17,23 @@ export type AvaliacaoStackParamList = {
     revealAvaliador: boolean;
   };
 };
+
+const FormularioLoteScreen = createLazyNamedScreen(
+  () => import('@/screens/avaliacao/formulario-lote-screen'),
+  'FormularioLoteScreen',
+);
+const ListaColaboradoresScreen = createLazyNamedScreen(
+  () => import('@/screens/avaliacao/lista-colaboradores-screen'),
+  'ListaColaboradoresScreen',
+);
+const FormularioAvaliacaoScreen = createLazyNamedScreen(
+  () => import('@/screens/avaliacao/formulario-avaliacao-screen'),
+  'FormularioAvaliacaoScreen',
+);
+const HistoricoAvaliacoesScreen = createLazyNamedScreen(
+  () => import('@/screens/avaliacao/historico-avaliacoes-screen'),
+  'HistoricoAvaliacoesScreen',
+);
 
 const Stack = createNativeStackNavigator<AvaliacaoStackParamList>();
 

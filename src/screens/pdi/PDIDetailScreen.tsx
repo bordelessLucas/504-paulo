@@ -45,6 +45,14 @@ function canManagePdi(role: ReturnType<typeof useAuthRole>['role']): boolean {
   );
 }
 
+export function PDIDetailRouteScreen({
+  route,
+}: {
+  route: { params: { pdiId: string } };
+}) {
+  return <PDIDetailScreen pdiId={route.params.pdiId} />;
+}
+
 export function PDIDetailScreen({ pdiId, onUpdated }: PDIDetailScreenProps) {
   const theme = useTheme();
   const { user } = useAuth();
