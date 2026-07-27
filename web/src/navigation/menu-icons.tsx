@@ -1,0 +1,62 @@
+import {
+  Activity,
+  AlertTriangle,
+  Award,
+  BarChart3,
+  BookOpen,
+  Briefcase,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  ClipboardList,
+  FileText,
+  Grid3X3,
+  Home,
+  LayoutGrid,
+  LineChart,
+  List,
+  LogOut,
+  type LucideIcon,
+  ShieldCheck,
+  Trophy,
+  TrendingUp,
+  User,
+  UserCircle,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import type { TabIconName } from '@/navigation/types';
+
+/** Mapa Ionicons (mobile) → Lucide (web). */
+const ICON_MAP: Partial<Record<string, LucideIcon>> = {
+  'home-outline': Home,
+  'document-text-outline': FileText,
+  'clipboard-outline': ClipboardList,
+  'people-outline': Users,
+  'trending-up-outline': TrendingUp,
+  'grid-outline': Grid3X3,
+  'stats-chart-outline': BarChart3,
+  'analytics-outline': LineChart,
+  'warning-outline': AlertTriangle,
+  'book-outline': BookOpen,
+  'shield-checkmark-outline': ShieldCheck,
+  'checkmark-circle-outline': CheckCircle2,
+  'calendar-outline': Calendar,
+  'person-outline': User,
+  'time-outline': Calendar,
+  'exit-outline': LogOut,
+  'people-circle-outline': Users,
+  'business-outline': Building2,
+  'ribbon-outline': Award,
+  'list-outline': List,
+  'bar-chart-outline': BarChart3,
+  'cash-outline': Wallet,
+  'wallet-outline': Wallet,
+  'trophy-outline': Trophy,
+  'pulse-outline': Activity,
+  'person-circle-outline': UserCircle,
+};
+
+export function getMenuIcon(name: TabIconName | string): LucideIcon {
+  return ICON_MAP[name] ?? LayoutGrid;
+}

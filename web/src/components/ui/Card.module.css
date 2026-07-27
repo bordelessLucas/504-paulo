@@ -1,0 +1,11 @@
+.card {
+  background: #ffffff;
+  border: 1px solid rgba(1, 45, 96, 0.1);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(1, 45, 96, 0.06);
+}
+
+.compact {
+  padding: 1rem;
+}

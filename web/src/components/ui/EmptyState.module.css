@@ -1,0 +1,30 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: #718096;
+}
+
+.icon {
+  color: #00a675;
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  color: #012d60;
+}
+
+.description {
+  margin: 0;
+  max-width: 360px;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.action {
+  margin-top: 1rem;
+}

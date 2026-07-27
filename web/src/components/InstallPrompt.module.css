@@ -1,0 +1,59 @@
+.banner {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 50;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  max-width: min(420px, calc(100vw - 2rem));
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  background: #012d60;
+  color: #fff;
+  box-shadow: 0 16px 40px rgba(1, 26, 56, 0.35);
+}
+
+.banner p {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.install,
+.dismiss {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 0.65rem;
+  cursor: pointer;
+  padding: 0.55rem 0.75rem;
+}
+
+.install {
+  background: #00a675;
+  color: #fff;
+  font-weight: 600;
+}
+
+.dismiss {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .banner {
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

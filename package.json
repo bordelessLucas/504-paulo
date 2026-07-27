@@ -2,14 +2,23 @@
   "name": "504-paulo",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "web",
+    "packages/*"
+  ],
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build:web": "expo export -p web",
-    "serve:web": "expo serve",
+    "web:dev": "npm run dev --workspace=web",
+    "web:build": "npm run build --workspace=web",
+    "web:preview": "npm run preview --workspace=web",
+    "build:web": "npm run build --workspace=web",
+    "build:web:legacy": "expo export -p web",
+    "serve:web": "npm run preview --workspace=web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit"
   },
@@ -57,5 +66,8 @@
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  }
 }

@@ -1,0 +1,68 @@
+import type { ComponentType } from 'react';
+import type { MainTabParamList } from '@/navigation/types';
+import {
+  AdminDashboardPage,
+  AnaliseAvaliadoresPage,
+  AnalisePerfilPage,
+  AprovacoesPage,
+  CadastroAvaliadoresPage,
+  CadastroClientePage,
+  CompliancePage,
+  DashboardColaboradorPage,
+  DashboardsGerenciaisPage,
+  HistoricoDesligadosPage,
+  HistoricoQuinzenalPage,
+  HistoricoReajustePage,
+  HistoricoSemestralPage,
+  ImpactoCaixaPage,
+  ListaAtivosPage,
+  MetodologiaPage,
+  MinhaEquipePage,
+  MinhasAvaliacoesPage,
+  PainelAnualEstrategicoPage,
+  PainelAvaliacaoPage,
+  PainelReajustePage,
+  PerfilPage,
+  RankingPerformancePage,
+  RelatorioIndividualPage,
+  RegrasPage,
+  StatusSolicitacoesPage,
+  VisaoEstrategicaPage,
+} from '../pages';
+
+export const TAB_ROUTES: Record<
+  keyof MainTabParamList,
+  { path: string; component: ComponentType }
+> = {
+  DashboardColaborador: { path: 'dashboard', component: DashboardColaboradorPage },
+  MinhasAvaliacoes: { path: 'minhas-avaliacoes', component: MinhasAvaliacoesPage },
+  PainelAvaliacao: { path: 'painel-avaliacao', component: PainelAvaliacaoPage },
+  MinhaEquipe: { path: 'minha-equipe', component: MinhaEquipePage },
+  PainelReajuste: { path: 'reajuste', component: PainelReajustePage },
+  AdminDashboard: { path: 'admin', component: AdminDashboardPage },
+  DashboardsGerenciais: { path: 'gerencial', component: DashboardsGerenciaisPage },
+  VisaoEstrategica: { path: 'estrategico', component: VisaoEstrategicaPage },
+  Compliance: { path: 'compliance', component: CompliancePage },
+  Metodologia: { path: 'metodologia', component: MetodologiaPage },
+  Regras: { path: 'regras', component: RegrasPage },
+  Aprovacoes: { path: 'aprovacoes', component: AprovacoesPage },
+  PainelAnualEstrategico: { path: 'anual', component: PainelAnualEstrategicoPage },
+  RelatorioIndividual: { path: 'relatorio-individual', component: RelatorioIndividualPage },
+  HistoricoQuinzenal: { path: 'historico-quinzenal', component: HistoricoQuinzenalPage },
+  HistoricoSemestral: { path: 'historico-semestral', component: HistoricoSemestralPage },
+  HistoricoDesligados: { path: 'historico-desligados', component: HistoricoDesligadosPage },
+  ListaAtivos: { path: 'lista-ativos', component: ListaAtivosPage },
+  CadastroCliente: { path: 'cadastro-cliente', component: CadastroClientePage },
+  CadastroAvaliadores: { path: 'cadastro-avaliadores', component: CadastroAvaliadoresPage },
+  StatusSolicitacoes: { path: 'status-solicitacoes', component: StatusSolicitacoesPage },
+  AnaliseAvaliadores: { path: 'analise-avaliadores', component: AnaliseAvaliadoresPage },
+  HistoricoReajuste: { path: 'historico-reajuste', component: HistoricoReajustePage },
+  ImpactoCaixa: { path: 'impacto-caixa', component: ImpactoCaixaPage },
+  RankingPerformance: { path: 'ranking', component: RankingPerformancePage },
+  AnalisePerfil: { path: 'analise-perfil', component: AnalisePerfilPage },
+  Perfil: { path: 'perfil', component: PerfilPage },
+};
+
+export function getTabPath(tab: keyof MainTabParamList): string {
+  return `/app/${TAB_ROUTES[tab].path}`;
+}

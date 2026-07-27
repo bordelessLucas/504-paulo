@@ -1,12 +1,12 @@
 [build]
-  command = "npx expo export -p web"
-  publish = "dist"
+  base = "/"
+  command = "npm run build --workspace=web"
+  publish = "web/dist"
 
 [build.environment]
   NODE_VERSION = "22"
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Cross-Origin-Embedder-Policy = "credentialless"
-    Cross-Origin-Opener-Policy = "same-origin"
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
