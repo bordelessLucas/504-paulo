@@ -186,7 +186,7 @@ export function FormularioAcessoPlataforma({ onCreated }: FormularioAcessoPlataf
         error={errors.senha_temporaria}
         label="Senha temporária (opcional)"
         onChangeText={(value) => updateField('senha_temporaria', value)}
-        placeholder="Gerada automaticamente se vazio"
+        placeholder="Padrão: senha123"
         secureTextEntry
         value={form.senha_temporaria}
         variant="soft"

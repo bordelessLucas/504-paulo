@@ -38,7 +38,7 @@ function canAssignRole(callerRole: string, targetRole: string): boolean {
   return false;
 }
 
-const DEFAULT_PASSWORD = '12345678';
+const DEFAULT_PASSWORD = 'senha123';
 
 const NIVEL_IRATA_VALUES = new Set(['N1', 'N2', 'N3', 'N/A']);
 const PROFILE_STATUS_VALUES = new Set(['ativo', 'inativo', 'ferias', 'afastado']);
@@ -205,7 +205,7 @@ Deno.serve(async (request) => {
 
     const { data: callerProfile, error: profileError } = await callerClient
       .from('profiles')
-      .select('role')
+      .select('role, organizacao_id, nome')
       .eq('id', caller.id)
       .single();
 
@@ -247,6 +247,75 @@ Deno.serve(async (request) => {
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
+
+    // Vincula o novo usuário à empresa (organização) do solicitante — herda o plano ativo.
+    let organizacaoId = (callerProfile?.organizacao_id as string | null) ?? null;
+
+    if (!organizacaoId && (callerRole === 'ceo' || callerRole === 'admin')) {
+      const { data: ensuredOrgId, error: orgError } = await admin.rpc(
+        'ensure_organizacao_for_owner',
+        {
+          p_owner_id: caller.id,
+          p_nome: callerProfile?.nome ?? null,
+        },
+      );
+
+      if (orgError) {
+        // Fallback: cria organização diretamente se a RPC ainda não existir.
+        const { data: existingOrg } = await admin
+          .from('organizacoes')
+          .select('id')
+          .eq('owner_id', caller.id)
+          .maybeSingle();
+
+        if (existingOrg?.id) {
+          organizacaoId = existingOrg.id;
+        } else {
+          const { data: createdOrg, error: createOrgError } = await admin
+            .from('organizacoes')
+            .insert({
+              owner_id: caller.id,
+              nome: callerProfile?.nome || 'Empresa',
+            })
+            .select('id')
+            .single();
+
+          if (createOrgError) {
+            return jsonResponse(
+              {
+                error:
+                  orgError.message ||
+                  createOrgError.message ||
+                  'Não foi possível vincular o usuário à empresa do CEO.',
+              },
+              400,
+            );
+          }
+
+          organizacaoId = createdOrg.id;
+        }
+
+        if (organizacaoId) {
+          await admin
+            .from('profiles')
+            .update({ organizacao_id: organizacaoId })
+            .eq('id', caller.id);
+        }
+      } else {
+        organizacaoId = typeof ensuredOrgId === 'string' ? ensuredOrgId : null;
+      }
+    }
+
+    if (!organizacaoId) {
+      return jsonResponse(
+        {
+          error:
+            'Sua conta ainda não está vinculada a uma empresa com plano. Peça ao CEO para acessar o sistema uma vez após assinar o plano.',
+        },
+        400,
+      );
+    }
+
     let userId = await findUserIdByEmail(admin, email);
     let authCreated = false;
 
@@ -292,6 +361,8 @@ Deno.serve(async (request) => {
         certificacao_edn: body.certificacao_edn ?? false,
         status,
         role,
+        organizacao_id: organizacaoId,
+        must_change_password: true,
         telefone_2: body.telefone_2?.trim() || null,
         endereco: body.endereco?.trim() || null,
         cidade_uf: body.cidade_uf?.trim() || null,
@@ -309,7 +380,7 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: upsertError.message }, 400);
     }
 
-    return jsonResponse({ id: userId, authCreated });
+    return jsonResponse({ id: userId, authCreated, organizacaoId });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro interno.';
     return jsonResponse({ error: message }, 500);

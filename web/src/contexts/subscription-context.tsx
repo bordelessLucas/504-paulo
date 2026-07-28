@@ -9,6 +9,11 @@ import React, {
 } from 'react';
 
 import { useAuth } from '@/features/auth/auth-context';
+import {
+  activateOrganizacaoAssinatura,
+  fetchOrganizacaoAssinatura,
+  syncLocalAssinaturaToOrganizacao,
+} from '@/features/subscription/assinatura-api';
 import { getPlanById } from '@/features/subscription/plans';
 import {
   clearSubscription,
@@ -33,6 +38,24 @@ type SubscriptionCache = {
 
 const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
 
+async function resolveSubscriptionForUser(
+  userId: string,
+  userName?: string | null,
+): Promise<UserSubscription | null> {
+  const fromDb = await fetchOrganizacaoAssinatura(userId);
+  if (fromDb) {
+    await saveSubscription(userId, fromDb);
+    return fromDb;
+  }
+
+  const local = await loadSubscription(userId);
+  if (!local) {
+    return null;
+  }
+
+  return syncLocalAssinaturaToOrganizacao(userId, local, userName);
+}
+
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
@@ -52,23 +75,38 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       }
 
       setIsLoading(true);
-      const stored = await loadSubscription(userId);
-      if (!isActive) return;
 
-      const cached = cacheRef.current;
-      const shouldPreferCache =
-        cached.userId === userId && cached.subscription !== null && stored === null;
-      const resolved = shouldPreferCache ? cached.subscription : stored;
-      cacheRef.current = { userId, subscription: resolved };
-      setSubscription(resolved);
-      setIsLoading(false);
+      try {
+        const resolved = await resolveSubscriptionForUser(userId, user?.name);
+        if (!isActive) return;
+
+        const cached = cacheRef.current;
+        const shouldPreferCache =
+          cached.userId === userId && cached.subscription !== null && resolved === null;
+        const next = shouldPreferCache ? cached.subscription : resolved;
+        cacheRef.current = { userId, subscription: next };
+        setSubscription(next);
+      } catch {
+        if (!isActive) return;
+        const local = await loadSubscription(userId);
+        const cached = cacheRef.current;
+        const shouldPreferCache =
+          cached.userId === userId && cached.subscription !== null && local === null;
+        const next = shouldPreferCache ? cached.subscription : local;
+        cacheRef.current = { userId, subscription: next };
+        setSubscription(next);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
     }
 
     void loadForUser();
     return () => {
       isActive = false;
     };
-  }, [userId]);
+  }, [userId, user?.name]);
 
   const subscribe = useCallback(
     async (planId: PlanId, explicitUserId?: string) => {
@@ -81,11 +119,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         planId,
         activatedAt: new Date().toISOString(),
       };
-      await saveSubscription(targetUserId, next);
       cacheRef.current = { userId: targetUserId, subscription: next };
+      await activateOrganizacaoAssinatura(targetUserId, planId, user?.name);
+      await saveSubscription(targetUserId, next);
       setSubscription(next);
     },
-    [userId],
+    [userId, user?.name],
   );
 
   const cancel = useCallback(async () => {

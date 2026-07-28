@@ -62,7 +62,7 @@ const ADMIN_FEATURES: AdminFeatureDefinition[] = [
     description: 'Importe colaboradores via CSV.',
     icon: 'cloud-upload-outline',
     modalDescription:
-      'CSV com email, nome, classificacao, nivel_irata, datas, telefone, certificacoes, status e role. Contas novas recebem senha padrão 12345678.',
+      'CSV com email, nome, classificacao, nivel_irata, datas, telefone, certificacoes, status e role. Contas novas recebem senha padrão senha123 (troca no 1º login).',
     isVisible: (role) => isAdminDashboardRole(role),
   },
 ];

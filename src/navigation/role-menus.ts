@@ -81,6 +81,11 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
     label: 'Metodologia de Escala',
     icon: 'book-outline',
   },
+  MatrizPeso: {
+    name: 'MatrizPeso',
+    label: 'Matriz de Peso',
+    icon: 'git-network-outline',
+  },
   Regras: {
     name: 'Regras',
     label: 'Regras / Direitos / Deveres',
@@ -233,7 +238,7 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
 
     case 'supervisor':
       return [
-        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'MatrizPeso'),
         menuSection(
           'Avaliação Quinzenal',
           'MinhaEquipe',
@@ -248,7 +253,7 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
 
     case 'gestor':
       return [
-        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'MatrizPeso'),
         menuSection(
           'Avaliação Semestral',
           'MinhaEquipe',
@@ -263,7 +268,7 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
 
     case 'gerente':
       return [
-        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'MatrizPeso'),
         menuSection(
           'Avaliação Semestral',
           'MinhaEquipe',
@@ -280,7 +285,7 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
 
     case 'rh':
       return [
-        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'MatrizPeso'),
         menuSection('Cadastro', 'AdminDashboard', 'CadastroCliente', 'Compliance'),
         menuSection('Dashboard', 'HistoricoReajuste', 'RankingPerformance', 'AnalisePerfil'),
         menuSection(
@@ -299,7 +304,7 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
 
     case 'ceo':
       return [
-        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'MatrizPeso'),
         menuSection(
           'Dashboard',
           'DashboardsGerenciais',
@@ -323,7 +328,7 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
 
     case 'admin':
       return [
-        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'Compliance'),
+        menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'MatrizPeso', 'Compliance'),
         menuSection('Cadastro', 'AdminDashboard', 'CadastroCliente', 'CadastroAvaliadores'),
         menuSection(
           'Dashboard',

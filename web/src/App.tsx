@@ -12,6 +12,7 @@ import {
   PublicOnly,
   RequireAuth,
   RequireAuthOrPendingRegistration,
+  RequirePasswordChanged,
   RequireSubscription,
 } from './navigation/guards';
 import { getTabPath, TAB_ROUTES } from './navigation/routes';
@@ -25,6 +26,7 @@ import {
   PdiListPage,
   PlansPage,
   RegisterPage,
+  TrocarSenhaPage,
 } from './pages';
 
 function RootRedirect() {
@@ -40,6 +42,10 @@ function RootRedirect() {
       return <Navigate to="/planos" replace />;
     }
     return <Navigate to="/login" replace />;
+  }
+
+  if (user.mustChangePassword) {
+    return <Navigate to="/trocar-senha" replace />;
   }
 
   if (!isSubscribed) {
@@ -69,6 +75,9 @@ export default function App() {
             </Route>
 
             <Route element={<RequireAuth />}>
+              <Route element={<RequirePasswordChanged />}>
+                <Route path="/trocar-senha" element={<TrocarSenhaPage />} />
+              </Route>
               <Route element={<RequireSubscription />}>
                 <Route path="/app" element={<AppShell />}>
                   {Object.entries(TAB_ROUTES).map(([key, route]) => (
@@ -90,3 +99,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+

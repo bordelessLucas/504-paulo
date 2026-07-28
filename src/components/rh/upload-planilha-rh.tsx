@@ -132,7 +132,7 @@ export function UploadPlanilhaRH({ embedded = false, onImported }: UploadPlanilh
           <ThemedText themeColor="textSecondary" style={styles.hint}>
             CSV com ficha completa: email, nome, classificacao, nivel_irata, datas, ddd, telefone,
             expertise, formacao_tecnica, certificacao_edn, status, role. Contas novas recebem senha
-            padrão 12345678.
+            padrão senha123.
           </ThemedText>
         </View>
       ) : null}

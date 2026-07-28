@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 
+import { AutoavaliacaoForm } from '../components/AutoavaliacaoForm';
 import { PageContent } from '../components/PageContent';
 import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
 import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
@@ -13,24 +16,62 @@ import {
   formatFeedbackDate,
   formatMediaGeral,
 } from '@/features/colaborador/dashboard-api';
+import {
+  isElegivelParaAutoavaliacao,
+  MENSAGEM_BLOQUEIO_DEVERES,
+  MENSAGEM_BLOQUEIO_TEMPO_CASA,
+  resolveMotivoBloqueioAutoavaliacao,
+} from '@/features/colaborador/eligibility';
 import { STATUS_SOLICITACAO_LABELS } from '@/features/colaborador/solicitacoes-api';
+import { getTabPath } from '../navigation/routes';
 import { useAsyncData } from '../hooks/useAsyncData';
 import page from '../styles/page.module.css';
 
 export function DashboardColaboradorPage() {
   const { user } = useAuth();
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const { data, isLoading, error, reload } = useAsyncData(
     () => fetchColaboradorDashboard(user!.id),
     [user?.id],
     { enabled: Boolean(user?.id) },
   );
 
+  const isAutoavaliacaoEnabled = isElegivelParaAutoavaliacao(
+    data?.dataAdmissao,
+    data?.temIncidentesRecentes ?? false,
+  );
+  const bloqueioMotivo = resolveMotivoBloqueioAutoavaliacao(
+    data?.dataAdmissao,
+    data?.temIncidentesRecentes ?? false,
+  );
+  const bloqueioMensagem =
+    bloqueioMotivo === 'deveres'
+      ? MENSAGEM_BLOQUEIO_DEVERES
+      : bloqueioMotivo === 'tempo_casa'
+        ? MENSAGEM_BLOQUEIO_TEMPO_CASA
+        : null;
+
   return (
     <div className={page.page}>
       <PageHeader
         title={`Olá, ${user?.name?.split(' ')[0] ?? 'Colaborador'}`}
         description="Resumo do seu desempenho, feedbacks e solicitações."
+        accessory={
+          <Button
+            size="sm"
+            disabled={!data || !isAutoavaliacaoEnabled}
+            onClick={() => setIsFormOpen(true)}
+          >
+            Nova autoavaliação
+          </Button>
+        }
       />
+
+      {bloqueioMensagem ? (
+        <Card style={{ marginBottom: '1rem', borderColor: '#fde68a' }}>
+          <p className={page.listItemBody}>{bloqueioMensagem}</p>
+        </Card>
+      ) : null}
 
       <PageContent
         isLoading={isLoading}
@@ -141,16 +182,25 @@ export function DashboardColaboradorPage() {
             </section>
 
             <div className={page.actions}>
-              <Link to="/minhas-avaliacoes">
+              <Link to={getTabPath('MinhasAvaliacoes')}>
                 <Badge label="Ver histórico" tone="accent" />
               </Link>
-              <Link to="/pdi">
+              <Link to="/app/pdi">
                 <Badge label="Meus PDIs" tone="info" />
               </Link>
             </div>
           </>
         )}
       </PageContent>
+
+      {user ? (
+        <AutoavaliacaoForm
+          open={isFormOpen}
+          colaboradorId={user.id}
+          onClose={() => setIsFormOpen(false)}
+          onSuccess={reload}
+        />
+      ) : null}
     </div>
   );
 }

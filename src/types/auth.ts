@@ -9,6 +9,8 @@ export type AuthUser = {
   departamento?: string | null;
   funcao?: string | null;
   avatarUrl?: string | null;
+  /** Usuário criado com senha provisória — deve trocar antes de usar o app. */
+  mustChangePassword?: boolean;
 };
 
 export type LoginCredentials = {

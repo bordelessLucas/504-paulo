@@ -10,7 +10,7 @@ Na raiz do monorepo (com `.env` contendo `EXPO_PUBLIC_SUPABASE_*` ou `VITE_SUPAB
 npm run web:dev
 ```
 
-Abre em http://localhost:5173
+Abre em http://localhost:5180
 
 ## Build / preview
 

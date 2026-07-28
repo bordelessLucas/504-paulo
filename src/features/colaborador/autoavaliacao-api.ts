@@ -2,7 +2,7 @@ import {
   isElegivelParaAutoavaliacao,
   MENSAGEM_BLOQUEIO_DEVERES,
 } from '@/features/colaborador/eligibility';
-import type { AutoavaliacaoSubmitPayload } from '@/features/colaborador/autoavaliacao-modal';
+import type { AutoavaliacaoSubmitPayload } from '@/features/colaborador/autoavaliacao-types';
 import { hasIncidentesRecentes } from '@/features/incidentes/api';
 import { parseCurrency } from '@/lib/input-masks';
 import { supabase } from '@/lib/supabase';

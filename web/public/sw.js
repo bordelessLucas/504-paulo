@@ -1,5 +1,5 @@
-/* Service worker PWA — Vertek Avalia */
-const CACHE = 'vertek-avalia-v1';
+/* Service worker PWA — Vertek Avalia (somente build de produção) */
+const CACHE = 'vertek-avalia-v2';
 const PRECACHE = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {

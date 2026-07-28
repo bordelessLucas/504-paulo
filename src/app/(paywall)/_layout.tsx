@@ -4,8 +4,7 @@ import { useAuth } from '@/features/auth/auth-context';
 import { useSubscription } from '@/features/subscription/subscription-context';
 
 /**
- * Grupo de rota do paywall — exige sessão ativa e ausência de assinatura.
- * Usuários já assinantes são enviados de volta ao app.
+ * Grupo de rota do paywall — planos e troca obrigatória de senha no 1º acesso.
  */
 export default function PaywallLayout() {
   const { user, isLoading: isAuthLoading, pendingRegistration } = useAuth();
@@ -13,6 +12,14 @@ export default function PaywallLayout() {
 
   if (isAuthLoading) {
     return null;
+  }
+
+  if (user?.mustChangePassword) {
+    return (
+      <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+        <Stack.Screen name="trocar-senha" />
+      </Stack>
+    );
   }
 
   // Já assinante → volta para o app.

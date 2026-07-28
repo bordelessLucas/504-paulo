@@ -20,6 +20,10 @@ export default function MainLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
+  if (user.mustChangePassword) {
+    return <Redirect href={'/(paywall)/trocar-senha' as Href} />;
+  }
+
   if (!isSubscribed) {
     return <Redirect href={'/(paywall)/planos' as Href} />;
   }

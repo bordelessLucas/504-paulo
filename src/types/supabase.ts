@@ -108,6 +108,8 @@ export type Database = {
           tipo_demissao: string | null;
           apto_recontratacao: boolean | null;
           salario_base: number | null;
+          organizacao_id: string | null;
+          must_change_password: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -133,6 +135,8 @@ export type Database = {
           status?: string | null;
           avatar_url?: string | null;
           role?: UserRoleEnum;
+          organizacao_id?: string | null;
+          must_change_password?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -158,6 +162,8 @@ export type Database = {
           status?: string | null;
           avatar_url?: string | null;
           role?: UserRoleEnum;
+          organizacao_id?: string | null;
+          must_change_password?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -166,6 +172,76 @@ export type Database = {
             foreignKeyName: "profiles_id_fkey";
             columns: ["id"];
             referencedRelation: "auth.users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "profiles_organizacao_id_fkey";
+            columns: ["organizacao_id"];
+            referencedRelation: "organizacoes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      organizacoes: {
+        Row: {
+          id: string;
+          owner_id: string;
+          nome: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          nome: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          nome?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organizacoes_owner_id_fkey";
+            columns: ["owner_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      assinaturas: {
+        Row: {
+          organizacao_id: string;
+          plan_id: string;
+          activated_at: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          organizacao_id: string;
+          plan_id: string;
+          activated_at?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          organizacao_id?: string;
+          plan_id?: string;
+          activated_at?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assinaturas_organizacao_id_fkey";
+            columns: ["organizacao_id"];
+            referencedRelation: "organizacoes";
             referencedColumns: ["id"];
           },
         ];
@@ -1139,6 +1215,31 @@ export type Database = {
           p_dias?: number;
         };
         Returns: number;
+      };
+      ensure_organizacao_for_owner: {
+        Args: {
+          p_owner_id: string;
+          p_nome?: string | null;
+        };
+        Returns: string;
+      };
+      activate_organizacao_assinatura: {
+        Args: {
+          p_owner_id: string;
+          p_plan_id: string;
+          p_nome?: string | null;
+        };
+        Returns: string;
+      };
+      get_minha_assinatura: {
+        Args: {
+          p_user_id?: string | null;
+        };
+        Returns: {
+          plan_id: string;
+          activated_at: string;
+          organizacao_id: string;
+        }[];
       };
     };
     Enums: {

@@ -5,6 +5,11 @@ import {
 } from '@/features/avaliacao/colaborador-scope';
 import type { ColaboradorAtivo } from '@/features/aprovacoes/api';
 import { getDataLimiteIncidentes } from '@/features/colaborador/eligibility';
+import { calcularTempoEmpresa } from '@/features/colaborador/tempo-empresa';
+import {
+  calcularAnaliseReajuste,
+  type AnaliseReajusteSugerida,
+} from '@/features/reajuste/analise';
 import { isElegivelParaReajuste } from '@/features/reajuste/eligibility';
 import { supabase } from '@/lib/supabase';
 import type { UserRole } from '@/types/supabase';
@@ -14,6 +19,12 @@ export type ColaboradorReajusteResumo = ColaboradorAtivo & {
   totalRespostas: number;
   temIncidentesRecentes: boolean;
   isElegivel: boolean;
+  especialidade: string | null;
+  nivelIrata: string | null;
+  dataAdmissao: string | null;
+  tempoEmpresaLabel: string | null;
+  salarioBase: number | null;
+  analise: AnaliseReajusteSugerida;
 };
 
 function calcularMedia(notas: number[]): number | null {
@@ -56,7 +67,9 @@ export async function fetchColaboradoresReajusteResumo(
 
   let colaboradoresQuery = supabase
     .from('profiles')
-    .select('id, nome, departamento, funcao')
+    .select(
+      'id, nome, departamento, funcao, especialidade, nivel_irata, data_admissao, salario_base',
+    )
     .eq('role', 'colaborador')
     .eq('status', 'ativo')
     .order('nome', { ascending: true });
@@ -137,13 +150,25 @@ export async function fetchColaboradoresReajusteResumo(
     const totalRespostas = notas.length;
     const temIncidentesRecentes = colaboradoresComIncidentes.has(colaborador.id);
     const isElegivel = isElegivelParaReajuste(media, totalRespostas, temIncidentesRecentes);
+    const tempoEmpresa = calcularTempoEmpresa(colaborador.data_admissao);
+    const salarioBase = colaborador.salario_base;
+    const analise = calcularAnaliseReajuste(media, salarioBase);
 
     return {
-      ...colaborador,
+      id: colaborador.id,
+      nome: colaborador.nome,
+      departamento: colaborador.departamento,
+      funcao: colaborador.funcao,
       media,
       totalRespostas,
       temIncidentesRecentes,
       isElegivel,
+      especialidade: colaborador.especialidade,
+      nivelIrata: colaborador.nivel_irata,
+      dataAdmissao: colaborador.data_admissao,
+      tempoEmpresaLabel: tempoEmpresa?.label ?? null,
+      salarioBase,
+      analise,
     };
   });
 }

@@ -15,6 +15,10 @@ export default function IndexScreen() {
     }
 
     if (user) {
+      if (user.mustChangePassword) {
+        router.replace('/(paywall)/trocar-senha' as Href);
+        return;
+      }
       router.replace('/(main)/' as Href);
       return;
     }

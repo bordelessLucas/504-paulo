@@ -16,6 +16,10 @@ export function PublicOnly() {
     return <Spinner label="Carregando..." />;
   }
 
+  if (user?.mustChangePassword) {
+    return <Navigate to="/trocar-senha" replace />;
+  }
+
   if (user && isSubscribed) {
     const role = (user.role ?? 'colaborador') as UserRole;
     return <Navigate to={getTabPath(getPrimaryTabForRole(role))} replace />;
@@ -76,6 +80,29 @@ export function RequireSubscription() {
       return <Navigate to="/planos" replace />;
     }
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.mustChangePassword) {
+    return <Navigate to="/trocar-senha" replace />;
+  }
+
+  return <Outlet />;
+}
+
+/** Bloqueia o app até a senha provisória ser trocada. */
+export function RequirePasswordChanged() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <Spinner label="Carregando..." />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user.mustChangePassword) {
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;

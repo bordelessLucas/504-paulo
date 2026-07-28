@@ -129,5 +129,20 @@ export async function changePassword(params: {
     return { field: 'general', message: updateError.message };
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user?.id) {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ must_change_password: false })
+      .eq('id', user.id);
+
+    if (profileError && !profileError.message.includes('must_change_password')) {
+      return { field: 'general', message: profileError.message };
+    }
+  }
+
   return null;
 }

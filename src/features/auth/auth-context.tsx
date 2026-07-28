@@ -78,6 +78,23 @@ async function ensureOwnerProfile(userId: string, nome: string): Promise<void> {
       'Conta criada, mas o papel de CEO não foi aplicado. Contate o suporte.',
     );
   }
+
+  // Cria/vincula a organização da empresa do CEO (plano compartilhado com a equipe).
+  const { error: orgError } = await supabase.rpc('ensure_organizacao_for_owner', {
+    p_owner_id: userId,
+    p_nome: nome,
+  });
+
+  if (orgError) {
+    // Migration pode ainda não estar aplicada — não bloqueia o signup.
+    if (
+      !orgError.message.includes('Could not find the function') &&
+      !orgError.message.includes('does not exist') &&
+      orgError.code !== 'PGRST202'
+    ) {
+      throw new Error(orgError.message || 'Não foi possível criar a organização da conta.');
+    }
+  }
 }
 
 type AuthContextValue = {
@@ -104,10 +121,11 @@ type ProfileRow = {
   departamento: string | null;
   funcao: string | null;
   avatar_url?: string | null;
+  must_change_password?: boolean | null;
 };
 
 async function fetchProfileByUserId(userId: string): Promise<ProfileRow | null> {
-  const baseSelect = 'nome, role, created_at, departamento, funcao';
+  const baseSelect = 'nome, role, created_at, departamento, funcao, must_change_password';
 
   const fetchProfile = async (): Promise<ProfileRow | null> => {
     const { data: baseData, error: baseError } = await supabase
@@ -117,6 +135,24 @@ async function fetchProfileByUserId(userId: string): Promise<ProfileRow | null> 
       .maybeSingle();
 
     if (baseError) {
+      // Coluna ainda não migrada: tenta sem must_change_password.
+      if (baseError.message.includes('must_change_password')) {
+        const { data: legacyData, error: legacyError } = await supabase
+          .from('profiles')
+          .select('nome, role, created_at, departamento, funcao')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (legacyError) {
+          console.warn('[Auth] Falha ao carregar profile:', legacyError.message);
+          return null;
+        }
+
+        return legacyData
+          ? { ...(legacyData as ProfileRow), avatar_url: null, must_change_password: false }
+          : null;
+      }
+
       console.warn('[Auth] Falha ao carregar profile:', baseError.message);
       return null;
     }
@@ -172,6 +208,7 @@ async function buildAuthUser(session: Session): Promise<AuthUser> {
     departamento: profile?.departamento ?? null,
     funcao: profile?.funcao ?? null,
     avatarUrl: profile?.avatar_url ?? null,
+    mustChangePassword: Boolean(profile?.must_change_password),
   };
 }
 

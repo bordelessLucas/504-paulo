@@ -133,7 +133,9 @@ export default defineConfig(({ mode }) => {
       exclude: ['react-native', 'expo-sqlite', 'expo-router'],
     },
     server: {
-      port: 5173,
+      // Porta dedicada — evita colisão com outros Vite (ex.: thora em 5173).
+      port: 5180,
+      strictPort: true,
       fs: {
         allow: [path.resolve(__dirname, '..')],
       },

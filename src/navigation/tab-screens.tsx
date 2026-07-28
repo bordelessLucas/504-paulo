@@ -47,6 +47,10 @@ export const TAB_SCREENS: Record<keyof MainTabParamList, ComponentType> = {
     () => import('@/screens/shared/metodologia-screen'),
     'MetodologiaScreen',
   ),
+  MatrizPeso: createLazyNamedScreen(
+    () => import('@/screens/shared/matriz-peso-screen'),
+    'MatrizPesoScreen',
+  ),
   Regras: createLazyNamedScreen(
     () => import('@/screens/shared/regras-screen'),
     'RegrasScreen',

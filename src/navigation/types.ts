@@ -16,6 +16,7 @@ export type MainTabParamList = {
   VisaoEstrategica: undefined;
   Compliance: undefined;
   Metodologia: undefined;
+  MatrizPeso: undefined;
   Regras: undefined;
   Aprovacoes: undefined;
   PainelAnualEstrategico: undefined;

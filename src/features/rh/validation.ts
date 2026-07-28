@@ -44,7 +44,10 @@ export type CreateColaboradorInput = {
 };
 
 /** Senha padrão ao importar colaboradores via CSV (contas novas). */
-export const CSV_IMPORT_DEFAULT_PASSWORD = '12345678';
+export const CSV_IMPORT_DEFAULT_PASSWORD = 'senha123';
+
+/** Senha padrão ao gerar acesso (CEO/RH). O usuário troca no primeiro login. */
+export const DEFAULT_ACCESS_PASSWORD = 'senha123';
 
 export type ColaboradorFieldError = {
   field: keyof CreateColaboradorInput | 'general';

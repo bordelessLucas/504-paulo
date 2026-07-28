@@ -1,6 +1,7 @@
 export { LoginPage } from './LoginPage';
 export { RegisterPage } from './RegisterPage';
 export { PlansPage } from './PlansPage';
+export { TrocarSenhaPage } from './TrocarSenhaPage';
 export { DashboardColaboradorPage } from './DashboardColaboradorPage';
 export { MinhasAvaliacoesPage } from './MinhasAvaliacoesPage';
 export { PainelAvaliacaoPage } from './PainelAvaliacaoPage';
@@ -11,6 +12,7 @@ export { DashboardsGerenciaisPage } from './DashboardsGerenciaisPage';
 export { VisaoEstrategicaPage } from './VisaoEstrategicaPage';
 export { CompliancePage } from './CompliancePage';
 export { MetodologiaPage } from './MetodologiaPage';
+export { MatrizPesoPage } from './MatrizPesoPage';
 export { RegrasPage } from './RegrasPage';
 export { AprovacoesPage } from './AprovacoesPage';
 export { PainelAnualEstrategicoPage } from './PainelAnualEstrategicoPage';

@@ -9,44 +9,23 @@ import { BaseModal, BaseModalActions, getModalTextAreaStyle } from '@/components
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Radius, layout } from '@/constants/theme';
+import {
+  AUTOAVALIACAO_TIPO_LABELS,
+  AUTOAVALIACAO_TIPO_OPTIONS,
+  type AutoavaliacaoSubmitPayload,
+  type AutoavaliacaoTipo,
+} from '@/features/colaborador/autoavaliacao-types';
 import { useTheme } from '@/hooks/use-theme';
 
-export type AutoavaliacaoTipo =
-  | 'financiamento_curso'
-  | 'revisao_cargo_salario'
-  | 'nova_qualificacao';
-
-export type AutoavaliacaoSubmitPayload = {
-  tipoSolicitacao: AutoavaliacaoTipo;
-  qualificacoes: string;
-  investimento: string;
-  cursoNome: string;
-  cursoInstituicao: string;
-  valorEstimado: string;
-  checklist: {
-    semNoShow: boolean;
-    semAdvertencias: boolean;
-    treinamentosEmDia: boolean;
-    mediaAcimaElegivel: boolean;
-  };
-};
+export type {
+  AutoavaliacaoSubmitPayload,
+  AutoavaliacaoTipo,
+} from '@/features/colaborador/autoavaliacao-types';
 
 type AutoavaliacaoModalProps = {
   visible: boolean;
   onClose: () => void;
   onSubmit: (payload: AutoavaliacaoSubmitPayload) => Promise<void>;
-};
-
-const TIPO_OPTIONS: AutoavaliacaoTipo[] = [
-  'financiamento_curso',
-  'revisao_cargo_salario',
-  'nova_qualificacao',
-];
-
-const TIPO_LABELS: Record<AutoavaliacaoTipo, string> = {
-  financiamento_curso: 'Financiamento de curso',
-  revisao_cargo_salario: 'Revisão de cargo/salário',
-  nova_qualificacao: 'Nova qualificação',
 };
 
 export function AutoavaliacaoModal({ visible, onClose, onSubmit }: AutoavaliacaoModalProps) {
@@ -163,8 +142,8 @@ export function AutoavaliacaoModal({ visible, onClose, onSubmit }: Autoavaliacao
       </View>
 
       <OptionChips
-        options={TIPO_OPTIONS}
-        labels={TIPO_LABELS}
+        options={AUTOAVALIACAO_TIPO_OPTIONS}
+        labels={AUTOAVALIACAO_TIPO_LABELS}
         value={tipoSolicitacao}
         onChange={setTipoSolicitacao}
       />
