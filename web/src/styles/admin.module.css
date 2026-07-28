@@ -1,0 +1,255 @@
+.featureGrid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  margin-bottom: 1.25rem;
+}
+
+.featureCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  text-align: left;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(1, 45, 96, 0.12);
+  background: #ffffff;
+  cursor: pointer;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.featureCard:hover {
+  border-color: rgba(0, 166, 117, 0.45);
+  box-shadow: 0 8px 24px rgba(1, 45, 96, 0.08);
+}
+
+.featureCardActive {
+  border-color: #00a675;
+  box-shadow: 0 0 0 2px rgba(0, 166, 117, 0.18);
+}
+
+.featureIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(0, 166, 117, 0.12);
+  color: #00a675;
+}
+
+.featureTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #012d60;
+}
+
+.featureDescription {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #718096;
+}
+
+.panel {
+  border: 1px solid rgba(1, 45, 96, 0.1);
+  border-radius: 16px;
+  background: #f7f5ef;
+  padding: 1.25rem;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #012d60;
+}
+
+.panelSubtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  color: #4a5568;
+  line-height: 1.45;
+}
+
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(1, 45, 96, 0.08);
+}
+
+.sectionBlock:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.sectionHeading {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #718096;
+}
+
+.row2 {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .row2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.chipGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(1, 45, 96, 0.2);
+  background: #ffffff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #012d60;
+}
+
+.chipActive {
+  background: #012d60;
+  color: #ffffff;
+  border-color: #012d60;
+}
+
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: #1a202c;
+  cursor: pointer;
+}
+
+.checkRow input {
+  margin-top: 0.2rem;
+}
+
+.feedback {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #4a5568;
+}
+
+.feedbackSuccess {
+  color: #047857;
+}
+
+.feedbackError {
+  color: #b91c1c;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #718096;
+  line-height: 1.45;
+}
+
+.colaboradorList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 240px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.colaboradorItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(1, 45, 96, 0.12);
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.colaboradorItemActive {
+  border-color: #00a675;
+  background: rgba(0, 166, 117, 0.08);
+}
+
+.colaboradorNome {
+  font-weight: 600;
+  color: #012d60;
+}
+
+.colaboradorMeta {
+  font-size: 0.8rem;
+  color: #718096;
+}
+
+.uploadBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(1, 45, 96, 0.25);
+  background: #ffffff;
+}
+
+.errorReport {
+  margin-top: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.errorReportTitle {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #c2410c;
+}
+
+.errorLine {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  color: #b91c1c;
+  line-height: 1.4;
+}
+
+.searchField {
+  margin-bottom: 1rem;
+}

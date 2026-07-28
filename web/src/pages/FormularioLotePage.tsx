@@ -66,7 +66,7 @@ export function FormularioLotePage() {
         perguntas: data.perguntas,
         notas,
       });
-      navigate('/avaliacao/painel', {
+      navigate('/app/painel-avaliacao', {
         state: { message: `${result.salvos} avaliação(ões) salva(s) em lote.` },
       });
     } catch (submitErr) {

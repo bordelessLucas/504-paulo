@@ -1,14 +1,23 @@
-import { Building2 } from 'lucide-react';
+import { useState } from 'react';
 
+import { FormularioClienteForm } from '../components/rh/FormularioClienteForm';
 import { PageContent } from '../components/PageContent';
 import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
 import { fetchClientesComUnidades } from '@/features/clientes/api';
+import { useAuthRole } from '@/hooks/use-auth-role';
+import { isAdminDashboardRole } from '@/types/supabase';
 import { useAsyncData } from '../hooks/useAsyncData';
 import page from '../styles/page.module.css';
+import admin from '../styles/admin.module.css';
 
 export function CadastroClientePage() {
+  const { role } = useAuthRole();
+  const [showForm, setShowForm] = useState(false);
+  const canWrite = isAdminDashboardRole(role);
+
   const { data, isLoading, error, reload } = useAsyncData(
     () => fetchClientesComUnidades(),
     [],
@@ -19,7 +28,33 @@ export function CadastroClientePage() {
       <PageHeader
         title="Cadastro de clientes"
         description="Clientes e unidades operacionais cadastrados na plataforma."
+        accessory={
+          canWrite ? (
+            <Button size="sm" onClick={() => setShowForm((value) => !value)}>
+              {showForm ? 'Ocultar formulário' : 'Novo cliente'}
+            </Button>
+          ) : undefined
+        }
       />
+
+      {showForm && canWrite ? (
+        <section className={admin.panel} style={{ marginBottom: '1.25rem' }}>
+          <div className={admin.panelHeader}>
+            <div>
+              <h2 className={admin.panelTitle}>Novo cliente</h2>
+              <p className={admin.panelSubtitle}>
+                Informe a razão social. Unidade e aeroporto são opcionais.
+              </p>
+            </div>
+          </div>
+          <FormularioClienteForm
+            onCreated={() => {
+              reload();
+              setShowForm(false);
+            }}
+          />
+        </section>
+      ) : null}
 
       <PageContent
         isLoading={isLoading}
@@ -34,15 +69,32 @@ export function CadastroClientePage() {
             {clientes.map((cliente) => (
               <Card key={cliente.id} padding="compact">
                 <div className={page.listItemHeader}>
-                  <h3 className={page.listItemTitle}>
-                    {cliente.nomeFantasia ?? cliente.razaoSocial}
-                  </h3>
+                  <div>
+                    <h3 className={page.listItemTitle}>
+                      {cliente.nomeFantasia ?? cliente.razaoSocial}
+                    </h3>
+                    <p className={page.listItemMeta}>
+                      {[cliente.razaoSocial, cliente.codigo, cliente.cnpj]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  </div>
                   <Badge label={`${cliente.unidades.length} unidade(s)`} tone="info" size="sm" />
                 </div>
+                {cliente.cidade || cliente.uf ? (
+                  <p className={page.listItemMeta}>
+                    {[cliente.cidade, cliente.uf].filter(Boolean).join(' / ')}
+                  </p>
+                ) : null}
                 {cliente.unidades.length > 0 ? (
                   <ul className={page.staticList}>
                     {cliente.unidades.map((unidade) => (
-                      <li key={unidade.id}>{unidade.nome}</li>
+                      <li key={unidade.id}>
+                        {unidade.nome}
+                        {unidade.aeroportoEmbarque
+                          ? ` · embarque: ${unidade.aeroportoEmbarque}`
+                          : ''}
+                      </li>
                     ))}
                   </ul>
                 ) : (

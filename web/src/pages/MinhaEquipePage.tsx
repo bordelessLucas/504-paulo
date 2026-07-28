@@ -61,11 +61,20 @@ export function MinhaEquipePage() {
                       {new Date(colaborador.ultimaAvaliacaoData).toLocaleDateString('pt-BR')}
                     </p>
                   ) : null}
-                  <Link to={`/avaliacao/formulario?colaboradorId=${colaborador.id}`}>
-                    <Button size="sm" variant="secondary">
-                      Abrir formulário
-                    </Button>
-                  </Link>
+                  <div className={page.actions}>
+                    <Link
+                      to={`/app/avaliacao/${colaborador.id}?nome=${encodeURIComponent(colaborador.nome)}`}
+                    >
+                      <Button size="sm" variant="secondary">
+                        Abrir formulário
+                      </Button>
+                    </Link>
+                    <Link to={`/app/avaliacao/${colaborador.id}/historico`}>
+                      <Button size="sm" variant="ghost">
+                        Histórico
+                      </Button>
+                    </Link>
+                  </div>
                 </Card>
               ))}
             </div>

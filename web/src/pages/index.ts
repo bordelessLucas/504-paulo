@@ -35,4 +35,5 @@ export { PdiDetailPage } from './PdiDetailPage';
 export { PdiEquipePage } from './PdiEquipePage';
 export { FormularioAvaliacaoPage } from './FormularioAvaliacaoPage';
 export { FormularioLotePage } from './FormularioLotePage';
+export { HistoricoAvaliacaoColaboradorPage } from './HistoricoAvaliacaoColaboradorPage';
 export { NotFoundPage } from './NotFoundPage';

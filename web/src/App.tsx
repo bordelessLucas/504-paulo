@@ -19,6 +19,7 @@ import { getTabPath, TAB_ROUTES } from './navigation/routes';
 import {
   FormularioAvaliacaoPage,
   FormularioLotePage,
+  HistoricoAvaliacaoColaboradorPage,
   LoginPage,
   NotFoundPage,
   PdiDetailPage,
@@ -87,6 +88,10 @@ export default function App() {
                   <Route path="pdi/:pdiId" element={<PdiDetailPage />} />
                   <Route path="pdi-equipe" element={<PdiEquipePage />} />
                   <Route path="avaliacao/:avaliadoId" element={<FormularioAvaliacaoPage />} />
+                  <Route
+                    path="avaliacao/:avaliadoId/historico"
+                    element={<HistoricoAvaliacaoColaboradorPage />}
+                  />
                   <Route path="avaliacao-lote" element={<FormularioLotePage />} />
                 </Route>
               </Route>

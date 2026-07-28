@@ -62,3 +62,7 @@
   color: #b91c1c;
   font-size: 0.75rem;
 }
+
+.rowSelected td {
+  background: rgba(0, 166, 117, 0.08);
+}
