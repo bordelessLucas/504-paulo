@@ -47,6 +47,7 @@ const ICON_MAP: Partial<Record<string, LucideIcon>> = {
   'exit-outline': LogOut,
   'people-circle-outline': Users,
   'business-outline': Building2,
+  'briefcase-outline': Briefcase,
   'ribbon-outline': Award,
   'list-outline': List,
   'bar-chart-outline': BarChart3,

@@ -1,4 +1,4 @@
-import { Menu, X } from 'lucide-react';
+import { Flag, Menu, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
@@ -15,6 +15,31 @@ import { getMenuIcon } from '../navigation/menu-icons';
 import { getTabPath } from '../navigation/routes';
 import styles from './AppShell.module.css';
 
+type ExtraLink = {
+  path: string;
+  label: string;
+};
+
+function getPdiLinksForRole(role: UserRole): ExtraLink[] {
+  switch (role) {
+    case 'colaborador':
+      return [{ path: '/app/pdi', label: 'Meus PDIs' }];
+    case 'supervisor':
+    case 'gestor':
+    case 'gerente':
+      return [{ path: '/app/pdi-equipe', label: 'PDI da equipe' }];
+    case 'rh':
+    case 'ceo':
+    case 'admin':
+      return [
+        { path: '/app/pdi-equipe', label: 'PDI da equipe' },
+        { path: '/app/pdi', label: 'PDIs' },
+      ];
+    default:
+      return [];
+  }
+}
+
 export function AppShell() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -22,6 +47,7 @@ export function AppShell() {
 
   const role = (user?.role ?? 'colaborador') as UserRole;
   const sections = useMemo(() => getMenuSectionsForRole(role), [role]);
+  const pdiLinks = useMemo(() => getPdiLinksForRole(role), [role]);
 
   return (
     <div className={styles.shell}>
@@ -36,7 +62,8 @@ export function AppShell() {
             type="button"
             className={styles.closeMobile}
             onClick={() => setIsMobileOpen(false)}
-            aria-label="Fechar menu">
+            aria-label="Fechar menu"
+          >
             <X size={18} />
           </button>
         </div>
@@ -54,7 +81,8 @@ export function AppShell() {
                     className={({ isActive }) =>
                       `${styles.link} ${isActive ? styles.linkActive : ''}`
                     }
-                    onClick={() => setIsMobileOpen(false)}>
+                    onClick={() => setIsMobileOpen(false)}
+                  >
                     <Icon size={18} />
                     <span>{getTabLabelForRole(item.name, role)}</span>
                   </NavLink>
@@ -62,6 +90,25 @@ export function AppShell() {
               })}
             </div>
           ))}
+
+          {pdiLinks.length > 0 ? (
+            <div className={styles.section}>
+              <p className={styles.sectionTitle}>Desenvolvimento</p>
+              {pdiLinks.map((link) => (
+                <NavLink
+                  key={link.path}
+                  to={link.path}
+                  className={({ isActive }) =>
+                    `${styles.link} ${isActive ? styles.linkActive : ''}`
+                  }
+                  onClick={() => setIsMobileOpen(false)}
+                >
+                  <Flag size={18} />
+                  <span>{link.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          ) : null}
         </nav>
 
         <div className={styles.footer}>
@@ -72,7 +119,8 @@ export function AppShell() {
             onClick={async () => {
               await signOut();
               navigate('/login', { replace: true });
-            }}>
+            }}
+          >
             Sair
           </button>
         </div>
@@ -93,13 +141,15 @@ export function AppShell() {
             type="button"
             className={styles.menuButton}
             onClick={() => setIsMobileOpen(true)}
-            aria-label="Abrir menu">
+            aria-label="Abrir menu"
+          >
             <Menu size={20} />
           </button>
           <button
             type="button"
             className={styles.homeChip}
-            onClick={() => navigate(getTabPath(getPrimaryTabForRole(role)))}>
+            onClick={() => navigate(getTabPath(getPrimaryTabForRole(role)))}
+          >
             Início
           </button>
         </header>

@@ -166,6 +166,11 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
     label: 'Análise de Perfil',
     icon: 'pulse-outline',
   },
+  CadastroCargos: {
+    name: 'CadastroCargos',
+    label: 'Cargos / Funções + CBO',
+    icon: 'briefcase-outline',
+  },
   Perfil: {
     name: 'Perfil',
     label: 'Perfil',
@@ -286,8 +291,23 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
     case 'rh':
       return [
         menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'MatrizPeso'),
-        menuSection('Cadastro', 'AdminDashboard', 'CadastroCliente', 'Compliance'),
-        menuSection('Dashboard', 'HistoricoReajuste', 'RankingPerformance', 'AnalisePerfil'),
+        menuSection(
+          'Cadastro',
+          'AdminDashboard',
+          'CadastroCliente',
+          'CadastroCargos',
+          'CadastroAvaliadores',
+          'Compliance',
+        ),
+        menuSection(
+          'Dashboard',
+          'DashboardsGerenciais',
+          'HistoricoReajuste',
+          'ImpactoCaixa',
+          'RankingPerformance',
+          'AnalisePerfil',
+          'VisaoEstrategica',
+        ),
         menuSection(
           'Avaliação Semestral',
           'MinhaEquipe',
@@ -322,14 +342,20 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
         ),
         menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste'),
         menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
-        menuSection('Admin', 'AdminDashboard', 'Compliance'),
+        menuSection('Admin', 'AdminDashboard', 'CadastroCargos', 'Compliance'),
         menuSection('Conta', 'Perfil'),
       ];
 
     case 'admin':
       return [
         menuSection('DNA-TEK', 'PainelAvaliacao', 'Regras', 'Metodologia', 'MatrizPeso', 'Compliance'),
-        menuSection('Cadastro', 'AdminDashboard', 'CadastroCliente', 'CadastroAvaliadores'),
+        menuSection(
+          'Cadastro',
+          'AdminDashboard',
+          'CadastroCliente',
+          'CadastroCargos',
+          'CadastroAvaliadores',
+        ),
         menuSection(
           'Dashboard',
           'DashboardsGerenciais',

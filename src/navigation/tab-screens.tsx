@@ -91,6 +91,10 @@ export const TAB_SCREENS: Record<keyof MainTabParamList, ComponentType> = {
     () => import('@/screens/admin/cadastro-avaliadores-screen'),
     'CadastroAvaliadoresScreen',
   ),
+  CadastroCargos: createLazyNamedScreen(
+    () => import('@/screens/admin/cadastro-cargos-screen'),
+    'CadastroCargosScreen',
+  ),
   StatusSolicitacoes: createLazyNamedScreen(
     () => import('@/screens/desempenho/status-solicitacoes-screen'),
     'StatusSolicitacoesScreen',

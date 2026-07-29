@@ -42,6 +42,7 @@ export type SolicitacaoStatusRow = {
   justificativa: string;
   status: StatusSolicitacaoSalarial;
   valorEstimado: number | null;
+  percentualReajuste: number | null;
 };
 
 export type HistoricoFilters = {
@@ -215,7 +216,9 @@ export async function fetchStatusSolicitacoes(filters?: {
 }): Promise<SolicitacaoStatusRow[]> {
   let query = supabase
     .from('melhorias_salariais')
-    .select('id, colaborador_id, justificativa, status, created_at, tipo_solicitacao, valor_estimado')
+    .select(
+      'id, colaborador_id, justificativa, status, created_at, tipo_solicitacao, valor_estimado, percentual_reajuste',
+    )
     .order('created_at', { ascending: false })
     .limit(200);
 
@@ -226,7 +229,11 @@ export async function fetchStatusSolicitacoes(filters?: {
   let { data, error } = await query;
 
   // Fallback se a migration DNA ainda não tiver sido aplicada (colunas extras).
-  if (error?.message?.includes('tipo_solicitacao') || error?.message?.includes('valor_estimado')) {
+  if (
+    error?.message?.includes('tipo_solicitacao') ||
+    error?.message?.includes('valor_estimado') ||
+    error?.message?.includes('percentual_reajuste')
+  ) {
     let fallback = supabase
       .from('melhorias_salariais')
       .select('id, colaborador_id, justificativa, status, created_at')
@@ -242,6 +249,7 @@ export async function fetchStatusSolicitacoes(filters?: {
       ...row,
       tipo_solicitacao: null,
       valor_estimado: null,
+      percentual_reajuste: null,
     }));
     error = retry.error;
   }
@@ -282,6 +290,7 @@ export async function fetchStatusSolicitacoes(filters?: {
         justificativa: row.justificativa,
         status: row.status,
         valorEstimado: row.valor_estimado ?? null,
+        percentualReajuste: row.percentual_reajuste ?? null,
       };
     })
     .filter((row) => {

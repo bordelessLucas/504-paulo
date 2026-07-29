@@ -1,0 +1,481 @@
+.cardTitle {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #012d60;
+}
+
+.cardHint {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: #718096;
+  line-height: 1.45;
+}
+
+.heroRow {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .heroRow {
+    grid-template-columns: 1.2fr 0.8fr;
+    align-items: start;
+  }
+}
+
+.insightStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.insightCard {
+  background: #ffffff;
+  border: 1px solid rgba(1, 45, 96, 0.1);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+.insightLabel {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.insightValue {
+  margin: 0.15rem 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #012d60;
+}
+
+.insightHint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #4a5568;
+}
+
+.dualRow {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 900px) {
+  .dualRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.banner {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+.alertBanner {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.alertText {
+  color: #dc2626 !important;
+}
+
+.pdiMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pdiMetrics strong {
+  display: block;
+  font-size: 1.25rem;
+  color: #012d60;
+}
+
+.pdiMetrics span {
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.barList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: 96px 1fr 28px;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.barLabel {
+  font-size: 0.75rem;
+  color: #4a5568;
+}
+
+.barTrack {
+  height: 10px;
+  border-radius: 999px;
+  background: #edf2f7;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.barValue {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: right;
+  color: #012d60;
+}
+
+.deptList {
+  margin-top: 1rem;
+}
+
+.deptTitle {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #012d60;
+}
+
+.deptItem {
+  margin: 0.15rem 0;
+  font-size: 0.8rem;
+  color: #718096;
+}
+
+.exportList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.exportRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(1, 45, 96, 0.08);
+}
+
+.exportRow strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #012d60;
+}
+
+.exportRow p {
+  margin: 0.1rem 0 0;
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+.nineBox {
+  display: grid;
+  grid-template-columns: 72px repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.nineBoxAxis {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.nineBoxCell {
+  min-height: 88px;
+  border-radius: 10px;
+  border: 1px solid rgba(1, 45, 96, 0.12);
+  background: #ffffff;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nineBoxCellHeader {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #012d60;
+}
+
+.nineBoxCount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #00a675;
+}
+
+.nineBoxNames {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.7rem;
+  color: #4a5568;
+  line-height: 1.35;
+}
+
+.faixasRow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.faixaCard {
+  background: #f7f5f0;
+  border: 1px solid rgba(1, 45, 96, 0.1);
+  border-radius: 12px;
+  padding: 0.85rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.faixaRange {
+  font-size: 0.72rem;
+  color: #718096;
+  line-height: 1.2;
+}
+
+.faixaCount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #012d60;
+  line-height: 1.1;
+}
+
+.faixaLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.faixaTone_success {
+  border-color: rgba(4, 120, 87, 0.25);
+}
+
+.faixaTone_accent {
+  border-color: rgba(0, 166, 117, 0.3);
+}
+
+.faixaTone_info {
+  border-color: rgba(29, 78, 216, 0.25);
+}
+
+.faixaTone_warning {
+  border-color: rgba(180, 83, 9, 0.25);
+}
+
+.faixaTone_danger {
+  border-color: rgba(185, 28, 28, 0.25);
+}
+
+@media (max-width: 900px) {
+  .faixasRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .faixasRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.toast {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+}
+
+.toastSuccess {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.toastError {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.metricHint {
+  margin: 0.2rem 0 0;
+  font-size: 0.7rem;
+  color: #718096;
+}
+
+.execHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.execSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.execEyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #00a675;
+}
+
+.execTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #012d60;
+  line-height: 1.3;
+}
+
+.execKpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.execKpi {
+  background: #f7f5f0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.execKpi span {
+  display: block;
+  font-size: 0.75rem;
+  color: #718096;
+  margin-bottom: 0.25rem;
+}
+
+.execKpi strong {
+  font-size: 1.35rem;
+  color: #012d60;
+}
+
+.kpiHint {
+  margin: 0.85rem 0 0;
+  font-size: 0.8rem;
+  color: #718096;
+  line-height: 1.4;
+}
+
+.chipText {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #012d60;
+}
+
+.tratativaText {
+  display: block;
+  font-size: 0.78rem;
+  color: #4a5568;
+  line-height: 1.35;
+}
+
+.rankingTable th:nth-child(1),
+.rankingTable td:nth-child(1) {
+  width: 3rem;
+}
+
+.rankingTable th:nth-child(3),
+.rankingTable td:nth-child(3) {
+  width: 3.5rem;
+}
+
+.rankingTable th:nth-child(4),
+.rankingTable td:nth-child(4) {
+  width: 8rem;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.dataTable th,
+.dataTable td {
+  padding: 0.65rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(1, 45, 96, 0.1);
+  vertical-align: top;
+}
+
+.dataTable th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #718096;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dataTable td strong {
+  color: #012d60;
+  font-weight: 600;
+}
+
+.tableMeta {
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+@media (max-width: 720px) {
+  .execHeader {
+    flex-direction: column;
+  }
+
+  .dataTable {
+    min-width: 640px;
+  }
+}

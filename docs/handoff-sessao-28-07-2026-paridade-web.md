@@ -101,9 +101,14 @@ Login e checklist por papel cruzando Excel + mobile:
 | 1 Admin RH | Feito |
 | 2 Avaliação | Feito |
 | 3 Reajuste / Cliente / PDI | Feito |
-| 4 Dashboards + Excel residual | **Pendente — começar amanhã** |
+| 4 Dashboards + Excel residual | **Feito em 29/07/2026** |
 | 5 QA por perfil | Pendente |
 
----
+### Fase 4 entregue (29/07)
+- Dashboards gerenciais: IMA gauge, radar offshore/legado, rankings Top/Bottom/Completo, PDI, export PDF, faixas CEO, status por gestor
+- Visão estratégica: radar + gauge + nine-box matriz + turnover + sucessão
+- Impacto caixa: folha, R$, % da folha, % médio, status gestores
+- Cadastro Cargos/Funções + CBO (migration + web/mobile)
+- Menus RH/CEO/Admin alinhados + links PDI no AppShell / Minha Equipe / Dashboard colaborador
 
-*Gerado em 28/07/2026 para continuidade da sessão seguinte.*
+*Atualizado em 29/07/2026.*

@@ -1,0 +1,41 @@
+.chartWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chartHint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #718096;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.gaugeValue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  text-align: center;
+}
+
+.gaugeLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #718096;
+}
+
+.gaugeValue strong {
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.gaugeStatus {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}

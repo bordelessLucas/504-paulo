@@ -23,6 +23,7 @@ export { HistoricoDesligadosPage } from './HistoricoDesligadosPage';
 export { ListaAtivosPage } from './ListaAtivosPage';
 export { CadastroClientePage } from './CadastroClientePage';
 export { CadastroAvaliadoresPage } from './CadastroAvaliadoresPage';
+export { CadastroCargosPage } from './CadastroCargosPage';
 export { StatusSolicitacoesPage } from './StatusSolicitacoesPage';
 export { AnaliseAvaliadoresPage } from './AnaliseAvaliadoresPage';
 export { HistoricoReajustePage } from './HistoricoReajustePage';

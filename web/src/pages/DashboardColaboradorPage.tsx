@@ -57,13 +57,20 @@ export function DashboardColaboradorPage() {
         title={`Olá, ${user?.name?.split(' ')[0] ?? 'Colaborador'}`}
         description="Resumo do seu desempenho, feedbacks e solicitações."
         accessory={
-          <Button
-            size="sm"
-            disabled={!data || !isAutoavaliacaoEnabled}
-            onClick={() => setIsFormOpen(true)}
-          >
-            Nova autoavaliação
-          </Button>
+          <div className={page.actions}>
+            <Link to="/app/pdi">
+              <Button size="sm" variant="secondary">
+                Meus PDIs
+              </Button>
+            </Link>
+            <Button
+              size="sm"
+              disabled={!data || !isAutoavaliacaoEnabled}
+              onClick={() => setIsFormOpen(true)}
+            >
+              Nova autoavaliação
+            </Button>
+          </div>
         }
       />
 

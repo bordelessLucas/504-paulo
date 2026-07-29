@@ -298,7 +298,7 @@ function buildFichaBody(ficha: ColaboradorFichaData, options?: { showPageBreak?:
   `;
 }
 
-function buildFichaHtml(ficha: ColaboradorFichaData): string {
+export function buildFichaHtml(ficha: ColaboradorFichaData): string {
   return `
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -308,7 +308,7 @@ function buildFichaHtml(ficha: ColaboradorFichaData): string {
   `;
 }
 
-function buildLoteHtml(fichas: ColaboradorFichaData[], titulo: string, departamento?: string): string {
+export function buildLoteHtml(fichas: ColaboradorFichaData[], titulo: string, departamento?: string): string {
   const cover = `
     <div class="lote-cover doc-header">
       <div class="doc-title">Relatório de fichas — Offshore</div>

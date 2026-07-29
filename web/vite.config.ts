@@ -55,6 +55,10 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve(__dirname, 'src/contexts/auth-context.tsx'),
         },
         {
+          find: '@/features/gerencial/export-ficha-pdf',
+          replacement: path.resolve(__dirname, 'src/adapters/export-ficha-pdf.ts'),
+        },
+        {
           find: 'react-native',
           replacement: path.resolve(__dirname, 'src/shims/react-native.ts'),
         },

@@ -28,6 +28,13 @@ export function MinhaEquipePage() {
       <PageHeader
         title="Minha equipe"
         description="Status de preenchimento da quinzena atual por colaborador."
+        accessory={
+          <Link to="/app/pdi-equipe">
+            <Button size="sm" variant="secondary">
+              PDI da equipe
+            </Button>
+          </Link>
+        }
       />
 
       <PageContent isLoading={isLoading} error={error} data={data} onRetry={reload}>

@@ -15,6 +15,7 @@ import {
 import { SECOES_OFFSHORE } from '@/features/avaliacao/secoes-offshore';
 import { matchDepartamentoEmpresa } from '@/features/gerencial/departamentos';
 import { getSemaforoPorMedia, type SemaforoStatus } from '@/features/gerencial/semaforo';
+import { splitTopBottomRankings } from '@/features/gerencial/relatorio-gerencial';
 import { supabase } from '@/lib/supabase';
 import type { Profile, TipoAvaliacao, UserRole } from '@/types/supabase';
 
@@ -60,9 +61,13 @@ export type GerencialDashboardData = {
   radarOffshore: RadarUniversalData;
   ima: number | null;
   semaforoStatus: SemaforoStatus;
+  /** Colaboradores ativos (escopo da organização). */
+  totalColaboradores: number;
   statusPreenchimento: GestorPreenchimentoStatus[];
   top5: ColaboradorRanking[];
   bottom5: ColaboradorRanking[];
+  top10: ColaboradorRanking[];
+  bottom10: ColaboradorRanking[];
   rankingCompleto: ColaboradorRanking[];
 };
 
@@ -141,11 +146,22 @@ function calcularIma(
 function buildRankings(
   colaboradores: ColaboradorBase[],
   notasPorColaborador: Map<string, number[]>,
+  notasPorColaboradorCodigo?: Map<string, Map<string, number[]>>,
 ): ColaboradorRanking[] {
   return colaboradores
     .map((colaborador) => {
       const notas = notasPorColaborador.get(colaborador.id) ?? [];
-      const media = calcularMedia(notas);
+      let media = calcularMedia(notas);
+
+      const notasCodigo = notasPorColaboradorCodigo?.get(colaborador.id);
+      if (notasCodigo && notasCodigo.size > 0) {
+        const imaPonderado = calcularImaPonderado(
+          buildMediasPorSecaoFromCodigos(notasCodigo),
+        );
+        if (imaPonderado !== null) {
+          media = imaPonderado;
+        }
+      }
 
       return {
         id: colaborador.id,
@@ -157,7 +173,12 @@ function buildRankings(
       };
     })
     .filter((item) => item.totalRespostas > 0)
-    .sort((left, right) => right.media - left.media);
+    .sort((left, right) => {
+      if (right.media !== left.media) {
+        return right.media - left.media;
+      }
+      return left.nome.localeCompare(right.nome, 'pt-BR');
+    });
 }
 
 async function fetchPerguntasIdsPorSecao(): Promise<{
@@ -293,9 +314,12 @@ export async function fetchGerencialDashboard(): Promise<GerencialDashboardData>
       radarOffshore: buildRadarOffshore(new Map()),
       ima: null,
       semaforoStatus: 'cinza',
+      totalColaboradores: 0,
       statusPreenchimento: [],
       top5: [],
       bottom5: [],
+      top10: [],
+      bottom10: [],
       rankingCompleto: [],
     };
   }
@@ -394,26 +418,41 @@ export async function fetchGerencialDashboard(): Promise<GerencialDashboardData>
     }
   }
 
-  const rankings = buildRankings(listaColaboradores, notasPorColaborador);
-  const ima = calcularIma(
+  const rankings = buildRankings(
     listaColaboradores,
     notasPorColaborador,
     perguntasMeta.offshore ? notasPorColaboradorCodigo : undefined,
   );
+  const topBottom5 = splitTopBottomRankings(rankings, 5);
+  const topBottom10 = splitTopBottomRankings(rankings, 10);
+  let ima = calcularIma(
+    listaColaboradores,
+    notasPorColaborador,
+    perguntasMeta.offshore ? notasPorColaboradorCodigo : undefined,
+  );
+
+  // Fallback: média simples do ranking quando o IMA ponderado ainda não fecha.
+  if (ima === null && rankings.length > 0) {
+    ima =
+      rankings.reduce((sum, item) => sum + item.media, 0) / rankings.length;
+  }
 
   return {
     radarUniversal: buildRadarUniversal(notasPorCodigo),
     radarOffshore: buildRadarOffshore(notasPorSecao),
     ima,
     semaforoStatus: getSemaforoPorMedia(ima),
+    totalColaboradores: listaColaboradores.length,
     statusPreenchimento: buildStatusPreenchimento(
       gestores ?? [],
       listaColaboradores,
       avaliadosQuinzena,
       avaliadosSemestre,
     ),
-    top5: rankings.slice(0, 5),
-    bottom5: [...rankings].reverse().slice(0, 5),
+    top5: topBottom5.top,
+    bottom5: topBottom5.bottom,
+    top10: topBottom10.top,
+    bottom10: topBottom10.bottom,
     rankingCompleto: rankings,
   };
 }

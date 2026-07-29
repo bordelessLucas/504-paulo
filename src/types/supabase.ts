@@ -247,6 +247,50 @@ export type Database = {
         ];
       };
 
+      cargos: {
+        Row: {
+          id: string;
+          nome: string;
+          codigo_cbo: string | null;
+          departamento: string | null;
+          descricao: string | null;
+          ativo: boolean;
+          organizacao_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          nome: string;
+          codigo_cbo?: string | null;
+          departamento?: string | null;
+          descricao?: string | null;
+          ativo?: boolean;
+          organizacao_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          nome?: string;
+          codigo_cbo?: string | null;
+          departamento?: string | null;
+          descricao?: string | null;
+          ativo?: boolean;
+          organizacao_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cargos_organizacao_id_fkey";
+            columns: ["organizacao_id"];
+            isOneToOne: false;
+            referencedRelation: "organizacoes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       clientes: {
         Row: {
           id: string;

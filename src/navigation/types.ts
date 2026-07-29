@@ -33,6 +33,7 @@ export type MainTabParamList = {
   ImpactoCaixa: undefined;
   RankingPerformance: undefined;
   AnalisePerfil: undefined;
+  CadastroCargos: undefined;
   Perfil: undefined;
 };
 
