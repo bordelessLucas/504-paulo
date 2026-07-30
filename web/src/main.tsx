@@ -10,15 +10,8 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-// Em localhost, NÃO registrar SW: vários projetos compartilham a origem
-// (localhost:porta) e o cache de outro app pode “tomar” a tela após o login.
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/sw.js').catch((error) => {
-      console.warn('[PWA] Falha ao registrar service worker:', error);
-    });
-  });
-} else if ('serviceWorker' in navigator) {
+// Em desenvolvimento, limpa SW/caches residuais de outros projetos na mesma origem.
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
   void navigator.serviceWorker.getRegistrations().then((registrations) => {
     for (const registration of registrations) {
       void registration.unregister();

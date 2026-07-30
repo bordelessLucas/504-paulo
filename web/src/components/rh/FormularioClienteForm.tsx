@@ -21,6 +21,14 @@ const INITIAL: CreateClienteInput = {
   uf: '',
   unidadeNome: '',
   aeroportoEmbarque: '',
+  contatoBaseNome: '',
+  contatoBaseTelefone: '',
+  contatoBaseEmail: '',
+  contatoBaseDepto: '',
+  contatoBordoNome: '',
+  contatoBordoTelefone: '',
+  contatoBordoEmail: '',
+  contatoBordoDepto: '',
 };
 
 export function FormularioClienteForm({ onCreated }: FormularioClienteFormProps) {
@@ -70,70 +78,139 @@ export function FormularioClienteForm({ onCreated }: FormularioClienteFormProps)
 
   return (
     <form className={page.form} onSubmit={(event) => void handleSubmit(event)}>
-      <div className={admin.row2}>
+      <section className={admin.sectionBlock}>
+        <h3 className={admin.sectionHeading}>Dados do cliente</h3>
+        <div className={admin.row2}>
+          <Field
+            id="cliente-razao"
+            label="Razão social"
+            value={form.razaoSocial}
+            onChange={(value) => updateField('razaoSocial', value)}
+            required
+          />
+          <Field
+            id="cliente-fantasia"
+            label="Nome fantasia"
+            value={form.nomeFantasia ?? ''}
+            onChange={(value) => updateField('nomeFantasia', value)}
+          />
+        </div>
+        <div className={admin.row2}>
+          <Field
+            id="cliente-codigo"
+            label="Código"
+            value={form.codigo ?? ''}
+            onChange={(value) => updateField('codigo', value)}
+          />
+          <Field
+            id="cliente-cnpj"
+            label="CNPJ"
+            value={form.cnpj ?? ''}
+            onChange={(value) => updateField('cnpj', value)}
+          />
+        </div>
+        <div className={admin.row2}>
+          <Field
+            id="cliente-endereco"
+            label="Endereço"
+            value={form.endereco ?? ''}
+            onChange={(value) => updateField('endereco', value)}
+          />
+          <Field
+            id="cliente-cidade"
+            label="Cidade"
+            value={form.cidade ?? ''}
+            onChange={(value) => updateField('cidade', value)}
+          />
+        </div>
+        <div className={admin.row2}>
+          <Field
+            id="cliente-uf"
+            label="UF"
+            value={form.uf ?? ''}
+            onChange={(value) => updateField('uf', value)}
+          />
+          <Field
+            id="cliente-unidade"
+            label="Plataforma / Unidade"
+            value={form.unidadeNome ?? ''}
+            onChange={(value) => updateField('unidadeNome', value)}
+            placeholder="Se vazio e houver contato, usa Principal"
+          />
+        </div>
         <Field
-          id="cliente-razao"
-          label="Razão social"
-          value={form.razaoSocial}
-          onChange={(value) => updateField('razaoSocial', value)}
-          required
+          id="cliente-aeroporto"
+          label="Aeroporto de embarque"
+          value={form.aeroportoEmbarque ?? ''}
+          onChange={(value) => updateField('aeroportoEmbarque', value)}
         />
-        <Field
-          id="cliente-fantasia"
-          label="Nome fantasia"
-          value={form.nomeFantasia ?? ''}
-          onChange={(value) => updateField('nomeFantasia', value)}
-        />
-      </div>
-      <div className={admin.row2}>
-        <Field
-          id="cliente-codigo"
-          label="Código"
-          value={form.codigo ?? ''}
-          onChange={(value) => updateField('codigo', value)}
-        />
-        <Field
-          id="cliente-cnpj"
-          label="CNPJ"
-          value={form.cnpj ?? ''}
-          onChange={(value) => updateField('cnpj', value)}
-        />
-      </div>
-      <div className={admin.row2}>
-        <Field
-          id="cliente-endereco"
-          label="Endereço"
-          value={form.endereco ?? ''}
-          onChange={(value) => updateField('endereco', value)}
-        />
-        <Field
-          id="cliente-cidade"
-          label="Cidade"
-          value={form.cidade ?? ''}
-          onChange={(value) => updateField('cidade', value)}
-        />
-      </div>
-      <div className={admin.row2}>
-        <Field
-          id="cliente-uf"
-          label="UF"
-          value={form.uf ?? ''}
-          onChange={(value) => updateField('uf', value)}
-        />
-        <Field
-          id="cliente-unidade"
-          label="Unidade (opcional)"
-          value={form.unidadeNome ?? ''}
-          onChange={(value) => updateField('unidadeNome', value)}
-          placeholder="Se preenchido, cria unidade vinculada"
-        />
-      </div>
-      <Field
-        id="cliente-aeroporto"
-        label="Aeroporto de embarque"
-        value={form.aeroportoEmbarque ?? ''}
-        onChange={(value) => updateField('aeroportoEmbarque', value)}
-      />
+      </section>
+
+      <section className={admin.sectionBlock}>
+        <h3 className={admin.sectionHeading}>Contato de base</h3>
+        <div className={admin.row2}>
+          <Field
+            id="cliente-base-nome"
+            label="Nome"
+            value={form.contatoBaseNome ?? ''}
+            onChange={(value) => updateField('contatoBaseNome', value)}
+          />
+          <Field
+            id="cliente-base-tel"
+            label="Telefone"
+            value={form.contatoBaseTelefone ?? ''}
+            onChange={(value) => updateField('contatoBaseTelefone', value)}
+          />
+        </div>
+        <div className={admin.row2}>
+          <Field
+            id="cliente-base-email"
+            label="E-mail"
+            type="email"
+            value={form.contatoBaseEmail ?? ''}
+            onChange={(value) => updateField('contatoBaseEmail', value)}
+          />
+          <Field
+            id="cliente-base-depto"
+            label="Departamento"
+            value={form.contatoBaseDepto ?? ''}
+            onChange={(value) => updateField('contatoBaseDepto', value)}
+          />
+        </div>
+      </section>
+
+      <section className={admin.sectionBlock}>
+        <h3 className={admin.sectionHeading}>Contato de bordo</h3>
+        <div className={admin.row2}>
+          <Field
+            id="cliente-bordo-nome"
+            label="Nome"
+            value={form.contatoBordoNome ?? ''}
+            onChange={(value) => updateField('contatoBordoNome', value)}
+          />
+          <Field
+            id="cliente-bordo-tel"
+            label="Telefone"
+            value={form.contatoBordoTelefone ?? ''}
+            onChange={(value) => updateField('contatoBordoTelefone', value)}
+          />
+        </div>
+        <div className={admin.row2}>
+          <Field
+            id="cliente-bordo-email"
+            label="E-mail"
+            type="email"
+            value={form.contatoBordoEmail ?? ''}
+            onChange={(value) => updateField('contatoBordoEmail', value)}
+          />
+          <Field
+            id="cliente-bordo-depto"
+            label="Departamento"
+            value={form.contatoBordoDepto ?? ''}
+            onChange={(value) => updateField('contatoBordoDepto', value)}
+          />
+        </div>
+      </section>
 
       {error ? <p className={`${admin.feedback} ${admin.feedbackError}`}>{error}</p> : null}
       {feedback ? (
@@ -154,6 +231,7 @@ function Field({
   onChange,
   required,
   placeholder,
+  type = 'text',
 }: {
   id: string;
   label: string;
@@ -161,6 +239,7 @@ function Field({
   onChange: (value: string) => void;
   required?: boolean;
   placeholder?: string;
+  type?: string;
 }) {
   return (
     <div className={page.field}>
@@ -170,6 +249,7 @@ function Field({
       <input
         id={id}
         className={page.input}
+        type={type}
         value={value}
         required={required}
         placeholder={placeholder}

@@ -41,11 +41,40 @@
   background: #00a675;
   color: #fff;
   font-weight: 600;
+  min-height: 44px;
+  text-decoration: none;
 }
 
 .dismiss {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.guideLink {
+  display: inline-block;
+  margin-top: 0.45rem;
+  color: #9ef0d0;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.iosBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+  .banner {
+    bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  }
 }
 
 @media (max-width: 640px) {

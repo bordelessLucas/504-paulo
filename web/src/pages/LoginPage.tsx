@@ -87,6 +87,12 @@ export function LoginPage() {
             Criar conta
           </Link>
         </p>
+        <p className={page.authFooter}>
+          Quer usar como aplicativo?{' '}
+          <Link className={page.authLink} to="/instalar">
+            Como instalar no celular
+          </Link>
+        </p>
       </div>
     </div>
   );

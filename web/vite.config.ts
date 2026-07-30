@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
 export default defineConfig(({ mode }) => {
@@ -9,7 +10,109 @@ export default defineConfig(({ mode }) => {
     env.VITE_SUPABASE_ANON_KEY || env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      VitePWA({
+        registerType: 'prompt',
+        includeAssets: [
+          'favicon.svg',
+          'apple-touch-icon.png',
+          'pwa-192x192.png',
+          'pwa-512x512.png',
+          'icons.svg',
+        ],
+        manifest: {
+          id: '/',
+          name: 'Vertek Avalia',
+          short_name: 'Vertek Avalia',
+          description: 'Avaliação de desempenho e gestão de pessoas — Vertek Avalia',
+          start_url: '/',
+          scope: '/',
+          display: 'standalone',
+          display_override: ['standalone', 'minimal-ui', 'browser'],
+          orientation: 'portrait-primary',
+          background_color: '#F0EDE4',
+          theme_color: '#012D60',
+          lang: 'pt-BR',
+          dir: 'ltr',
+          categories: ['business', 'productivity'],
+          shortcuts: [
+            {
+              name: 'Como instalar o app',
+              short_name: 'Instalar',
+              url: '/instalar',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+            },
+            {
+              name: 'Painel de Avaliações',
+              short_name: 'Avaliar',
+              url: '/app/painel-avaliacao',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+            },
+            {
+              name: 'Dashboard Gerencial',
+              short_name: 'Gerencial',
+              url: '/app/gerencial',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+            },
+            {
+              name: 'Meu Perfil',
+              short_name: 'Perfil',
+              url: '/app/perfil',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+            },
+          ],
+          icons: [
+            {
+              src: '/pwa-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+            },
+            {
+              src: '/pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+            },
+            {
+              src: '/pwa-512x512.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+          ],
+        },
+        workbox: {
+          navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/api/, /supabase\.co/],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,woff2}'],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) => url.hostname.includes('supabase.co'),
+              handler: 'NetworkOnly',
+            },
+            {
+              urlPattern: ({ request }) => request.destination === 'image',
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'vertek-images',
+                expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              },
+            },
+            {
+              urlPattern: ({ request }) =>
+                request.destination === 'script' || request.destination === 'style',
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'vertek-static',
+              },
+            },
+          ],
+        },
+        devOptions: {
+          enabled: false,
+        },
+      }),
+    ],
     envDir: path.resolve(__dirname, '..'),
     envPrefix: ['VITE_', 'EXPO_PUBLIC_'],
     define: {
@@ -80,23 +183,23 @@ export default defineConfig(({ mode }) => {
         },
         {
           find: 'expo-document-picker',
-          replacement: path.resolve(__dirname, 'src/shims/expo-stub.ts'),
-        },
-        {
-          find: 'expo-file-system',
-          replacement: path.resolve(__dirname, 'src/shims/expo-stub.ts'),
+          replacement: path.resolve(__dirname, 'src/shims/expo-document-picker.ts'),
         },
         {
           find: 'expo-image-picker',
-          replacement: path.resolve(__dirname, 'src/shims/expo-stub.ts'),
+          replacement: path.resolve(__dirname, 'src/shims/expo-image-picker.ts'),
+        },
+        {
+          find: 'expo-file-system',
+          replacement: path.resolve(__dirname, 'src/shims/expo-file-system.ts'),
         },
         {
           find: 'expo-print',
-          replacement: path.resolve(__dirname, 'src/shims/expo-stub.ts'),
+          replacement: path.resolve(__dirname, 'src/shims/expo-print.ts'),
         },
         {
           find: 'expo-sharing',
-          replacement: path.resolve(__dirname, 'src/shims/expo-stub.ts'),
+          replacement: path.resolve(__dirname, 'src/shims/expo-sharing.ts'),
         },
         {
           find: 'expo-font',
@@ -137,7 +240,6 @@ export default defineConfig(({ mode }) => {
       exclude: ['react-native', 'expo-sqlite', 'expo-router'],
     },
     server: {
-      // Porta dedicada — evita colisão com outros Vite (ex.: thora em 5173).
       port: 5180,
       strictPort: true,
       fs: {

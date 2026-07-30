@@ -65,7 +65,27 @@ type CreateColaboradorBody = {
   senha_temporaria?: string;
   role?: string;
   status?: string;
+  telefone_2?: string;
+  endereco?: string;
+  cidade_uf?: string;
+  telefone_emergencia?: string;
+  tipo_contrato?: string;
+  especialidade?: string;
+  aceita_dobra?: boolean;
+  perfil_risco?: string;
+  observacoes?: string;
+  total_no_show?: number;
+  total_bafometro_positivo?: number;
+  total_toxicologico_positivo?: number;
+  trocas_plataforma_avaliacao_baixa?: number;
 };
+
+function normalizeCounter(value?: number): number {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.floor(value));
+}
 
 function normalizeNivelIrata(value?: string): string | null {
   if (!value?.trim()) {
@@ -372,6 +392,12 @@ Deno.serve(async (request) => {
         aceita_dobra: body.aceita_dobra ?? false,
         perfil_risco: body.perfil_risco?.trim() || null,
         observacoes: body.observacoes?.trim() || null,
+        total_no_show: normalizeCounter(body.total_no_show),
+        total_bafometro_positivo: normalizeCounter(body.total_bafometro_positivo),
+        total_toxicologico_positivo: normalizeCounter(body.total_toxicologico_positivo),
+        trocas_plataforma_avaliacao_baixa: normalizeCounter(
+          body.trocas_plataforma_avaliacao_baixa,
+        ),
       },
       { onConflict: 'id' },
     );

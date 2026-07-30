@@ -43,7 +43,7 @@ export function CadastroClientePage() {
             <div>
               <h2 className={admin.panelTitle}>Novo cliente</h2>
               <p className={admin.panelSubtitle}>
-                Informe a razão social. Unidade e aeroporto são opcionais.
+                Razão social obrigatória. Unidade e contatos de base/bordo são opcionais.
               </p>
             </div>
           </div>
@@ -93,6 +93,12 @@ export function CadastroClientePage() {
                         {unidade.nome}
                         {unidade.aeroportoEmbarque
                           ? ` · embarque: ${unidade.aeroportoEmbarque}`
+                          : ''}
+                        {unidade.contatoBaseNome
+                          ? ` · base: ${unidade.contatoBaseNome}`
+                          : ''}
+                        {unidade.contatoBordoNome
+                          ? ` · bordo: ${unidade.contatoBordoNome}`
                           : ''}
                       </li>
                     ))}

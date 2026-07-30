@@ -325,3 +325,52 @@
   color: #012d60;
   margin: 0;
 }
+
+@media (max-width: 720px) {
+  .page,
+  .pageNarrow {
+    padding: 0.85rem;
+  }
+
+  .pageTitle {
+    font-size: clamp(1.25rem, 5vw, 1.6rem);
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+
+  .row2,
+  .formRow {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .listItemHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions > * {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .metricValue {
+    font-size: 1.25rem;
+  }
+}
+

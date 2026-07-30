@@ -5,6 +5,7 @@ import { getPrimaryTabForRole } from '@/navigation/role-menus';
 import type { UserRole } from '@/types/supabase';
 
 import { InstallPrompt } from './components/InstallPrompt';
+import { OfflineBanner, UpdatePrompt } from './components/PwaChrome';
 import { Spinner } from './components/ui/Spinner';
 import { useSubscription, SubscriptionProvider } from './contexts/subscription-context';
 import { AppShell } from './layouts/AppShell';
@@ -20,6 +21,7 @@ import {
   FormularioAvaliacaoPage,
   FormularioLotePage,
   HistoricoAvaliacaoColaboradorPage,
+  InstalarAppPage,
   LoginPage,
   NotFoundPage,
   PdiDetailPage,
@@ -62,9 +64,12 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <SubscriptionProvider>
+          <OfflineBanner />
           <InstallPrompt />
+          <UpdatePrompt />
           <Routes>
             <Route path="/" element={<RootRedirect />} />
+            <Route path="/instalar" element={<InstalarAppPage />} />
 
             <Route element={<PublicOnly />}>
               <Route path="/login" element={<LoginPage />} />

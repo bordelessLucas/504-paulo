@@ -90,9 +90,10 @@ export function FormularioAvaliacaoPage() {
     });
 
     if (incomplete) {
+      const perguntas = perguntasQuery.data;
       setTouched((current) => {
         const next = { ...current };
-        for (const pergunta of perguntasQuery.data) {
+        for (const pergunta of perguntas) {
           next[pergunta.id] = true;
         }
         return next;

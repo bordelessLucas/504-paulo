@@ -127,13 +127,14 @@
 }
 
 .chip {
-  padding: 0.4rem 0.85rem;
+  padding: 0.55rem 0.85rem;
   border-radius: 999px;
   border: 1px solid rgba(1, 45, 96, 0.2);
   background: #ffffff;
   font-size: 0.85rem;
   cursor: pointer;
   color: #012d60;
+  min-height: 44px;
 }
 
 .chipActive {

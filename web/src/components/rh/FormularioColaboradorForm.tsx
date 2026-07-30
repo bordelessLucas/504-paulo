@@ -50,6 +50,10 @@ const INITIAL_FORM: CreateColaboradorInput = {
   aceita_dobra: false,
   perfil_risco: '',
   observacoes: '',
+  total_no_show: 0,
+  total_bafometro_positivo: 0,
+  total_toxicologico_positivo: 0,
+  trocas_plataforma_avaliacao_baixa: 0,
 };
 
 export function FormularioColaboradorForm({ onCreated }: FormularioColaboradorFormProps) {
@@ -179,6 +183,20 @@ export function FormularioColaboradorForm({ onCreated }: FormularioColaboradorFo
             onChange={(value) => updateField('telefone', value)}
           />
         </div>
+        <div className={admin.row2}>
+          <Field
+            id="colab-telefone-2"
+            label="Segundo telefone"
+            value={form.telefone_2 ?? ''}
+            onChange={(value) => updateField('telefone_2', value)}
+          />
+          <Field
+            id="colab-emergencia"
+            label="Tel. emergência"
+            value={form.telefone_emergencia ?? ''}
+            onChange={(value) => updateField('telefone_emergencia', value)}
+          />
+        </div>
       </section>
 
       <section className={admin.sectionBlock}>
@@ -259,16 +277,16 @@ export function FormularioColaboradorForm({ onCreated }: FormularioColaboradorFo
         </div>
         <div className={admin.row2}>
           <Field
-            id="colab-emergencia"
-            label="Tel. emergência"
-            value={form.telefone_emergencia ?? ''}
-            onChange={(value) => updateField('telefone_emergencia', value)}
-          />
-          <Field
             id="colab-risco"
             label="Perfil de risco"
             value={form.perfil_risco ?? ''}
             onChange={(value) => updateField('perfil_risco', value)}
+          />
+          <Field
+            id="colab-observacoes"
+            label="Observações"
+            value={form.observacoes ?? ''}
+            onChange={(value) => updateField('observacoes', value)}
           />
         </div>
 
@@ -318,6 +336,42 @@ export function FormularioColaboradorForm({ onCreated }: FormularioColaboradorFo
           />
           <span>Aceita dobra</span>
         </label>
+      </section>
+
+      <section className={admin.sectionBlock}>
+        <h3 className={admin.sectionHeading}>Contadores de risco (Excel 1.7)</h3>
+        <div className={admin.row2}>
+          <NumberField
+            id="colab-no-show"
+            label="Total de no-show"
+            value={form.total_no_show ?? 0}
+            error={errors.total_no_show}
+            onChange={(value) => updateField('total_no_show', value)}
+          />
+          <NumberField
+            id="colab-bafometro"
+            label="Bafômetro positivo"
+            value={form.total_bafometro_positivo ?? 0}
+            error={errors.total_bafometro_positivo}
+            onChange={(value) => updateField('total_bafometro_positivo', value)}
+          />
+        </div>
+        <div className={admin.row2}>
+          <NumberField
+            id="colab-toxicologico"
+            label="Toxicológico positivo"
+            value={form.total_toxicologico_positivo ?? 0}
+            error={errors.total_toxicologico_positivo}
+            onChange={(value) => updateField('total_toxicologico_positivo', value)}
+          />
+          <NumberField
+            id="colab-trocas-plataforma"
+            label="Trocas de plataforma (avaliação baixa)"
+            value={form.trocas_plataforma_avaliacao_baixa ?? 0}
+            error={errors.trocas_plataforma_avaliacao_baixa}
+            onChange={(value) => updateField('trocas_plataforma_avaliacao_baixa', value)}
+          />
+        </div>
       </section>
 
       <section className={admin.sectionBlock}>
@@ -423,6 +477,41 @@ function Field({
         placeholder={placeholder}
         required={required}
         onChange={(event) => onChange(event.target.value)}
+      />
+      {error ? <span className={page.fieldError}>{error}</span> : null}
+    </div>
+  );
+}
+
+function NumberField({
+  id,
+  label,
+  value,
+  onChange,
+  error,
+}: {
+  id: string;
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  error?: string;
+}) {
+  return (
+    <div className={page.field}>
+      <label className={page.label} htmlFor={id}>
+        {label}
+      </label>
+      <input
+        id={id}
+        className={page.input}
+        type="number"
+        min={0}
+        step={1}
+        value={Number.isFinite(value) ? value : 0}
+        onChange={(event) => {
+          const parsed = Number.parseInt(event.target.value, 10);
+          onChange(Number.isNaN(parsed) ? 0 : parsed);
+        }}
       />
       {error ? <span className={page.fieldError}>{error}</span> : null}
     </div>

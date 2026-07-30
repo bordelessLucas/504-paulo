@@ -64,10 +64,10 @@ Checklist do que foi implementado e validável com prints. Ambiente: `cd web && 
 
 ## Pendente (fora desta sessão)
 
-- [ ] Aplicar migration `cargos_cbo` no Supabase (se ainda não aplicada)
-- [ ] Seed da lista de cargos do Excel 1.10
-- [ ] Cadastro colaborador completo (campos extras 1.7)
-- [ ] Cliente: contatos base/bordo no create
+- [ ] Aplicar migration `cargos_cbo` + seed `20260730160000_seed_cargos_cbo.sql` no Supabase
+- [x] Seed da lista de cargos do Excel 1.10 (arquivo criado; aplicar no remoto)
+- [x] Cadastro colaborador: telefone_2, observações, contadores 1.7 (web + mobile + Edge)
+- [x] Cliente: contatos base/bordo no create (web + mobile + API)
 - [ ] Impacto caixa mensal/anual separados (2.7 / 2.8)
 - [ ] Abas sem wireframe: 2.18, 2.22, 3.20, 3.21
 - [ ] QA E2E por perfil (Fase 5)

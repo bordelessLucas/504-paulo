@@ -41,6 +41,10 @@ export type CreateColaboradorInput = {
   aceita_dobra?: boolean;
   perfil_risco?: string;
   observacoes?: string;
+  total_no_show?: number;
+  total_bafometro_positivo?: number;
+  total_toxicologico_positivo?: number;
+  trocas_plataforma_avaliacao_baixa?: number;
 };
 
 /** Senha padrão ao importar colaboradores via CSV (contas novas). */
@@ -139,6 +143,48 @@ export function validateCreateColaborador(
     };
   }
 
+  const counterError = validateNonNegativeCounter(
+    input.total_no_show,
+    'total_no_show',
+    'Total de no-show',
+  );
+  if (counterError) return counterError;
+
+  const bafometroError = validateNonNegativeCounter(
+    input.total_bafometro_positivo,
+    'total_bafometro_positivo',
+    'Total bafômetro positivo',
+  );
+  if (bafometroError) return bafometroError;
+
+  const toxicologicoError = validateNonNegativeCounter(
+    input.total_toxicologico_positivo,
+    'total_toxicologico_positivo',
+    'Total toxicológico positivo',
+  );
+  if (toxicologicoError) return toxicologicoError;
+
+  const trocasError = validateNonNegativeCounter(
+    input.trocas_plataforma_avaliacao_baixa,
+    'trocas_plataforma_avaliacao_baixa',
+    'Trocas de plataforma por avaliação baixa',
+  );
+  if (trocasError) return trocasError;
+
+  return null;
+}
+
+function validateNonNegativeCounter(
+  value: number | undefined,
+  field: keyof CreateColaboradorInput,
+  label: string,
+): ColaboradorFieldError | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  if (!Number.isInteger(value) || value < 0) {
+    return { field, message: `${label} deve ser um número inteiro ≥ 0.` };
+  }
   return null;
 }
 
@@ -174,5 +220,18 @@ export function normalizeCreateColaboradorInput(input: CreateColaboradorInput): 
     aceita_dobra: input.aceita_dobra ?? false,
     perfil_risco: input.perfil_risco?.trim() || undefined,
     observacoes: input.observacoes?.trim() || undefined,
+    total_no_show: normalizeCounter(input.total_no_show),
+    total_bafometro_positivo: normalizeCounter(input.total_bafometro_positivo),
+    total_toxicologico_positivo: normalizeCounter(input.total_toxicologico_positivo),
+    trocas_plataforma_avaliacao_baixa: normalizeCounter(
+      input.trocas_plataforma_avaliacao_baixa,
+    ),
   };
+}
+
+function normalizeCounter(value: number | undefined): number | undefined {
+  if (value === undefined || value === null || Number.isNaN(value)) {
+    return undefined;
+  }
+  return Math.max(0, Math.floor(value));
 }

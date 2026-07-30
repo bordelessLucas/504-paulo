@@ -57,6 +57,10 @@ const INITIAL_FORM: CreateColaboradorInput = {
   aceita_dobra: false,
   perfil_risco: '',
   observacoes: '',
+  total_no_show: 0,
+  total_bafometro_positivo: 0,
+  total_toxicologico_positivo: 0,
+  trocas_plataforma_avaliacao_baixa: 0,
 };
 
 export function FormularioColaborador({ embedded = false, onCreated }: FormularioColaboradorProps) {
@@ -292,6 +296,13 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
           value={form.perfil_risco ?? ''}
           variant={inputVariant}
         />
+        <Input
+          label="Observações"
+          onChangeText={(value) => updateField('observacoes', value)}
+          placeholder="Anotações livres do RH"
+          value={form.observacoes ?? ''}
+          variant={inputVariant}
+        />
         <View style={styles.fieldGroup}>
           <NotionCheckbox
             checked={Boolean(form.aceita_dobra)}
@@ -360,6 +371,70 @@ export function FormularioColaborador({ embedded = false, onCreated }: Formulari
               {errors.status}
             </ThemedText>
           ) : null}
+        </View>
+      </FormSection>
+
+      <FormSection embedded={embedded} title="Contadores de risco">
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <Input
+              error={errors.total_no_show}
+              keyboardType="number-pad"
+              label="Total de no-show"
+              onChangeText={(value) =>
+                updateField('total_no_show', Number.parseInt(value.replace(/\D/g, ''), 10) || 0)
+              }
+              value={String(form.total_no_show ?? 0)}
+              variant={inputVariant}
+            />
+          </View>
+          <View style={styles.half}>
+            <Input
+              error={errors.total_bafometro_positivo}
+              keyboardType="number-pad"
+              label="Bafômetro positivo"
+              onChangeText={(value) =>
+                updateField(
+                  'total_bafometro_positivo',
+                  Number.parseInt(value.replace(/\D/g, ''), 10) || 0,
+                )
+              }
+              value={String(form.total_bafometro_positivo ?? 0)}
+              variant={inputVariant}
+            />
+          </View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.half}>
+            <Input
+              error={errors.total_toxicologico_positivo}
+              keyboardType="number-pad"
+              label="Toxicológico positivo"
+              onChangeText={(value) =>
+                updateField(
+                  'total_toxicologico_positivo',
+                  Number.parseInt(value.replace(/\D/g, ''), 10) || 0,
+                )
+              }
+              value={String(form.total_toxicologico_positivo ?? 0)}
+              variant={inputVariant}
+            />
+          </View>
+          <View style={styles.half}>
+            <Input
+              error={errors.trocas_plataforma_avaliacao_baixa}
+              keyboardType="number-pad"
+              label="Trocas plataforma (av. baixa)"
+              onChangeText={(value) =>
+                updateField(
+                  'trocas_plataforma_avaliacao_baixa',
+                  Number.parseInt(value.replace(/\D/g, ''), 10) || 0,
+                )
+              }
+              value={String(form.trocas_plataforma_avaliacao_baixa ?? 0)}
+              variant={inputVariant}
+            />
+          </View>
         </View>
       </FormSection>
 

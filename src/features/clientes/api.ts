@@ -20,9 +20,11 @@ export type ClienteUnidade = {
   contatoBaseNome: string | null;
   contatoBaseTelefone: string | null;
   contatoBaseEmail: string | null;
+  contatoBaseDepto: string | null;
   contatoBordoNome: string | null;
   contatoBordoTelefone: string | null;
   contatoBordoEmail: string | null;
+  contatoBordoDepto: string | null;
 };
 
 export type ClienteComUnidades = Cliente & { unidades: ClienteUnidade[] };
@@ -37,6 +39,14 @@ export type CreateClienteInput = {
   uf?: string;
   unidadeNome?: string;
   aeroportoEmbarque?: string;
+  contatoBaseNome?: string;
+  contatoBaseTelefone?: string;
+  contatoBaseEmail?: string;
+  contatoBaseDepto?: string;
+  contatoBordoNome?: string;
+  contatoBordoTelefone?: string;
+  contatoBordoEmail?: string;
+  contatoBordoDepto?: string;
 };
 
 export async function fetchClientesComUnidades(): Promise<ClienteComUnidades[]> {
@@ -47,8 +57,8 @@ export async function fetchClientesComUnidades(): Promise<ClienteComUnidades[]> 
       id, codigo, cnpj, razao_social, nome_fantasia, endereco, cidade, uf,
       unidades:cliente_unidades(
         id, cliente_id, nome, aeroporto_embarque, cidade,
-        contato_base_nome, contato_base_telefone, contato_base_email,
-        contato_bordo_nome, contato_bordo_telefone, contato_bordo_email
+        contato_base_nome, contato_base_telefone, contato_base_email, contato_base_depto,
+        contato_bordo_nome, contato_bordo_telefone, contato_bordo_email, contato_bordo_depto
       )
     `,
     )
@@ -76,9 +86,11 @@ export async function fetchClientesComUnidades(): Promise<ClienteComUnidades[]> 
       contatoBaseNome: (u.contato_base_nome as string | null) ?? null,
       contatoBaseTelefone: (u.contato_base_telefone as string | null) ?? null,
       contatoBaseEmail: (u.contato_base_email as string | null) ?? null,
+      contatoBaseDepto: (u.contato_base_depto as string | null) ?? null,
       contatoBordoNome: (u.contato_bordo_nome as string | null) ?? null,
       contatoBordoTelefone: (u.contato_bordo_telefone as string | null) ?? null,
       contatoBordoEmail: (u.contato_bordo_email as string | null) ?? null,
+      contatoBordoDepto: (u.contato_bordo_depto as string | null) ?? null,
     })),
   }));
 }
@@ -107,13 +119,41 @@ export async function createCliente(input: CreateClienteInput): Promise<void> {
     throw new Error(error.message);
   }
 
-  const unidadeNome = input.unidadeNome?.trim();
+  const contatoBaseNome = input.contatoBaseNome?.trim();
+  const contatoBaseTelefone = input.contatoBaseTelefone?.trim();
+  const contatoBaseEmail = input.contatoBaseEmail?.trim();
+  const contatoBaseDepto = input.contatoBaseDepto?.trim();
+  const contatoBordoNome = input.contatoBordoNome?.trim();
+  const contatoBordoTelefone = input.contatoBordoTelefone?.trim();
+  const contatoBordoEmail = input.contatoBordoEmail?.trim();
+  const contatoBordoDepto = input.contatoBordoDepto?.trim();
+
+  const hasContatos = Boolean(
+    contatoBaseNome ||
+      contatoBaseTelefone ||
+      contatoBaseEmail ||
+      contatoBaseDepto ||
+      contatoBordoNome ||
+      contatoBordoTelefone ||
+      contatoBordoEmail ||
+      contatoBordoDepto,
+  );
+
+  const unidadeNome = input.unidadeNome?.trim() || (hasContatos ? 'Principal' : '');
   if (unidadeNome) {
     const { error: unidadeError } = await supabase.from('cliente_unidades').insert({
       cliente_id: cliente.id,
       nome: unidadeNome,
       aeroporto_embarque: input.aeroportoEmbarque?.trim() || null,
       cidade: input.cidade?.trim() || null,
+      contato_base_nome: contatoBaseNome || null,
+      contato_base_telefone: contatoBaseTelefone || null,
+      contato_base_email: contatoBaseEmail || null,
+      contato_base_depto: contatoBaseDepto || null,
+      contato_bordo_nome: contatoBordoNome || null,
+      contato_bordo_telefone: contatoBordoTelefone || null,
+      contato_bordo_email: contatoBordoEmail || null,
+      contato_bordo_depto: contatoBordoDepto || null,
     });
     if (unidadeError) {
       throw new Error(unidadeError.message);

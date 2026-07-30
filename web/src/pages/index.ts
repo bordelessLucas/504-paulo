@@ -31,6 +31,7 @@ export { ImpactoCaixaPage } from './ImpactoCaixaPage';
 export { RankingPerformancePage } from './RankingPerformancePage';
 export { AnalisePerfilPage } from './AnalisePerfilPage';
 export { PerfilPage } from './PerfilPage';
+export { InstalarAppPage } from './InstalarAppPage';
 export { PdiListPage } from './PdiListPage';
 export { PdiDetailPage } from './PdiDetailPage';
 export { PdiEquipePage } from './PdiEquipePage';
