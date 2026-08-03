@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState, type
 
 import type { MainTabParamList } from '@/navigation/types';
 
-type NavigateToTab = (routeName: keyof MainTabParamList) => void;
+type NavigateToTab = (routeName: keyof MainTabParamList, params?: object) => void;
 type OpenDrawer = () => void;
 type ToggleDrawer = () => void;
 export type DrawerStatus = 'open' | 'closed';
@@ -12,7 +12,7 @@ type AppNavigationContextValue = {
   registerDrawer: (openDrawer: OpenDrawer | null) => void;
   registerToggleDrawer: (toggleDrawer: ToggleDrawer | null) => void;
   setDrawerStatus: (status: DrawerStatus) => void;
-  navigateToTab: (routeName: keyof MainTabParamList) => boolean;
+  navigateToTab: (routeName: keyof MainTabParamList, params?: object) => boolean;
   openDrawer: () => void;
   toggleDrawer: () => void;
   drawerStatus: DrawerStatus;
@@ -38,12 +38,12 @@ export function AppNavigationProvider({ children }: { children: ReactNode }) {
     toggleDrawerRef.current = toggleDrawer;
   }, []);
 
-  const navigateToTab = useCallback((routeName: keyof MainTabParamList) => {
+  const navigateToTab = useCallback((routeName: keyof MainTabParamList, params?: object) => {
     if (!navigatorRef.current) {
       return false;
     }
 
-    navigatorRef.current(routeName);
+    navigatorRef.current(routeName, params);
     return true;
   }, []);
 

@@ -1,8 +1,10 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { HeaderIconButton } from '@/components/navigation/header-icon-button';
 import { RoleContextChip } from '@/components/navigation/role-context-chip';
+import { GlobalSearchModal } from '@/components/search/global-search-modal';
 import { getScreenTopChromeHeight } from '@/constants/screen-chrome';
 import { SCREEN_TOP_BAR_HEIGHT } from '@/constants/layout';
 import { layout, zIndex } from '@/constants/theme';
@@ -15,6 +17,7 @@ import { useAppNavigation } from '@/navigation/app-navigation-context';
 import { brandRgb } from '@/constants/brand';
 
 export function ScreenTopBar() {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { role } = useAuthRole();
@@ -67,6 +70,17 @@ export function ScreenTopBar() {
             <RoleContextChip role={role} />
           </View>
         ) : null}
+        <View style={styles.actions}>
+          <HeaderIconButton
+            accessibilityLabel="Pesquisar páginas e colaboradores"
+            icon="magnify"
+            variant="ghost"
+            onPress={() => {
+              void hapticSelection();
+              setIsSearchOpen(true);
+            }}
+            tintColor={theme.text}
+          />
         <HeaderIconButton
           accessibilityLabel={
             unreadCount > 0 ? `Abrir alertas, ${unreadCount} não lidos` : 'Abrir alertas'
@@ -80,7 +94,9 @@ export function ScreenTopBar() {
           }}
           tintColor={theme.text}
         />
+        </View>
       </View>
+      <GlobalSearchModal visible={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </View>
   );
 }
@@ -115,5 +131,9 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

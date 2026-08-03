@@ -23,6 +23,19 @@ export function createLazyTabScreen<P extends object>(
   };
 }
 
+export type LazyScreenLoader = () => Promise<unknown>;
+
+/** Starts downloading/compiling screens before the user opens them. */
+export function preloadLazyScreens(loaders: LazyScreenLoader[]): void {
+  for (const loader of loaders) {
+    void loader().catch((error: unknown) => {
+      if (__DEV__) {
+        console.warn('[Navegação] Não foi possível pré-carregar uma tela:', error);
+      }
+    });
+  }
+}
+
 export function createLazyNamedScreen<P extends object>(
   loader: () => Promise<Record<string, unknown>>,
   exportName: string,

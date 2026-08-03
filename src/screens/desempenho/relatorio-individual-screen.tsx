@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useRoute, type RouteProp } from '@react-navigation/native';
 
 import { RadarDesempenhoChart } from '@/components/gerencial/radar-desempenho-chart';
 import { ScreenHeader } from '@/components/navigation/screen-header';
@@ -18,9 +19,13 @@ import {
   type RelatorioIndividual,
 } from '@/features/desempenho/relatorio-api';
 import { useTheme } from '@/hooks/use-theme';
+import type { MainTabParamList } from '@/navigation/types';
 
 export function RelatorioIndividualScreen() {
   const theme = useTheme();
+  const route = useRoute<RouteProp<MainTabParamList, 'RelatorioIndividual'>>();
+  const requestedColaboradorId = route.params?.colaboradorId;
+  const requestedNome = route.params?.nome;
   const [colaboradores, setColaboradores] = useState<ColaboradorBusca[]>([]);
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -61,6 +66,15 @@ export function RelatorioIndividualScreen() {
       setIsLoadingRelatorio(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!requestedColaboradorId) {
+      return;
+    }
+
+    setQuery(requestedNome ?? '');
+    void loadRelatorio(requestedColaboradorId);
+  }, [loadRelatorio, requestedColaboradorId, requestedNome]);
 
   const ficha = relatorio?.ficha ?? null;
   const radarLabels = ficha?.radarOffshore.labels ?? SECOES_OFFSHORE.map((s) => SECAO_OFFSHORE_LABELS[s]);

@@ -3,8 +3,40 @@ import { StyleSheet, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { BrandColors } from '@/constants/theme';
-import { createLazyNamedScreen } from '@/navigation/lazy-tab-screen';
+import { createLazyNamedScreen, type LazyScreenLoader } from '@/navigation/lazy-tab-screen';
 import type { MainTabParamList, TabIconName } from '@/navigation/types';
+
+export const TAB_SCREEN_LOADERS: Record<keyof MainTabParamList, LazyScreenLoader> = {
+  DashboardColaborador: () => import('@/screens/colaborador/colaborador-tab-screen'),
+  MinhasAvaliacoes: () => import('@/screens/colaborador/minhas-avaliacoes-screen'),
+  PainelAvaliacao: () => import('@/screens/avaliacao/painel-screen'),
+  MinhaEquipe: () => import('@/screens/avaliacao/minha-equipe-tab-screen'),
+  PainelReajuste: () => import('@/screens/gerente/painel-reajuste-screen'),
+  AdminDashboard: () => import('@/screens/admin/painel-admin-screen'),
+  DashboardsGerenciais: () => import('@/screens/admin/dashboards-gerenciais-screen'),
+  VisaoEstrategica: () => import('@/screens/admin/visao-estrategica-screen'),
+  Compliance: () => import('@/screens/admin/compliance-screen'),
+  Metodologia: () => import('@/screens/shared/metodologia-screen'),
+  MatrizPeso: () => import('@/screens/shared/matriz-peso-screen'),
+  Regras: () => import('@/screens/shared/regras-screen'),
+  Aprovacoes: () => import('@/screens/admin/aprovacoes-screen'),
+  PainelAnualEstrategico: () => import('@/screens/admin/painel-anual-estrategico'),
+  RelatorioIndividual: () => import('@/screens/desempenho/relatorio-individual-screen'),
+  HistoricoQuinzenal: () => import('@/screens/desempenho/historico-quinzenal-screen'),
+  HistoricoSemestral: () => import('@/screens/desempenho/historico-semestral-screen'),
+  HistoricoDesligados: () => import('@/screens/desempenho/historico-desligados-screen'),
+  ListaAtivos: () => import('@/screens/desempenho/lista-ativos-screen'),
+  CadastroCliente: () => import('@/screens/admin/cadastro-cliente-screen'),
+  CadastroAvaliadores: () => import('@/screens/admin/cadastro-avaliadores-screen'),
+  CadastroCargos: () => import('@/screens/admin/cadastro-cargos-screen'),
+  StatusSolicitacoes: () => import('@/screens/desempenho/status-solicitacoes-screen'),
+  AnaliseAvaliadores: () => import('@/screens/ceo/analise-avaliadores-screen'),
+  HistoricoReajuste: () => import('@/screens/ceo/historico-reajuste-screen'),
+  ImpactoCaixa: () => import('@/screens/ceo/impacto-caixa-screen'),
+  RankingPerformance: () => import('@/screens/desempenho/ranking-performance-screen'),
+  AnalisePerfil: () => import('@/screens/desempenho/analise-perfil-screen'),
+  Perfil: () => import('@/screens/shared/perfil-screen'),
+};
 
 export const TAB_SCREENS: Record<keyof MainTabParamList, ComponentType> = {
   DashboardColaborador: createLazyNamedScreen(

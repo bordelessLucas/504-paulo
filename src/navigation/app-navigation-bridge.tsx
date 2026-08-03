@@ -1,4 +1,4 @@
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { CommonActions, DrawerActions, useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import type { NavigationProp } from '@react-navigation/native';
 import { useEffect, useRef } from 'react';
@@ -19,8 +19,8 @@ export function AppNavigationBridge() {
   }, [drawerStatus, setDrawerStatus]);
 
   useEffect(() => {
-    registerNavigator((routeName) => {
-      navigation.navigate(routeName as never);
+    registerNavigator((routeName, params) => {
+      navigation.dispatch(CommonActions.navigate({ name: routeName, params }));
     });
 
     registerDrawer(() => {

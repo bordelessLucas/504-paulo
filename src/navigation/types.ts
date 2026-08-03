@@ -20,7 +20,7 @@ export type MainTabParamList = {
   Regras: undefined;
   Aprovacoes: undefined;
   PainelAnualEstrategico: undefined;
-  RelatorioIndividual: undefined;
+  RelatorioIndividual: { colaboradorId?: string; nome?: string } | undefined;
   HistoricoQuinzenal: undefined;
   HistoricoSemestral: undefined;
   HistoricoDesligados: undefined;

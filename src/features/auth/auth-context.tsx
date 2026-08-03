@@ -124,7 +124,22 @@ type ProfileRow = {
   must_change_password?: boolean | null;
 };
 
+const profileRequests = new Map<string, Promise<ProfileRow | null>>();
+
 async function fetchProfileByUserId(userId: string): Promise<ProfileRow | null> {
+  const pendingRequest = profileRequests.get(userId);
+  if (pendingRequest) {
+    return pendingRequest;
+  }
+
+  const request = fetchProfileByUserIdOnce(userId).finally(() => {
+    profileRequests.delete(userId);
+  });
+  profileRequests.set(userId, request);
+  return request;
+}
+
+async function fetchProfileByUserIdOnce(userId: string): Promise<ProfileRow | null> {
   const baseSelect = 'nome, role, created_at, departamento, funcao, must_change_password';
 
   const fetchProfile = async (): Promise<ProfileRow | null> => {
@@ -178,15 +193,23 @@ async function fetchProfileByUserId(userId: string): Promise<ProfileRow | null> 
 
   const timeoutMs = 12_000;
 
-  return Promise.race([
-    fetchProfile(),
-    new Promise<null>((resolve) => {
-      setTimeout(() => {
-        console.warn('[Auth] Timeout ao carregar profile — seguindo sem dados remotos.');
-        resolve(null);
-      }, timeoutMs);
-    }),
-  ]);
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      fetchProfile(),
+      new Promise<null>((resolve) => {
+        timeoutId = setTimeout(() => {
+          console.warn('[Auth] Timeout ao carregar profile — seguindo sem dados remotos.');
+          resolve(null);
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 async function buildAuthUser(session: Session): Promise<AuthUser> {

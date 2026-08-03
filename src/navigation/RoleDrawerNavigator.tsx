@@ -1,4 +1,6 @@
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { useEffect } from 'react';
+import { InteractionManager } from 'react-native';
 
 import { AppNavigationBridge } from '@/navigation/app-navigation-bridge';
 import { NotionDrawerContent } from '@/components/navigation/notion-drawer-content';
@@ -8,7 +10,8 @@ import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { usePendingApprovalCount } from '@/hooks/use-pending-approval-count';
 import { getPrimaryTabForRole, getTabLabelForRole, getTabsForRole } from '@/navigation/role-menus';
-import { TAB_SCREENS } from '@/navigation/tab-screens';
+import { preloadLazyScreens } from '@/navigation/lazy-tab-screen';
+import { TAB_SCREEN_LOADERS, TAB_SCREENS } from '@/navigation/tab-screens';
 import type { MainTabParamList } from '@/navigation/types';
 import type { UserRole } from '@/types/supabase';
 
@@ -25,6 +28,15 @@ export function RoleDrawerNavigator({ role }: RoleDrawerNavigatorProps) {
   const tabs = getTabsForRole(role);
   const initialRouteName = getPrimaryTabForRole(role);
   const pendingApprovalCount = usePendingApprovalCount();
+
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      const roleTabs = getTabsForRole(role);
+      preloadLazyScreens(roleTabs.map((tab) => TAB_SCREEN_LOADERS[tab.name]));
+    });
+
+    return () => task.cancel();
+  }, [role]);
 
   if (!user) {
     return null;
