@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import { Card, Text, useTheme as usePaperTheme } from 'react-native-paper';
 
+import { EstrategicoCadastroPanel } from '@/components/estrategico/estrategico-cadastro-panel';
 import { EstrategicoRankingPanel } from '@/components/gerencial/estrategico-ranking-panel';
 import { ImaGaugeChart } from '@/components/gerencial/ima-gauge-chart';
 import { RadarDesempenhoChart } from '@/components/gerencial/radar-desempenho-chart';
@@ -16,8 +17,7 @@ import { fetchGerencialDashboard, type GerencialDashboardData } from '@/features
 import { useIsDesktopLayout } from '@/hooks/use-is-desktop-layout';
 
 /**
- * Painel estratégico da diretoria — radar comparativo e rankings Top/Bottom 5.
- * Rota de navegação: tab `VisaoEstrategica` (CEO / Admin).
+ * Painel estratégico da diretoria — radar, rankings e cadastro de potencial/sucessão.
  */
 export function VisaoEstrategicaScreen() {
   const paperTheme = usePaperTheme();
@@ -70,13 +70,17 @@ export function VisaoEstrategicaScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={isLoading} onRefresh={() => void load()} />}>
       <View style={styles.header}>
-        <Text variant="headlineSmall" style={{ color: paperTheme.colors.onBackground, fontWeight: '700' }}>
+        <Text
+          variant="headlineSmall"
+          style={{ color: paperTheme.colors.onBackground, fontWeight: '700' }}>
           Visão Estratégica
         </Text>
         <Text variant="bodyMedium" style={{ color: paperTheme.colors.onSurfaceVariant }}>
-          Comparativo de seções offshore e ranking de desempenho.
+          Comparativo de seções offshore, ranking e cadastro de potencial/sucessão.
         </Text>
       </View>
+
+      <EstrategicoCadastroPanel onChanged={() => void load()} />
 
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.cardContent}>

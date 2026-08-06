@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 import { PageContent } from '../components/PageContent';
 import { Badge } from '../components/ui/Badge';
@@ -14,8 +15,16 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import page from '../styles/page.module.css';
 
 export function RelatorioIndividualPage() {
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const colaborador = searchParams.get('colaborador');
+    if (colaborador) {
+      setSelectedId(colaborador);
+    }
+  }, [searchParams]);
 
   const buscaQuery = useAsyncData(
     () => fetchColaboradoresParaRelatorio(query || undefined),

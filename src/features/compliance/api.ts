@@ -164,6 +164,73 @@ export async function fetchPlanosAcaoCompliance(): Promise<PlanoAcaoComplianceRo
   return (data ?? []) as PlanoAcaoComplianceRow[];
 }
 
+export async function registrarPlanoAcaoCompliance(params: {
+  origemTipo: string;
+  descricaoAcao: string;
+  prazo?: string | null;
+}): Promise<void> {
+  const descricao = params.descricaoAcao.trim();
+  if (descricao.length < 5) {
+    throw new Error('Descreva a ação com pelo menos 5 caracteres.');
+  }
+
+  const idAcao = `PAC-${String(Date.now()).slice(-6)}`;
+  const { error } = await supabase.from('planos_acao_compliance').insert({
+    id_acao: idAcao,
+    origem_tipo: params.origemTipo.trim() || 'manual',
+    descricao_acao: descricao,
+    prazo: params.prazo?.trim() || null,
+    status: 'nao_iniciado',
+    conclusao_pct: 0,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function atualizarStatusDenuncia(
+  denunciaId: string,
+  status: StatusDenuncia,
+): Promise<void> {
+  const patch: {
+    status: StatusDenuncia;
+    updated_at: string;
+    data_fechamento?: string;
+  } = {
+    status,
+    updated_at: new Date().toISOString(),
+  };
+  if (status === 'concluido' || status === 'arquivado') {
+    patch.data_fechamento = new Date().toISOString();
+  }
+
+  const { error } = await supabase.from('denuncias').update(patch).eq('id', denunciaId);
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function atualizarProgressoPlanoAcao(
+  planoId: string,
+  conclusaoPct: number,
+): Promise<void> {
+  const pct = Math.max(0, Math.min(100, Math.round(conclusaoPct)));
+  const status = pct >= 100 ? 'concluido' : pct > 0 ? 'em_andamento' : 'nao_iniciado';
+  const { error } = await supabase
+    .from('planos_acao_compliance')
+    .update({
+      conclusao_pct: pct,
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', planoId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function fetchDashboardCompliance() {
   const [denuncias, riscos, planos] = await Promise.all([
     fetchDenuncias(),

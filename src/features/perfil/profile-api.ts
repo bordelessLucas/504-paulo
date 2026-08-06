@@ -74,7 +74,30 @@ export async function uploadProfileAvatar(
   }
 
   const arrayBuffer = await response.arrayBuffer();
+  return uploadAvatarBuffer(userId, filePath, arrayBuffer, contentType);
+}
 
+export async function uploadProfileAvatarFromFile(
+  userId: string,
+  file: File,
+): Promise<string> {
+  if (file.size > MAX_AVATAR_BYTES) {
+    throw new Error('A imagem deve ter no máximo 5 MB.');
+  }
+
+  const fileExt = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+  const contentType = file.type || resolveImageContentType(fileExt);
+  const filePath = `${userId}/avatar.${fileExt === 'jpeg' ? 'jpg' : fileExt}`;
+  const arrayBuffer = await file.arrayBuffer();
+  return uploadAvatarBuffer(userId, filePath, arrayBuffer, contentType);
+}
+
+async function uploadAvatarBuffer(
+  userId: string,
+  filePath: string,
+  arrayBuffer: ArrayBuffer,
+  contentType: string,
+): Promise<string> {
   const { error: uploadError } = await supabase.storage
     .from(AVATAR_BUCKET)
     .upload(filePath, arrayBuffer, {

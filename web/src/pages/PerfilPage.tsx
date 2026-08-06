@@ -1,11 +1,12 @@
 import { Bell, Download, LogOut, MonitorSmartphone } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useAuth } from '@/features/auth/auth-context';
+import { uploadProfileAvatarFromFile } from '@/features/perfil/profile-api';
 import { ROLE_LABELS } from '@/navigation/role-menus';
 import { isStandaloneDisplay } from '../pwa/display';
 import {
@@ -19,11 +20,14 @@ import page from '../styles/page.module.css';
 
 export function PerfilPage() {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, refetchProfile } = useAuth();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [permission, setPermission] = useState<NotificationPermissionState>(() =>
     getNotificationPermission(),
   );
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.avatarUrl ?? null);
   const standalone = isStandaloneDisplay();
   const pendingOffline = useMemo(() => getOfflineQueue().length, []);
 
@@ -62,30 +66,76 @@ export function PerfilPage() {
     setFeedback('Este navegador não suporta notificações web.');
   }
 
+  async function handleAvatarChange(file: File | null) {
+    if (!file || !user) return;
+    setAvatarBusy(true);
+    setFeedback(null);
+    try {
+      const url = await uploadProfileAvatarFromFile(user.id, file);
+      setAvatarUrl(url);
+      await refetchProfile();
+      setFeedback('Foto de perfil atualizada.');
+    } catch (err) {
+      setFeedback(err instanceof Error ? err.message : 'Erro ao enviar foto.');
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
+
   return (
     <div className={page.page}>
       <PageHeader title="Perfil" description="Dados da sua conta e preferências do app." />
 
       <Card style={{ marginBottom: '1rem' }}>
-        <div
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: '50%',
-            background: '#012D60',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.5rem',
-            fontWeight: 700,
-            marginBottom: '1rem',
-          }}
-        >
-          {user.name.charAt(0).toUpperCase()}
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+          <div
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              background: '#012D60',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              overflow: 'hidden',
+              flexShrink: 0,
+            }}
+          >
+            {avatarUrl || user.avatarUrl ? (
+              <img
+                src={avatarUrl ?? user.avatarUrl ?? undefined}
+                alt={`Foto de ${user.name}`}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              user.name.charAt(0).toUpperCase()
+            )}
+          </div>
+          <div>
+            <h2 className={page.listItemTitle}>{user.name}</h2>
+            <p className={page.listItemMeta}>{user.email}</p>
+            <div className={page.actions} style={{ marginTop: '0.65rem' }}>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={avatarBusy}
+                onClick={() => fileRef.current?.click()}
+              >
+                {avatarBusy ? 'Enviando...' : 'Alterar foto'}
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                hidden
+                onChange={(e) => void handleAvatarChange(e.target.files?.[0] ?? null)}
+              />
+            </div>
+          </div>
         </div>
-        <h2 className={page.listItemTitle}>{user.name}</h2>
-        <p className={page.listItemMeta}>{user.email}</p>
       </Card>
 
       <Card style={{ marginBottom: '1rem' }}>

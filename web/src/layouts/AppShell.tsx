@@ -1,4 +1,4 @@
-import { Flag, Menu, MoreHorizontal, X } from 'lucide-react';
+import { Flag, Menu, MoreHorizontal, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
@@ -11,6 +11,7 @@ import {
 } from '@/navigation/role-menus';
 import type { UserRole } from '@/types/supabase';
 
+import { GlobalSearchModal } from '../components/GlobalSearchModal';
 import { getMenuIcon } from '../navigation/menu-icons';
 import { getBottomTabsForRole } from '../navigation/bottom-tabs';
 import { getTabPath } from '../navigation/routes';
@@ -72,6 +73,7 @@ export function AppShell() {
   const location = useLocation();
   const isStandalone = useStandalone();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const role = (user?.role ?? 'colaborador') as UserRole;
   const sections = useMemo(() => getMenuSectionsForRole(role), [role]);
@@ -196,6 +198,15 @@ export function AppShell() {
           <button
             type="button"
             className={styles.homeChip}
+            onClick={() => setIsSearchOpen(true)}
+            aria-label="Buscar"
+          >
+            <Search size={16} />
+            Buscar
+          </button>
+          <button
+            type="button"
+            className={styles.homeChip}
             onClick={() => navigate(getTabPath(getPrimaryTabForRole(role)))}
           >
             Início
@@ -206,6 +217,8 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+
+      <GlobalSearchModal open={isSearchOpen} onClose={() => setIsSearchOpen(false)} role={role} />
 
       <nav className={styles.bottomNav} aria-label="Atalhos rápidos">
         {bottomTabs.map((item) => {

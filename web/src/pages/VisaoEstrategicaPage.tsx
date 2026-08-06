@@ -1,5 +1,6 @@
 import { Fragment, useMemo } from 'react';
 
+import { PotencialSucessaoForms } from '../components/estrategico/PotencialSucessaoForms';
 import { PageContent } from '../components/PageContent';
 import { ImaGaugeChart } from '../components/charts/ImaGaugeChart';
 import { RadarDesempenhoChart } from '../components/charts/RadarDesempenhoChart';
@@ -10,6 +11,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import {
   NINE_BOX_ACOES,
   NINE_BOX_LABELS,
+  fetchColaboradoresAtivosOpcoes,
   fetchDashboardExecutivo,
   type ColaboradorExecutivo,
   type NineBoxQuadrante,
@@ -29,11 +31,12 @@ const POTENCIAL_LABELS = ['Alto potencial', 'Médio potencial', 'Baixo potencial
 const PERF_LABELS = ['Baixa perf.', 'Média perf.', 'Alta perf.'];
 
 async function loadEstrategicoBundle() {
-  const [gerencialData, executivo] = await Promise.all([
+  const [gerencialData, executivo, opcoes] = await Promise.all([
     fetchGerencialDashboard(),
     fetchDashboardExecutivo(),
+    fetchColaboradoresAtivosOpcoes(),
   ]);
-  return { gerencial: gerencialData, executivo };
+  return { gerencial: gerencialData, executivo, opcoes };
 }
 
 export function VisaoEstrategicaPage() {
@@ -83,6 +86,13 @@ export function VisaoEstrategicaPage() {
                 <div className={page.metricValue}>{bundle.executivo.riscos.length}</div>
               </div>
             </div>
+
+            <PotencialSucessaoForms
+              colaboradores={bundle.executivo.nineBox}
+              opcoes={bundle.opcoes}
+              sucessao={bundle.executivo.sucessao}
+              onChanged={reload}
+            />
 
             <div className={gerencial.heroRow}>
               <Card>
@@ -169,9 +179,6 @@ export function VisaoEstrategicaPage() {
                   </Fragment>
                 ))}
               </div>
-              <p className={page.listItemMeta}>
-                Ação sugerida por quadrante: use a lista abaixo para detalhar.
-              </p>
               <div className={page.list}>
                 {(bundle.executivo.nineBox ?? []).map((colaborador) => (
                   <Card key={colaborador.id} padding="compact">
@@ -184,8 +191,11 @@ export function VisaoEstrategicaPage() {
                       />
                     </div>
                     <p className={page.listItemMeta}>
-                      IMA {colaborador.ima?.toFixed(1) ?? '—'} · Potencial {colaborador.potencial} ·{' '}
-                      {NINE_BOX_ACOES[colaborador.quadrante]}
+                      IMA {colaborador.ima?.toFixed(1) ?? '—'} · Potencial{' '}
+                      {colaborador.potencialCadastrado
+                        ? colaborador.potencial
+                        : 'não cadastrado (padrão médio)'}{' '}
+                      · {NINE_BOX_ACOES[colaborador.quadrante]}
                     </p>
                   </Card>
                 ))}
@@ -221,34 +231,6 @@ export function VisaoEstrategicaPage() {
                           ? `${risco.tempoEmpresaAnos.toFixed(1)} anos`
                           : '—'}
                       </p>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className={page.section}>
-              <h2 className={page.sectionTitle}>Plano de sucessão</h2>
-              {bundle.executivo.sucessao.length === 0 ? (
-                <p className={page.listItemMeta}>Nenhum plano de sucessão cadastrado.</p>
-              ) : (
-                <div className={page.list}>
-                  {bundle.executivo.sucessao.map((item) => (
-                    <Card key={item.id} padding="compact">
-                      <h3 className={page.listItemTitle}>{item.posicaoChave}</h3>
-                      <p className={page.listItemMeta}>
-                        Titular: {item.titularNome ?? '—'} · Sucessor 1: {item.sucessor1Nome ?? '—'}
-                        {item.prontidaoS1 ? ` (${item.prontidaoS1})` : ''} · Sucessor 2:{' '}
-                        {item.sucessor2Nome ?? '—'}
-                        {item.prontidaoS2 ? ` (${item.prontidaoS2})` : ''}
-                      </p>
-                      {item.gapIdentificado || item.acaoDesenvolvimento ? (
-                        <p className={page.listItemBody}>
-                          {[item.gapIdentificado, item.acaoDesenvolvimento]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </p>
-                      ) : null}
                     </Card>
                   ))}
                 </div>

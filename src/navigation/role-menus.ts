@@ -73,7 +73,7 @@ const TAB_DEFINITIONS: Record<keyof MainTabParamList, TabMenuItem> = {
   },
   Compliance: {
     name: 'Compliance',
-    label: 'Registro de Incidente',
+    label: 'Compliance & Denúncias',
     icon: 'warning-outline',
   },
   Metodologia: {
@@ -267,6 +267,7 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
           'HistoricoSemestral',
           'HistoricoDesligados',
         ),
+        menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste'),
         menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Conta', 'Perfil'),
       ];
@@ -282,7 +283,6 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
           'HistoricoSemestral',
           'HistoricoDesligados',
         ),
-        menuSection('Autoavaliação', 'Aprovacoes'),
         menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste'),
         menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Conta', 'Perfil'),

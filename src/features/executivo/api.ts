@@ -55,9 +55,29 @@ export type ColaboradorExecutivo = {
   departamento: string | null;
   ima: number | null;
   potencial: PotencialNivel;
+  /** true quando não há linha em colaborador_potencial (valor padrão). */
+  potencialCadastrado: boolean;
   quadrante: NineBoxQuadrante;
   acao: string;
   classificacao: ClassificacaoDesempenho | null;
+};
+
+export type PlanoSucessaoInput = {
+  id?: string;
+  posicaoChave: string;
+  titularId?: string | null;
+  sucessor1Id?: string | null;
+  prontidaoS1?: string | null;
+  sucessor2Id?: string | null;
+  prontidaoS2?: string | null;
+  gapIdentificado?: string | null;
+  acaoDesenvolvimento?: string | null;
+};
+
+export type ColaboradorOpcao = {
+  id: string;
+  nome: string;
+  funcao: string | null;
 };
 
 export type RiscoTurnoverItem = {
@@ -74,9 +94,12 @@ export type RiscoTurnoverItem = {
 export type PlanoSucessaoRow = {
   id: string;
   posicaoChave: string;
+  titularId: string | null;
   titularNome: string | null;
+  sucessor1Id: string | null;
   sucessor1Nome: string | null;
   prontidaoS1: string | null;
+  sucessor2Id: string | null;
   sucessor2Nome: string | null;
   prontidaoS2: string | null;
   gapIdentificado: string | null;
@@ -211,7 +234,7 @@ export async function fetchDashboardExecutivo(): Promise<DashboardExecutivoData>
     supabase
       .from('plano_sucessao')
       .select(
-        'id, posicao_chave, prontidao_s1, prontidao_s2, gap_identificado, acao_desenvolvimento, titular:profiles!plano_sucessao_titular_id_fkey(nome), s1:profiles!plano_sucessao_sucessor_1_id_fkey(nome), s2:profiles!plano_sucessao_sucessor_2_id_fkey(nome)',
+        'id, posicao_chave, titular_id, sucessor_1_id, sucessor_2_id, prontidao_s1, prontidao_s2, gap_identificado, acao_desenvolvimento, titular:profiles!plano_sucessao_titular_id_fkey(nome), s1:profiles!plano_sucessao_sucessor_1_id_fkey(nome), s2:profiles!plano_sucessao_sucessor_2_id_fkey(nome)',
       ),
   ]);
 
@@ -222,6 +245,7 @@ export async function fetchDashboardExecutivo(): Promise<DashboardExecutivoData>
 
   const nineBox: ColaboradorExecutivo[] = lista.map((c) => {
     const ima = imaMap.get(c.id) ?? null;
+    const potencialCadastrado = potencialMap.has(c.id);
     const potencial = potencialMap.get(c.id) ?? 'medio';
     const quadrante = calcularQuadranteNineBox(ima, potencial);
     return {
@@ -231,6 +255,7 @@ export async function fetchDashboardExecutivo(): Promise<DashboardExecutivoData>
       departamento: c.departamento,
       ima,
       potencial,
+      potencialCadastrado,
       quadrante,
       acao: NINE_BOX_ACOES[quadrante],
       classificacao: classificarPorIma(ima),
@@ -302,9 +327,12 @@ export async function fetchDashboardExecutivo(): Promise<DashboardExecutivoData>
     return {
       id: row.id as string,
       posicaoChave: row.posicao_chave as string,
+      titularId: (row.titular_id as string | null | undefined) ?? null,
       titularNome: (r.titular as { nome?: string } | null)?.nome ?? null,
+      sucessor1Id: (row.sucessor_1_id as string | null | undefined) ?? null,
       sucessor1Nome: (r.s1 as { nome?: string } | null)?.nome ?? null,
       prontidaoS1: row.prontidao_s1,
+      sucessor2Id: (row.sucessor_2_id as string | null | undefined) ?? null,
       sucessor2Nome: (r.s2 as { nome?: string } | null)?.nome ?? null,
       prontidaoS2: row.prontidao_s2,
       gapIdentificado: row.gap_identificado,
@@ -322,6 +350,86 @@ export async function fetchDashboardExecutivo(): Promise<DashboardExecutivoData>
     riscos,
     sucessao,
   };
+}
+
+export async function fetchColaboradoresAtivosOpcoes(): Promise<ColaboradorOpcao[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, nome, funcao')
+    .eq('role', 'colaborador')
+    .eq('status', 'ativo')
+    .order('nome', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    nome: row.nome,
+    funcao: row.funcao,
+  }));
+}
+
+export async function upsertColaboradorPotencial(params: {
+  colaboradorId: string;
+  potencial: PotencialNivel;
+  observacao?: string | null;
+  avaliadoPorId?: string | null;
+}): Promise<void> {
+  const { error } = await supabase.from('colaborador_potencial').upsert(
+    {
+      colaborador_id: params.colaboradorId,
+      potencial: params.potencial,
+      observacao: params.observacao?.trim() || null,
+      avaliado_por_id: params.avaliadoPorId ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'colaborador_id' },
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function upsertPlanoSucessao(input: PlanoSucessaoInput): Promise<void> {
+  const posicao = input.posicaoChave.trim();
+  if (posicao.length < 2) {
+    throw new Error('Informe a posição-chave.');
+  }
+
+  const payload = {
+    posicao_chave: posicao,
+    titular_id: input.titularId || null,
+    sucessor_1_id: input.sucessor1Id || null,
+    prontidao_s1: input.prontidaoS1?.trim() || null,
+    sucessor_2_id: input.sucessor2Id || null,
+    prontidao_s2: input.prontidaoS2?.trim() || null,
+    gap_identificado: input.gapIdentificado?.trim() || null,
+    acao_desenvolvimento: input.acaoDesenvolvimento?.trim() || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.id) {
+    const { error } = await supabase.from('plano_sucessao').update(payload).eq('id', input.id);
+    if (error) {
+      throw new Error(error.message);
+    }
+    return;
+  }
+
+  const { error } = await supabase.from('plano_sucessao').insert(payload);
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function deletePlanoSucessao(id: string): Promise<void> {
+  const { error } = await supabase.from('plano_sucessao').delete().eq('id', id);
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 export { SECAO_OFFSHORE_RADAR };
