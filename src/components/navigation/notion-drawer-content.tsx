@@ -84,7 +84,9 @@ export function NotionDrawerContent({
         contentContainerStyle={styles.menuList}
         showsVerticalScrollIndicator={false}>
         {menuSections.map((section, sectionIndex) => (
-          <View key={section.title} style={sectionIndex > 0 ? styles.sectionSpacing : undefined}>
+          <View
+            key={`${section.title}-${sectionIndex}`}
+            style={sectionIndex > 0 ? styles.sectionSpacing : undefined}>
             <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>{section.title}</Text>
             {section.items.map((item) => {
               const isActive = activeRoute === item.name;
@@ -93,7 +95,7 @@ export function NotionDrawerContent({
 
               return (
                 <DrawerNavItem
-                  key={item.name}
+                  key={`${section.title}-${item.name}`}
                   icon={item.icon}
                   isActive={isActive}
                   label={label}

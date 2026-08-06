@@ -207,6 +207,24 @@ export function getTabLabelForRole(tabName: keyof MainTabParamList, role: UserRo
     return isCeoApprovalRole(role) ? 'Aprovações' : 'Validações';
   }
 
+  // Labels Excel Rev Jul 2026 — mesma tela, nome por papel.
+  if (tabName === 'StatusSolicitacoes') {
+    if (role === 'ceo' || role === 'admin') {
+      return 'Relatório de Autoavaliação';
+    }
+    if (role === 'gerente') {
+      return 'Aguardando Aprovação';
+    }
+  }
+
+  if (tabName === 'DashboardColaborador' && role === 'supervisor') {
+    return 'Formulário de Autoavaliação';
+  }
+
+  if (tabName === 'MinhasAvaliacoes' && role === 'supervisor') {
+    return 'Avalições';
+  }
+
   return TAB_DEFINITIONS[tabName].label;
 }
 
@@ -252,7 +270,13 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
           'HistoricoSemestral',
           'HistoricoDesligados',
         ),
-        menuSection('Autoavaliação', 'StatusSolicitacoes'),
+        // Excel 6.11 Status · 6.12 Formulário/Avalições (Dashboard + MinhasAvaliacoes)
+        menuSection(
+          'Autoavaliação',
+          'StatusSolicitacoes',
+          'DashboardColaborador',
+          'MinhasAvaliacoes',
+        ),
         menuSection('Conta', 'Perfil'),
       ];
 
@@ -283,6 +307,8 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
           'HistoricoSemestral',
           'HistoricoDesligados',
         ),
+        // Excel 4.11 — StatusSolicitacoes (fila de pedidos aguardando)
+        menuSection('Autoavaliação', 'StatusSolicitacoes'),
         menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste'),
         menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Conta', 'Perfil'),
@@ -316,7 +342,8 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
           'HistoricoSemestral',
           'HistoricoDesligados',
         ),
-        menuSection('Autoavaliação', 'StatusSolicitacoes', 'Aprovacoes'),
+        // Excel 3.16 Histórico (HistoricoReajuste) · 3.17 Status · 3.18 Aguardando (Aprovacoes)
+        menuSection('Autoavaliação', 'HistoricoReajuste', 'StatusSolicitacoes', 'Aprovacoes'),
         menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste'),
         menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Conta', 'Perfil'),
@@ -340,7 +367,8 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
           'HistoricoSemestral',
           'Aprovacoes',
         ),
-        menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste'),
+        // Excel 2.17 Relatório Autoavaliação = StatusSolicitacoes
+        menuSection('Melhoria Salarial', 'PainelReajuste', 'HistoricoReajuste', 'StatusSolicitacoes'),
         menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Admin', 'AdminDashboard', 'CadastroCargos', 'Compliance'),
         menuSection('Conta', 'Perfil'),
@@ -374,6 +402,7 @@ export function getMenuSectionsForRole(role: UserRole): MenuSection[] {
           'HistoricoDesligados',
           'Aprovacoes',
         ),
+        // StatusSolicitacoes = Relatório de Autoavaliação (mesmo reuse do CEO)
         menuSection('Melhoria Salarial', 'PainelReajuste', 'StatusSolicitacoes'),
         menuSection('Análise Anual', 'ListaAtivos', 'HistoricoDesligados', 'AnalisePerfil', 'PainelAnualEstrategico'),
         menuSection('Conta', 'Perfil'),

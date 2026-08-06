@@ -12,7 +12,7 @@ import {
   type PotencialNivel,
 } from '@/features/executivo/api';
 import { useAuth } from '@/features/auth/auth-context';
-import page from '../styles/page.module.css';
+import page from '../../styles/page.module.css';
 
 const POTENCIAIS: PotencialNivel[] = ['baixo', 'medio', 'alto'];
 

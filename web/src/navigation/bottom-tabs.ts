@@ -38,15 +38,15 @@ function preferredTabsByRole(role: UserRole): Array<keyof MainTabParamList> {
     case 'colaborador':
       return ['DashboardColaborador', 'MinhasAvaliacoes', 'StatusSolicitacoes', 'Perfil'];
     case 'supervisor':
-      return ['PainelAvaliacao', 'MinhaEquipe', 'RelatorioIndividual', 'Perfil'];
+      return ['PainelAvaliacao', 'StatusSolicitacoes', 'DashboardColaborador', 'Perfil'];
     case 'gestor':
       return ['PainelAvaliacao', 'MinhaEquipe', 'PainelReajuste', 'Perfil'];
     case 'gerente':
-      return ['PainelReajuste', 'PainelAvaliacao', 'PainelAnualEstrategico', 'Perfil'];
+      return ['PainelReajuste', 'StatusSolicitacoes', 'PainelAvaliacao', 'Perfil'];
     case 'rh':
-      return ['Aprovacoes', 'AdminDashboard', 'DashboardsGerenciais', 'Perfil'];
+      return ['Aprovacoes', 'StatusSolicitacoes', 'AdminDashboard', 'Perfil'];
     case 'ceo':
-      return ['DashboardsGerenciais', 'Aprovacoes', 'ImpactoCaixa', 'Perfil'];
+      return ['DashboardsGerenciais', 'Aprovacoes', 'StatusSolicitacoes', 'Perfil'];
     case 'admin':
       return ['AdminDashboard', 'Aprovacoes', 'DashboardsGerenciais', 'Perfil'];
     default:

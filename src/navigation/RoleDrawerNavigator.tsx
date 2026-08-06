@@ -30,6 +30,12 @@ export function RoleDrawerNavigator({ role }: RoleDrawerNavigatorProps) {
   const pendingApprovalCount = usePendingApprovalCount();
 
   useEffect(() => {
+    // Em DEV o Metro OOMs se dezenas de chunks compilarem juntos (~2GB).
+    // Em produção o preload continua para navegação mais rápida.
+    if (__DEV__) {
+      return;
+    }
+
     const task = InteractionManager.runAfterInteractions(() => {
       const roleTabs = getTabsForRole(role);
       preloadLazyScreens(roleTabs.map((tab) => TAB_SCREEN_LOADERS[tab.name]));

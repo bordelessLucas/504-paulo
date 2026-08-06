@@ -122,7 +122,7 @@ export function AppShell() {
                 const Icon = getMenuIcon(item.icon);
                 return (
                   <NavLink
-                    key={item.name}
+                    key={`${section.title}-${item.name}`}
                     to={getTabPath(item.name)}
                     className={({ isActive }) =>
                       `${styles.link} ${isActive ? styles.linkActive : ''}`
