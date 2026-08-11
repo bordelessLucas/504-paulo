@@ -1,7 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import type { ReactNode } from 'react';
 
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
-import { getPrimaryTabForRole } from '@/navigation/role-menus';
+import { canAccessTab, getPrimaryTabForRole } from '@/navigation/role-menus';
+import type { MainTabParamList } from '@/navigation/types';
 import type { UserRole } from '@/types/supabase';
 
 import { InstallPrompt } from './components/InstallPrompt';
@@ -32,6 +34,26 @@ import {
   TrocarSenhaPage,
 } from './pages';
 
+function RoleGuardedTab({
+  tab,
+  children,
+}: {
+  tab: keyof MainTabParamList;
+  children: ReactNode;
+}) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <Spinner label="Carregando..." />;
+  }
+
+  const role = (user?.role ?? 'colaborador') as UserRole;
+  if (!canAccessTab(role, tab)) {
+    return <Navigate to={getTabPath(getPrimaryTabForRole(role))} replace />;
+  }
+
+  return children;
+}
 function RootRedirect() {
   const { user, isLoading, pendingRegistration } = useAuth();
   const { isSubscribed, isLoading: isSubLoading } = useSubscription();
@@ -86,9 +108,21 @@ export default function App() {
               </Route>
               <Route element={<RequireSubscription />}>
                 <Route path="/app" element={<AppShell />}>
-                  {Object.entries(TAB_ROUTES).map(([key, route]) => (
-                    <Route key={key} path={route.path} element={<route.component />} />
-                  ))}
+                  {Object.entries(TAB_ROUTES).map(([key, route]) => {
+                    const tab = key as keyof MainTabParamList;
+                    const Component = route.component;
+                    return (
+                      <Route
+                        key={key}
+                        path={route.path}
+                        element={
+                          <RoleGuardedTab tab={tab}>
+                            <Component />
+                          </RoleGuardedTab>
+                        }
+                      />
+                    );
+                  })}
                   <Route path="pdi" element={<PdiListPage />} />
                   <Route path="pdi/:pdiId" element={<PdiDetailPage />} />
                   <Route path="pdi-equipe" element={<PdiEquipePage />} />

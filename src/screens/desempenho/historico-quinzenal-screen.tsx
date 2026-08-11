@@ -7,6 +7,7 @@ import { GlassCard } from '@/components/premium/GlassCard';
 import { StatusBadge } from '@/components/premium/StatusBadge';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 import { layout } from '@/constants/theme';
@@ -14,6 +15,7 @@ import {
   fetchHistoricoAvaliacoes,
   type HistoricoAvaliacaoRow,
 } from '@/features/desempenho/historico-api';
+import { useAppNavigation } from '@/navigation/app-navigation-context';
 import type { TipoAvaliacao } from '@/types/supabase';
 
 type Props = {
@@ -23,6 +25,7 @@ type Props = {
 };
 
 function HistoricoAvaliacoesBase({ tipo, title, description }: Props) {
+  const { navigateToTab, openDrawer } = useAppNavigation();
   const [ano, setAno] = useState(String(new Date().getFullYear()));
   const [cliente, setCliente] = useState('');
   const [unidade, setUnidade] = useState('');
@@ -80,8 +83,18 @@ function HistoricoAvaliacoesBase({ tipo, title, description }: Props) {
         </ThemedText>
       ) : null}
 
-      {!isLoading && rows.length === 0 ? (
-        <ThemedText themeColor="textSecondary">Nenhum registro encontrado.</ThemedText>
+      {!isLoading && !error && rows.length === 0 ? (
+        <EmptyState
+          icon="clipboard-text-off-outline"
+          title="Nenhuma avaliação neste filtro"
+          message="Ajuste os filtros ou registre avaliações no Painel de Avaliações / Lista de Colaboradores."
+          actionLabel="Ir para Painel de Avaliações"
+          onAction={() => {
+            if (!navigateToTab('PainelAvaliacao')) {
+              openDrawer();
+            }
+          }}
+        />
       ) : null}
 
       {rows.map((row) => (

@@ -5,7 +5,9 @@ import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
 import { fetchStatusSolicitacoes } from '@/features/desempenho/historico-api';
-import type { StatusSolicitacaoSalarial } from '@/types/supabase';
+import { useAuth } from '@/features/auth/auth-context';
+import { getTabLabelForRole } from '@/navigation/role-menus';
+import type { StatusSolicitacaoSalarial, UserRole } from '@/types/supabase';
 import { useAsyncData } from '../hooks/useAsyncData';
 import page from '../styles/page.module.css';
 
@@ -19,6 +21,8 @@ const STATUS_OPTIONS: Array<{ value: StatusSolicitacaoSalarial | 'todos'; label:
 ];
 
 export function StatusSolicitacoesPage() {
+  const { user } = useAuth();
+  const role = (user?.role ?? 'colaborador') as UserRole;
   const [status, setStatus] = useState<StatusSolicitacaoSalarial | 'todos'>('todos');
 
   const { data, isLoading, error, reload } = useAsyncData(
@@ -32,7 +36,7 @@ export function StatusSolicitacoesPage() {
   return (
     <div className={page.page}>
       <PageHeader
-        title="Status de solicitações"
+        title={getTabLabelForRole('StatusSolicitacoes', role)}
         description="Acompanhamento de autoavaliações e pedidos de reajuste."
       />
 
@@ -55,7 +59,10 @@ export function StatusSolicitacoesPage() {
         data={data}
         onRetry={reload}
         isEmpty={(items) => items.length === 0}
-        emptyTitle="Nenhuma solicitação encontrada"
+        emptyTitle="Nenhuma solicitação ainda"
+        emptyDescription="Quando houver autoavaliações ou pedidos de reajuste, eles aparecem aqui."
+        emptyActionLabel="Ir para Reajuste Salarial"
+        emptyActionTab="PainelReajuste"
       >
         {(rows) => (
           <div className={page.list}>

@@ -20,8 +20,12 @@ export function validateChangePassword(
     return { field: 'newPassword', message: 'Informe a nova senha.' };
   }
 
-  if (input.newPassword.length < 6) {
-    return { field: 'newPassword', message: 'A nova senha deve ter pelo menos 6 caracteres.' };
+  if (input.newPassword.length < 8) {
+    return { field: 'newPassword', message: 'A nova senha deve ter pelo menos 8 caracteres.' };
+  }
+
+  if (!/[A-Za-z]/.test(input.newPassword) || !/[0-9]/.test(input.newPassword)) {
+    return { field: 'newPassword', message: 'A nova senha deve combinar letras e números.' };
   }
 
   if (input.newPassword === input.currentPassword) {

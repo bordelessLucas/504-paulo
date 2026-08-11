@@ -6,17 +6,25 @@ import { TabScreenContainer } from '@/components/navigation/tab-screen-container
 import { GlassCard } from '@/components/premium/GlassCard';
 import { StatusBadge } from '@/components/premium/StatusBadge';
 import { ThemedText } from '@/components/themed-text';
+import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 import { layout } from '@/constants/theme';
 import {
   fetchStatusSolicitacoes,
   type SolicitacaoStatusRow,
 } from '@/features/desempenho/historico-api';
+import { useAuthRole } from '@/hooks/use-auth-role';
+import { useAppNavigation } from '@/navigation/app-navigation-context';
+import { getTabLabelForRole } from '@/navigation/role-menus';
 
 export function HistoricoReajusteScreen() {
+  const { role } = useAuthRole();
+  const { navigateToTab, openDrawer } = useAppNavigation();
   const [rows, setRows] = useState<SolicitacaoStatusRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const title = role ? getTabLabelForRole('HistoricoReajuste', role) : 'Histórico de Reajuste';
 
   useEffect(() => {
     void (async () => {
@@ -33,7 +41,7 @@ export function HistoricoReajusteScreen() {
   return (
     <TabScreenContainer scrollable contentContainerStyle={styles.content}>
       <ScreenHeader
-        title="Histórico de Reajuste"
+        title={title}
         description="Linha do tempo de solicitações de melhoria salarial e autoavaliação."
       />
 
@@ -42,6 +50,20 @@ export function HistoricoReajusteScreen() {
         <ThemedText themeColor="danger" type="small">
           {error}
         </ThemedText>
+      ) : null}
+
+      {!isLoading && !error && rows.length === 0 ? (
+        <EmptyState
+          icon="cash-remove"
+          title="Nenhum registro ainda"
+          message="Solicitações de reajuste e autoavaliação aparecem aqui após o fluxo Gerente → RH → CEO."
+          actionLabel="Abrir painel de reajuste"
+          onAction={() => {
+            if (!navigateToTab('PainelReajuste')) {
+              openDrawer();
+            }
+          }}
+        />
       ) : null}
 
       {rows.map((row) => (

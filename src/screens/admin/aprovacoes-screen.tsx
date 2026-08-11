@@ -13,6 +13,7 @@ import { ScreenHeader } from '@/components/navigation/screen-header';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { EmptyState } from '@/components/ui/empty-state';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useToast } from '@/components/ui/toast';
 import { Spacing } from '@/constants/theme';
@@ -31,6 +32,7 @@ import {
   type SolicitacaoMelhoria,
 } from '@/features/aprovacoes/api';
 import { useAuthRole } from '@/hooks/use-auth-role';
+import { useAppNavigation } from '@/navigation/app-navigation-context';
 import type { StatusSolicitacaoSalarialEnum, StatusValidacaoEnum } from '@/types/supabase';
 
 type AprovacoesSection = 'solicitacoes' | 'avaliacoes';
@@ -42,6 +44,7 @@ type PendingAction =
 export function AprovacoesScreen() {
   const { role, isLoading: isRoleLoading } = useAuthRole();
   const { showToast } = useToast();
+  const { navigateToTab, openDrawer } = useAppNavigation();
 
   const isRhView = isRhValidationRole(role);
   const isCeoView = isCeoApprovalRole(role);
@@ -209,9 +212,17 @@ export function AprovacoesScreen() {
         </ThemedText>
       ) : section === 'solicitacoes' ? (
             solicitacoes.length === 0 ? (
-              <ThemedText type="description" themeColor="textSecondary">
-                {emptySolicitacoes}
-              </ThemedText>
+              <EmptyState
+                icon="check-circle-outline"
+                title="Fila vazia"
+                message={emptySolicitacoes}
+                actionLabel="Ver status das solicitações"
+                onAction={() => {
+                  if (!navigateToTab('StatusSolicitacoes')) {
+                    openDrawer();
+                  }
+                }}
+              />
             ) : (
               <View style={styles.list}>
                 {solicitacoes.map((solicitacao) => (
@@ -256,9 +267,17 @@ export function AprovacoesScreen() {
               </View>
             )
           ) : avaliacoes.length === 0 ? (
-            <ThemedText type="description" themeColor="textSecondary">
-              {emptyAvaliacoes}
-            </ThemedText>
+            <EmptyState
+              icon="clipboard-check-outline"
+              title="Nada pendente"
+              message={emptyAvaliacoes}
+              actionLabel="Ir para Painel de Avaliações"
+              onAction={() => {
+                if (!navigateToTab('PainelAvaliacao')) {
+                  openDrawer();
+                }
+              }}
+            />
           ) : (
             <View style={styles.list}>
               {avaliacoes.map((avaliacao) => (

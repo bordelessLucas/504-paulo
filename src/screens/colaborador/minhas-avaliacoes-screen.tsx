@@ -13,13 +13,16 @@ import { ScreenHeader } from '@/components/navigation/screen-header';
 import { TabScreenContainer } from '@/components/navigation/tab-screen-container';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-context';
 import { fetchHistoricoAvaliacoesMasked } from '@/features/avaliacao/historico-api';
 import type { AvaliacaoHistoricoItem } from '@/features/avaliacao/historico-api';
+import { useAppNavigation } from '@/navigation/app-navigation-context';
 
 export function MinhasAvaliacoesScreen() {
   const { user } = useAuth();
+  const { navigateToTab, openDrawer } = useAppNavigation();
   const [items, setItems] = useState<AvaliacaoHistoricoItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -91,9 +94,17 @@ export function MinhasAvaliacoesScreen() {
           <EscalaLegenda />
 
           {items.length === 0 ? (
-            <ThemedText themeColor="textMuted" style={styles.empty}>
-              Nenhuma avaliação registrada ainda.
-            </ThemedText>
+            <EmptyState
+              icon="clipboard-text-outline"
+              title="Nenhuma avaliação ainda"
+              message="Quando supervisores e gestores registrarem suas notas, o histórico aparece aqui (sem mostrar o nome do avaliador)."
+              actionLabel="Abrir dashboard"
+              onAction={() => {
+                if (!navigateToTab('DashboardColaborador')) {
+                  openDrawer();
+                }
+              }}
+            />
           ) : (
             items.map((item) => (
               <AvaliacaoHistoricoCard

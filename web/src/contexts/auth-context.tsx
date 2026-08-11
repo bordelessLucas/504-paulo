@@ -2,6 +2,11 @@ import type { Session } from '@supabase/supabase-js';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { mapAuthError } from '@/features/auth/map-auth-error';
+import {
+  clearLoginThrottle,
+  getLoginThrottleMessage,
+  registerLoginFailure,
+} from '@/features/auth/login-throttle';
 import { resolveUserRole } from '@/features/auth/resolve-user-role';
 import {
   clearStaleAuthSession,
@@ -24,26 +29,59 @@ const OWNER_ROLE: UserRole = 'ceo';
 const UNIQUE_VIOLATION_CODE = '23505';
 
 async function ensureOwnerProfile(userId: string, nome: string): Promise<void> {
-  const payload = { id: userId, nome, role: OWNER_ROLE } as const;
-
-  const { error: upsertError } = await supabase.from('profiles').upsert(payload, {
-    onConflict: 'id',
+  const { error: claimError } = await supabase.rpc('claim_owner_ceo', {
+    p_nome: nome,
   });
 
-  if (upsertError) {
-    const { error: insertError } = await supabase.from('profiles').insert(payload);
+  if (claimError) {
+    const missingRpc =
+      claimError.message.includes('Could not find the function') ||
+      claimError.message.includes('does not exist') ||
+      claimError.code === 'PGRST202';
 
-    if (insertError && insertError.code !== UNIQUE_VIOLATION_CODE) {
-      throw new Error(insertError.message || 'Não foi possível criar o perfil do dono da conta.');
-    }
+    if (!missingRpc) {
+      const { data: existing, error: existingError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ nome, role: OWNER_ROLE })
-      .eq('id', userId);
+      if (existingError) {
+        throw new Error(existingError.message);
+      }
 
-    if (updateError) {
-      throw new Error(updateError.message || 'Não foi possível definir o papel de CEO da conta.');
+      if (existing?.role !== OWNER_ROLE) {
+        throw new Error(
+          claimError.message || 'Não foi possível criar o perfil do dono da conta.',
+        );
+      }
+    } else {
+      const payload = { id: userId, nome, role: OWNER_ROLE } as const;
+
+      const { error: upsertError } = await supabase.from('profiles').upsert(payload, {
+        onConflict: 'id',
+      });
+
+      if (upsertError) {
+        const { error: insertError } = await supabase.from('profiles').insert(payload);
+
+        if (insertError && insertError.code !== UNIQUE_VIOLATION_CODE) {
+          throw new Error(
+            insertError.message || 'Não foi possível criar o perfil do dono da conta.',
+          );
+        }
+
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ nome, role: OWNER_ROLE })
+          .eq('id', userId);
+
+        if (updateError) {
+          throw new Error(
+            updateError.message || 'Não foi possível definir o papel de CEO da conta.',
+          );
+        }
+      }
     }
   }
 
@@ -222,6 +260,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return validationError;
       }
 
+      const throttleMessage = getLoginThrottleMessage();
+      if (throttleMessage) {
+        return { field: 'general', message: throttleMessage };
+      }
+
       setIsSubmitting(true);
       try {
         const email = credentials.email.trim().toLowerCase();
@@ -231,8 +274,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
 
         if (error) {
+          const lockMessage = registerLoginFailure();
+          if (lockMessage) {
+            return { field: 'general', message: lockMessage };
+          }
           return mapAuthError(error as unknown as Parameters<typeof mapAuthError>[0]);
         }
+
+        clearLoginThrottle();
 
         if (data.session) {
           await syncSession(data.session);

@@ -13,7 +13,7 @@ export function HistoricoSemestralPage() {
   return (
     <div className={page.page}>
       <PageHeader
-        title="Histórico semestral"
+        title="Histórico das Avaliações – Semestral"
         description="Consolidações semestrais para incentivos e cursos."
       />
       <HistoricoList data={data} isLoading={isLoading} error={error} onRetry={reload} />

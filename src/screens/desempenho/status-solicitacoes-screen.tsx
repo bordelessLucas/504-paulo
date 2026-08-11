@@ -7,6 +7,7 @@ import { TabScreenContainer } from '@/components/navigation/tab-screen-container
 import { GlassCard } from '@/components/premium/GlassCard';
 import { StatusBadge } from '@/components/premium/StatusBadge';
 import { ThemedText } from '@/components/themed-text';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 import { layout } from '@/constants/theme';
@@ -14,6 +15,9 @@ import {
   fetchStatusSolicitacoes,
   type SolicitacaoStatusRow,
 } from '@/features/desempenho/historico-api';
+import { useAuthRole } from '@/hooks/use-auth-role';
+import { useAppNavigation } from '@/navigation/app-navigation-context';
+import { getTabLabelForRole } from '@/navigation/role-menus';
 import type { StatusSolicitacaoSalarial } from '@/types/supabase';
 
 const STATUS_FILTERS = ['todos', 'pendente_rh', 'pendente_ceo', 'aprovado', 'recusado', 'devolvida'] as const;
@@ -35,11 +39,17 @@ function toneForStatus(status: StatusSolicitacaoSalarial) {
 }
 
 export function StatusSolicitacoesScreen() {
+  const { role } = useAuthRole();
+  const { navigateToTab, openDrawer } = useAppNavigation();
   const [status, setStatus] = useState<(typeof STATUS_FILTERS)[number]>('todos');
   const [nome, setNome] = useState('');
   const [rows, setRows] = useState<SolicitacaoStatusRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const title = role
+    ? getTabLabelForRole('StatusSolicitacoes', role)
+    : 'Dashboard — Status das Solicitações';
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -62,10 +72,33 @@ export function StatusSolicitacoesScreen() {
     void load();
   }, [load]);
 
+  const goReajusteOrMenu = () => {
+    if (
+      role === 'gerente' ||
+      role === 'gestor' ||
+      role === 'rh' ||
+      role === 'admin' ||
+      role === 'ceo'
+    ) {
+      if (navigateToTab('PainelReajuste')) return;
+    }
+    if (role === 'colaborador' && navigateToTab('DashboardColaborador')) {
+      return;
+    }
+    openDrawer();
+  };
+
+  const emptyActionLabel =
+    role === 'colaborador'
+      ? 'Abrir dashboard'
+      : role === 'supervisor'
+        ? 'Abrir menu'
+        : 'Ir para Reajuste Salarial';
+
   return (
     <TabScreenContainer scrollable contentContainerStyle={styles.content}>
       <ScreenHeader
-        title="Dashboard — Status das Solicitações"
+        title={title}
         description="Acompanhe autoavaliações e pedidos de melhoria salarial."
       />
 
@@ -82,6 +115,16 @@ export function StatusSolicitacoesScreen() {
         <ThemedText themeColor="danger" type="small">
           {error}
         </ThemedText>
+      ) : null}
+
+      {!isLoading && !error && rows.length === 0 ? (
+        <EmptyState
+          icon="clipboard-text-outline"
+          title="Nenhuma solicitação ainda"
+          message="Quando houver autoavaliações ou pedidos de reajuste, eles aparecem aqui."
+          actionLabel={emptyActionLabel}
+          onAction={goReajusteOrMenu}
+        />
       ) : null}
 
       {rows.map((row) => (

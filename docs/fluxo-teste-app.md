@@ -30,20 +30,27 @@ npm start
 ### Edge Function
 
 Publicar `create-colaborador` no Supabase (código em `supabase/functions/create-colaborador/index.ts`).
-
+    
 ### Contas necessárias
 
-Você precisa de **pelo menos um usuário por papel** em `auth.users` + `profiles.role`:
+Você precisa de **pelo menos um usuário por papel** em `auth.users` + `profiles.role`.
 
-| Papel | Para testar |
-|-------|-------------|
-| `rh` ou `admin` | Cadastro, CSV, Aprovações RH, Painel Anual |
-| `ceo` | Dashboard gerencial, Aprovações CEO, Histórico completo |
-| `supervisor` | Avaliação quinzenal |
-| `gestor` ou `gerente` | Avaliação semestral + Reajuste |
-| `colaborador` | Dashboard, Minhas Avaliações, Autoavaliação |
+Crie com o script (recomendado):
 
-**Senha padrão** de contas criadas pelo app/CSV: `12345678`
+1. No `.env` da raiz, adicione `SUPABASE_SERVICE_ROLE_KEY` (Dashboard → Settings → API).
+2. Na raiz: `node scripts/seed-test-users.mjs`
+
+| Papel | E-mail | Senha |
+|-------|--------|-------|
+| admin | `admin@teste.com` | `senha123` |
+| ceo | `ceo@teste.com` | `senha123` |
+| rh | `rh@teste.com` | `senha123` |
+| gerente | `gerente@teste.com` | `senha123` |
+| gestor | `gestor@teste.com` | `senha123` |
+| supervisor | `supervisor@teste.com` | `senha123` |
+| colaborador | `colaborador1@teste.com` (também 2 e 3) | `senha123` |
+
+**Senha padrão** de contas criadas pelo app/CSV/script: `senha123`
 
 > Se não tiver contas de gestão, crie no Supabase Auth e defina `profiles.role` manualmente no Table Editor.
 
@@ -104,7 +111,7 @@ RH/CEO registra decisão anual
 | # | Ação | Resultado esperado |
 |---|------|-------------------|
 | 2.6 | Importar `fixtures/colaboradores-teste.csv` | `5 perfil(is) importado(s) com sucesso` |
-| 2.7 | Login com `colaborador1@teste.com` / `12345678` | Entra como colaborador |
+| 2.7 | Login com `colaborador1@teste.com` / `senha123` | Entra como colaborador |
 | 2.8 | CSV com erros (criar arquivo de teste) | Linhas válidas importam; relatório lista `Erro na linha X: ...` |
 
 **CSV de erros (copiar e salvar como `erros-teste.csv`):**

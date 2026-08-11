@@ -1,7 +1,9 @@
 import { ClipboardList } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { PageContent } from '../components/PageContent';
 import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { PageHeader } from '../components/ui/PageHeader';
@@ -9,6 +11,7 @@ import { TIPO_AVALIACAO_LABELS } from '@/features/avaliacao/ciclos';
 import { fetchHistoricoAvaliacoesMasked } from '@/features/avaliacao/historico-api';
 import { useAuth } from '@/features/auth/auth-context';
 import { useAsyncData } from '../hooks/useAsyncData';
+import { getTabPath } from '../navigation/routes';
 import page from '../styles/page.module.css';
 
 export function MinhasAvaliacoesPage() {
@@ -22,7 +25,7 @@ export function MinhasAvaliacoesPage() {
   return (
     <div className={page.page}>
       <PageHeader
-        title="Minhas avaliações"
+        title="Minhas Avaliações"
         description="Histórico de ciclos concluídos com médias consolidadas."
       />
 
@@ -31,8 +34,15 @@ export function MinhasAvaliacoesPage() {
           items.length === 0 ? (
             <EmptyState
               icon={ClipboardList}
-              title="Nenhuma avaliação encontrada"
-              description="Quando houver ciclos concluídos, eles aparecerão aqui."
+              title="Nenhuma avaliação ainda"
+              description="Quando supervisores e gestores registrarem suas notas, o histórico aparece aqui."
+              action={
+                <Link to={getTabPath('DashboardColaborador')}>
+                  <Button variant="secondary" size="sm">
+                    Abrir dashboard
+                  </Button>
+                </Link>
+              }
             />
           ) : (
             <div className={page.list}>

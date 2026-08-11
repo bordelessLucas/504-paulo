@@ -3,10 +3,15 @@ import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
 import { fetchStatusSolicitacoes } from '@/features/desempenho/historico-api';
+import { useAuth } from '@/features/auth/auth-context';
+import { getTabLabelForRole } from '@/navigation/role-menus';
+import type { UserRole } from '@/types/supabase';
 import { useAsyncData } from '../hooks/useAsyncData';
 import page from '../styles/page.module.css';
 
 export function HistoricoReajustePage() {
+  const { user } = useAuth();
+  const role = (user?.role ?? 'colaborador') as UserRole;
   const { data, isLoading, error, reload } = useAsyncData(
     () => fetchStatusSolicitacoes(),
     [],
@@ -15,7 +20,7 @@ export function HistoricoReajustePage() {
   return (
     <div className={page.page}>
       <PageHeader
-        title="Histórico de reajuste"
+        title={getTabLabelForRole('HistoricoReajuste', role)}
         description="Linha do tempo de solicitações de melhoria salarial e autoavaliação."
       />
 
@@ -25,7 +30,10 @@ export function HistoricoReajustePage() {
         data={data}
         onRetry={reload}
         isEmpty={(items) => items.length === 0}
-        emptyTitle="Nenhum registro de reajuste"
+        emptyTitle="Nenhum registro ainda"
+        emptyDescription="Solicitações de reajuste e autoavaliação aparecem aqui após o fluxo Gerente → RH → CEO."
+        emptyActionLabel="Abrir painel de reajuste"
+        emptyActionTab="PainelReajuste"
       >
         {(rows) => (
           <div className={page.list}>

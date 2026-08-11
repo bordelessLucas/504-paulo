@@ -21,7 +21,7 @@ export function mapAuthError(error: SupabaseAuthError): AuthError {
   }
 
   if (message.includes('password') && message.includes('least')) {
-    return { field: 'password', message: 'A senha deve ter pelo menos 6 caracteres.' };
+    return { field: 'password', message: 'A senha deve ter pelo menos 8 caracteres.' };
   }
 
   if (message.includes('rate limit') || message.includes('too many requests')) {

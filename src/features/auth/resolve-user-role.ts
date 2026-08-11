@@ -33,22 +33,9 @@ export function normalizeUserRole(value: unknown): UserRole | undefined {
 }
 
 export function resolveUserRole(
-  session: Session,
+  _session: Session,
   profileRole?: unknown,
 ): UserRole | undefined {
-  const roleFromProfile = normalizeUserRole(profileRole);
-  if (roleFromProfile) {
-    return roleFromProfile;
-  }
-
-  const candidates = [session.user.app_metadata?.role, session.user.user_metadata?.role];
-
-  for (const candidate of candidates) {
-    const role = normalizeUserRole(candidate);
-    if (role) {
-      return role;
-    }
-  }
-
-  return undefined;
+  // Fonte de verdade: profiles.role (RLS/trigger). Metadata do JWT não eleva privilégio.
+  return normalizeUserRole(profileRole);
 }

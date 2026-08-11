@@ -1,9 +1,12 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Button } from './ui/Button';
 import { EmptyState } from './ui/EmptyState';
 import { Spinner } from './ui/Spinner';
 import page from '../styles/page.module.css';
+import { getTabPath } from '../navigation/routes';
+import type { MainTabParamList } from '@/navigation/types';
 
 type PageContentProps<T> = {
   isLoading: boolean;
@@ -12,6 +15,8 @@ type PageContentProps<T> = {
   isEmpty?: (data: T) => boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+  emptyActionLabel?: string;
+  emptyActionTab?: keyof MainTabParamList;
   onRetry?: () => void;
   children: (data: T) => ReactNode;
 };
@@ -23,6 +28,8 @@ export function PageContent<T>({
   isEmpty,
   emptyTitle = 'Nenhum registro encontrado',
   emptyDescription,
+  emptyActionLabel,
+  emptyActionTab,
   onRetry,
   children,
 }: PageContentProps<T>) {
@@ -46,7 +53,21 @@ export function PageContent<T>({
   }
 
   if (!data || (isEmpty?.(data) ?? false)) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} />;
+    return (
+      <EmptyState
+        title={emptyTitle}
+        description={emptyDescription}
+        action={
+          emptyActionLabel && emptyActionTab ? (
+            <Link to={getTabPath(emptyActionTab)}>
+              <Button variant="secondary" size="sm">
+                {emptyActionLabel}
+              </Button>
+            </Link>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return <>{children(data)}</>;

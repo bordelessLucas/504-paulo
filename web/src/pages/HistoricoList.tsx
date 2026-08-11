@@ -19,7 +19,10 @@ export function HistoricoList({ data, isLoading, error, onRetry }: HistoricoList
       data={data}
       onRetry={onRetry}
       isEmpty={(items) => items.length === 0}
-      emptyTitle="Nenhum registro no período"
+      emptyTitle="Nenhuma avaliação neste filtro"
+      emptyDescription="Registre avaliações no Painel de Avaliações ou na Lista de Colaboradores."
+      emptyActionLabel="Ir para Painel de Avaliações"
+      emptyActionTab="PainelAvaliacao"
     >
       {(items) => (
         <div className={page.list}>

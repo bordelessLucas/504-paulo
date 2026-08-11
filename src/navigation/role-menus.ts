@@ -215,14 +215,76 @@ export function getTabLabelForRole(tabName: keyof MainTabParamList, role: UserRo
     if (role === 'gerente') {
       return 'Aguardando Aprovação';
     }
+    if (role === 'rh') {
+      return 'Status de Solicitações de Autoavaliação';
+    }
+    if (role === 'supervisor' || role === 'colaborador') {
+      return 'Dashboard — Status das Solicitações';
+    }
+  }
+
+  if (tabName === 'HistoricoReajuste') {
+    if (role === 'rh') {
+      return 'Histórico de Avalições';
+    }
+    if (role === 'ceo' || role === 'admin') {
+      return 'Histórico de Reajuste';
+    }
+  }
+
+  if (tabName === 'PainelReajuste') {
+    if (role === 'gerente' || role === 'gestor') {
+      return 'Análise de Reajuste Salarial';
+    }
+  }
+
+  if (tabName === 'MinhaEquipe') {
+    return 'Lista de Colaboradores';
+  }
+
+  if (tabName === 'HistoricoQuinzenal') {
+    return 'Histórico de Avaliações – Quinzenal';
+  }
+
+  if (tabName === 'HistoricoSemestral') {
+    return 'Histórico das Avaliações – Semestral';
+  }
+
+  if (tabName === 'HistoricoDesligados') {
+    return 'Histórico dos Colaboradores Desligados';
+  }
+
+  if (tabName === 'ListaAtivos') {
+    return 'Lista de Colaboradores – Ativos';
+  }
+
+  if (tabName === 'RelatorioIndividual') {
+    return 'Relatório de Desempenho – Individual';
+  }
+
+  if (tabName === 'AnalisePerfil') {
+    return 'Análise Anual de Perfil Comportamental';
+  }
+
+  if (tabName === 'PainelAnualEstrategico') {
+    return 'Análise Avaliação Anual de Reajuste';
   }
 
   if (tabName === 'DashboardColaborador' && role === 'supervisor') {
     return 'Formulário de Autoavaliação';
   }
 
-  if (tabName === 'MinhasAvaliacoes' && role === 'supervisor') {
-    return 'Avalições';
+  if (tabName === 'MinhasAvaliacoes') {
+    if (role === 'supervisor') {
+      return 'Avalições';
+    }
+    if (role === 'colaborador') {
+      return 'Minhas Avaliações';
+    }
+  }
+
+  if (tabName === 'ImpactoCaixa') {
+    return 'Impacto no Caixa';
   }
 
   return TAB_DEFINITIONS[tabName].label;

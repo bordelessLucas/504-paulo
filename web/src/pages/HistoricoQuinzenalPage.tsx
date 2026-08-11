@@ -13,7 +13,7 @@ export function HistoricoQuinzenalPage() {
   return (
     <div className={page.page}>
       <PageHeader
-        title="Histórico quinzenal"
+        title="Histórico de Avaliações – Quinzenal"
         description="Avaliações de bordo registradas no sistema."
       />
       <HistoricoList data={data} isLoading={isLoading} error={error} onRetry={reload} />

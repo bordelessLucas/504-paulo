@@ -89,6 +89,26 @@ export function RequireSubscription() {
   return <Outlet />;
 }
 
+/** Exige um dos papéis informados; caso contrário redireciona ao home do usuário. */
+export function RequireRole({ roles }: { roles: UserRole[] }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <Spinner label="Carregando sessão..." />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const role = (user.role ?? 'colaborador') as UserRole;
+  if (!roles.includes(role)) {
+    return <Navigate to={getTabPath(getPrimaryTabForRole(role))} replace />;
+  }
+
+  return <Outlet />;
+}
+
 /** Bloqueia o app até a senha provisória ser trocada. */
 export function RequirePasswordChanged() {
   const { user, isLoading } = useAuth();

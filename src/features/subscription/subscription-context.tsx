@@ -104,11 +104,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           return;
         }
 
-        const local = await loadSubscription(userId);
+        // Fail-closed: localStorage sozinho não libera assinatura.
         const cached = cacheRef.current;
-        const shouldPreferCache =
-          cached.userId === userId && cached.subscription !== null && local === null;
-        const next = shouldPreferCache ? cached.subscription : local;
+        const next =
+          cached.userId === userId && cached.subscription !== null ? cached.subscription : null;
         cacheRef.current = { userId, subscription: next };
         setSubscription(next);
       } finally {

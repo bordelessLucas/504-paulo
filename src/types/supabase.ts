@@ -1267,6 +1267,12 @@ export type Database = {
         };
         Returns: string;
       };
+      claim_owner_ceo: {
+        Args: {
+          p_nome?: string | null;
+        };
+        Returns: undefined;
+      };
       activate_organizacao_assinatura: {
         Args: {
           p_owner_id: string;

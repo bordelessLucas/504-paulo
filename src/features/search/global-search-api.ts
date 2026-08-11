@@ -10,7 +10,11 @@ export type GlobalPersonResult = {
 };
 
 function sanitizeSearchTerm(value: string): string {
-  return value.trim().replace(/[,%()]/g, ' ');
+  return value
+    .trim()
+    .replace(/[,%().\\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .slice(0, 80);
 }
 
 export async function searchPeople(value: string): Promise<GlobalPersonResult[]> {
