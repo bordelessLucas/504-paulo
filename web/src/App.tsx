@@ -24,6 +24,7 @@ import {
   FormularioLotePage,
   HistoricoAvaliacaoColaboradorPage,
   InstalarAppPage,
+  LandingPage,
   LoginPage,
   NotFoundPage,
   PdiDetailPage,
@@ -58,15 +59,15 @@ function RootRedirect() {
   const { user, isLoading, pendingRegistration } = useAuth();
   const { isSubscribed, isLoading: isSubLoading } = useSubscription();
 
-  if (isLoading || isSubLoading) {
-    return <Spinner label="Iniciando Vertek Avalia..." />;
-  }
-
   if (!user) {
     if (pendingRegistration) {
       return <Navigate to="/planos" replace />;
     }
-    return <Navigate to="/login" replace />;
+    return <LandingPage />;
+  }
+
+  if (isLoading || isSubLoading) {
+    return <Spinner label="Iniciando Vertek Avalia..." />;
   }
 
   if (user.mustChangePassword) {

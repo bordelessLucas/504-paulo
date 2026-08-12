@@ -84,7 +84,7 @@ export default defineConfig(({ mode }) => {
         workbox: {
           navigateFallback: '/index.html',
           navigateFallbackDenylist: [/^\/api/, /supabase\.co/],
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,woff2}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,webmanifest,woff2}'],
           runtimeCaching: [
             {
               urlPattern: ({ url }) => url.hostname.includes('supabase.co'),

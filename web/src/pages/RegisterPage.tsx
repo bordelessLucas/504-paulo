@@ -120,6 +120,10 @@ export function RegisterPage() {
           <Link className={page.authLink} to="/login">
             Entrar
           </Link>
+          {' · '}
+          <Link className={page.authLink} to="/">
+            Voltar ao site
+          </Link>
         </p>
       </div>
     </div>

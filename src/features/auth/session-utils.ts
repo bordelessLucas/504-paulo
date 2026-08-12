@@ -4,6 +4,21 @@ import { supabase } from '@/lib/supabase';
 import { supabaseStorage } from '@/lib/supabase-storage';
 
 const REFRESH_MARGIN_SECONDS = 60;
+const SESSION_BOOTSTRAP_MS = 5000;
+
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Auth session timeout')), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -26,6 +41,22 @@ export function isInvalidRefreshTokenError(error: unknown): boolean {
     message.includes('refresh token not found') ||
     message.includes('invalid jwt')
   );
+}
+
+function isNetworkAuthError(error: unknown): boolean {
+  const message = getErrorMessage(error).toLowerCase();
+
+  return (
+    message.includes('failed to fetch') ||
+    message.includes('networkerror') ||
+    message.includes('network request failed') ||
+    message.includes('auth session timeout') ||
+    message.includes('load failed')
+  );
+}
+
+function isRecoverableAuthError(error: unknown): boolean {
+  return isInvalidRefreshTokenError(error) || isNetworkAuthError(error);
 }
 
 export function getAuthStorageKey(): string {
@@ -52,10 +83,10 @@ function isSessionExpiringSoon(session: Session): boolean {
 
 async function refreshSessionSafely(): Promise<Session | null> {
   try {
-    const { data, error } = await supabase.auth.refreshSession();
+    const { data, error } = await withTimeout(supabase.auth.refreshSession(), SESSION_BOOTSTRAP_MS);
 
     if (error) {
-      if (isInvalidRefreshTokenError(error)) {
+      if (isRecoverableAuthError(error)) {
         await clearStaleAuthSession();
       }
 
@@ -64,12 +95,11 @@ async function refreshSessionSafely(): Promise<Session | null> {
 
     return data.session;
   } catch (error) {
-    if (isInvalidRefreshTokenError(error)) {
+    if (isRecoverableAuthError(error)) {
       await clearStaleAuthSession();
-      return null;
     }
 
-    throw error;
+    return null;
   }
 }
 
@@ -78,10 +108,10 @@ export async function getSafeSession(): Promise<Session | null> {
     const {
       data: { session },
       error,
-    } = await supabase.auth.getSession();
+    } = await withTimeout(supabase.auth.getSession(), SESSION_BOOTSTRAP_MS);
 
     if (error) {
-      if (isInvalidRefreshTokenError(error)) {
+      if (isRecoverableAuthError(error)) {
         await clearStaleAuthSession();
         return null;
       }
@@ -100,12 +130,11 @@ export async function getSafeSession(): Promise<Session | null> {
 
     return refreshSessionSafely();
   } catch (error) {
-    if (isInvalidRefreshTokenError(error)) {
+    if (isRecoverableAuthError(error)) {
       await clearStaleAuthSession();
-      return null;
     }
 
-    throw error;
+    return null;
   }
 }
 

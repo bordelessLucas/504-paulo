@@ -187,16 +187,9 @@ export function LoginPage() {
               </p>
               <p className={styles.footerRow}>
                 Família Vertek:{' '}
-                <a
-                  className={styles.link}
-                  href={(
-                    import.meta.env.VITE_OPS_SITE_URL || 'https://vertek-505-paulo.netlify.app'
-                  ).replace(/\/$/, '')}
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <Link className={styles.link} to="/">
                   Site institucional
-                </a>
+                </Link>
                 {' · '}
                 <a
                   className={styles.link}
