@@ -200,7 +200,7 @@ export function FormularioAcessoForm({ onCreated }: FormularioAcessoFormProps) {
           className={page.input}
           type="password"
           autoComplete="new-password"
-          placeholder="Padrão: senha123"
+          placeholder="Deixe em branco para gerar no servidor"
           value={form.senha_temporaria}
           onChange={(event) => updateField('senha_temporaria', event.target.value)}
         />

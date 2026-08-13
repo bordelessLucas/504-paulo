@@ -1,7 +1,19 @@
 import type { AuthError, LoginCredentials, RegisterCredentials } from '@/types/auth';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const MIN_PASSWORD_LENGTH = 8;
+
+const COMMON_PASSWORDS = new Set([
+  'senha123',
+  'senha1234',
+  'password',
+  'password1',
+  '12345678',
+  '123456789',
+  'qwerty123',
+  'admin123',
+  'vertek123',
+]);
 
 export function getPasswordStrengthError(password: string): string | null {
   if (password.length < MIN_PASSWORD_LENGTH) {
@@ -10,6 +22,10 @@ export function getPasswordStrengthError(password: string): string | null {
 
   if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
     return 'A senha deve combinar letras e números.';
+  }
+
+  if (COMMON_PASSWORDS.has(password.trim().toLowerCase())) {
+    return 'Escolha uma senha menos óbvia. Evite senhas padrão ou sequências conhecidas.';
   }
 
   return null;

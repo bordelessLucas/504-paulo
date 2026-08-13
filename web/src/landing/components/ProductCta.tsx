@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { ProductId } from '../data/products';
-import { AVALIA_LOGIN_PATH, OPS_URL } from '../links';
+import { AVALIA_LOGIN_PATH, OPS_SITE_URL, OPS_URL } from '../links';
 
 type ProductCtaProps = {
   productId?: ProductId;
@@ -11,23 +11,36 @@ type ProductCtaProps = {
   children: ReactNode;
 };
 
-export default function ProductCta({ productId, href, className, children }: ProductCtaProps) {
-  const isAvalia =
-    productId === 'avalia' ||
-    href === AVALIA_LOGIN_PATH ||
-    href === '/register' ||
-    (typeof href === 'string' && href.startsWith('/login'));
+function isInternalPath(href: string): boolean {
+  return href.startsWith('/') && !href.startsWith('//');
+}
 
-  if (isAvalia) {
+function isLoginPath(href: string): boolean {
+  return href === AVALIA_LOGIN_PATH || href.startsWith('/login') || href.includes('/app/login');
+}
+
+export default function ProductCta({ productId, href, className, children }: ProductCtaProps) {
+  const resolved =
+    href ||
+    (productId === 'avalia' ? '/' : productId === 'ops' ? OPS_SITE_URL : '/');
+
+  if (isInternalPath(resolved)) {
     return (
-      <Link className={className} to={href || AVALIA_LOGIN_PATH}>
+      <Link className={className} to={resolved}>
         {children}
       </Link>
     );
   }
 
+  const isOpsLogin = productId === 'ops' && isLoginPath(resolved);
   return (
-    <a className={className} href={href || OPS_URL} target="_blank" rel="noreferrer">
+    <a
+      className={className}
+      href={isOpsLogin ? OPS_URL : resolved}
+      target="_blank"
+      rel="noopener noreferrer"
+      referrerPolicy="strict-origin-when-cross-origin"
+    >
       {children}
     </a>
   );

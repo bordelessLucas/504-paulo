@@ -30,8 +30,8 @@ export default function Hero() {
             <a className="button button--accent" href="#solucoes">
               Conhecer as soluções
             </a>
-            <ProductCta productId="avalia" className="button button--ghost">
-              Acessar Avalia <span aria-hidden="true">→</span>
+            <ProductCta productId="avalia" href="/login" className="button button--ghost">
+              Entrar no Avalia <span aria-hidden="true">→</span>
             </ProductCta>
           </div>
         </div>

@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/auth-context';
 import { changePassword } from '@/features/perfil/profile-api';
-import { DEFAULT_ACCESS_PASSWORD } from '@/features/rh/validation';
-
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import page from '../styles/page.module.css';
@@ -62,8 +60,8 @@ export function TrocarSenhaPage() {
         </div>
         <h1 className={page.authTitle}>Defina sua nova senha</h1>
         <p className={page.authSubtitle}>
-          Olá, {firstName}! Este é o seu primeiro acesso. Por segurança, troque a senha temporária
-          (padrão: <strong>{DEFAULT_ACCESS_PASSWORD}</strong>) antes de continuar.
+          Olá, {firstName}! Este é o seu primeiro acesso. Use a senha temporária que você recebeu e
+          defina uma senha própria antes de continuar.
         </p>
 
         <form className={page.form} onSubmit={(event) => void handleSubmit(event)}>
@@ -78,7 +76,7 @@ export function TrocarSenhaPage() {
               autoComplete="current-password"
               value={currentPassword}
               onChange={(event) => setCurrentPassword(event.target.value)}
-              placeholder={DEFAULT_ACCESS_PASSWORD}
+              placeholder="Senha temporária recebida"
             />
           </div>
           <div className={page.field}>
@@ -92,7 +90,7 @@ export function TrocarSenhaPage() {
               autoComplete="new-password"
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres, letras e números"
             />
           </div>
           <div className={page.field}>

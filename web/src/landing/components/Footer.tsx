@@ -21,8 +21,10 @@ export default function Footer() {
             <span>Soluções</span>
             <a href="#ops">Vertek Ops</a>
             <a href="#avalia">Vertek Avalia</a>
-            <ProductCta productId="ops">Entrar no Ops</ProductCta>
-            <ProductCta productId="avalia">Abrir Avalia</ProductCta>
+            <ProductCta productId="ops">Site do Ops</ProductCta>
+            <ProductCta productId="avalia" href="/">
+              Site do Avalia
+            </ProductCta>
           </div>
         </div>
       </div>

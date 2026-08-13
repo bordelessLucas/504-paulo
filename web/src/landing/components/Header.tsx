@@ -24,8 +24,12 @@ export default function Header() {
             </a>
           ))}
         </nav>
-        <ProductCta productId="avalia" className="button button--small button--accent header__cta">
-          Acessar Avalia
+        <ProductCta
+          productId="avalia"
+          href="/login"
+          className="button button--small button--accent header__cta"
+        >
+          Entrar
         </ProductCta>
         <button
           className="menu-button"

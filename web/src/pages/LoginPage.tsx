@@ -1,12 +1,14 @@
 import { AlertCircle, ClipboardCheck, Eye, EyeOff, Lock, Mail, ShieldCheck, Users } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/auth-context';
+import { isSafeInternalPath } from '../navigation/safe-path';
 import styles from './LoginPage.module.css';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isSubmitting } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,7 +29,11 @@ export function LoginPage() {
       return;
     }
 
-    navigate('/', { replace: true });
+    const from =
+      typeof location.state === 'object' && location.state && 'from' in location.state
+        ? (location.state as { from?: unknown }).from
+        : undefined;
+    navigate(isSafeInternalPath(from) ? from : '/', { replace: true });
   }
 
   return (
@@ -115,7 +121,7 @@ export function LoginPage() {
                     id="login-email"
                     className={`${styles.input} ${errors.email ? styles.inputInvalid : ''}`.trim()}
                     type="email"
-                    autoComplete="email"
+                    autoComplete="username"
                     inputMode="email"
                     placeholder="nome@empresa.com"
                     value={email}
@@ -186,23 +192,22 @@ export function LoginPage() {
                 </Link>
               </p>
               <p className={styles.footerRow}>
-                Família Vertek:{' '}
-                <Link className={styles.link} to="/">
-                  Site institucional
+                <Link className={`${styles.link} ${styles.linkAccent}`} to="/">
+                  Voltar ao site institucional
                 </Link>
-                {' · '}
+              </p>
+              <p className={styles.footerRow}>
+                Família Vertek:{' '}
                 <a
                   className={styles.link}
-                  href={
-                    import.meta.env.VITE_OPS_URL ||
-                    `${(
-                      import.meta.env.VITE_OPS_SITE_URL || 'https://vertek-505-paulo.netlify.app'
-                    ).replace(/\/$/, '')}/app/login`
-                  }
+                  href={(
+                    import.meta.env.VITE_OPS_SITE_URL || 'https://vertek-505-paulo.netlify.app'
+                  ).replace(/\/$/, '')}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
+                  referrerPolicy="strict-origin-when-cross-origin"
                 >
-                  Entrar no Ops
+                  Site do Ops
                 </a>
               </p>
             </div>

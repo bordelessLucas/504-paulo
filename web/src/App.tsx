@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
 import { AuthProvider, useAuth } from '@/features/auth/auth-context';
@@ -6,6 +6,7 @@ import { canAccessTab, getPrimaryTabForRole } from '@/navigation/role-menus';
 import type { MainTabParamList } from '@/navigation/types';
 import type { UserRole } from '@/types/supabase';
 
+import { DocumentMeta } from './components/DocumentMeta';
 import { InstallPrompt } from './components/InstallPrompt';
 import { OfflineBanner, UpdatePrompt } from './components/PwaChrome';
 import { Spinner } from './components/ui/Spinner';
@@ -82,14 +83,26 @@ function RootRedirect() {
   return <Navigate to={getTabPath(getPrimaryTabForRole(role))} replace />;
 }
 
+function AppChrome() {
+  const location = useLocation();
+  const showInstall = location.pathname !== '/';
+
+  return (
+    <>
+      <DocumentMeta />
+      <OfflineBanner />
+      {showInstall ? <InstallPrompt /> : null}
+      <UpdatePrompt />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <SubscriptionProvider>
-          <OfflineBanner />
-          <InstallPrompt />
-          <UpdatePrompt />
+          <AppChrome />
           <Routes>
             <Route path="/" element={<RootRedirect />} />
             <Route path="/instalar" element={<InstalarAppPage />} />

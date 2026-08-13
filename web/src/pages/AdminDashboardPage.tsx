@@ -58,7 +58,7 @@ const ADMIN_FEATURES: AdminFeatureDefinition[] = [
     title: 'Importar planilha RH',
     description: 'Importe colaboradores via CSV.',
     modalDescription:
-      'CSV com email, nome, classificacao, nivel_irata, datas, telefone, certificacoes, status e role. Contas novas recebem senha padrão senha123.',
+      'CSV com email, nome, classificacao, nivel_irata, datas, telefone, certificacoes, status e role. Contas novas recebem senha temporária de primeiro acesso.',
     icon: CloudUpload,
     isVisible: (role) => isAdminDashboardRole(role),
   },

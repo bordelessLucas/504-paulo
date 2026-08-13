@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
           name: 'Vertek Avalia',
           short_name: 'Vertek Avalia',
           description: 'Avaliação de desempenho e gestão de pessoas — Vertek Avalia',
-          start_url: '/',
+          start_url: '/login',
           scope: '/',
           display: 'standalone',
           display_override: ['standalone', 'minimal-ui', 'browser'],
@@ -38,27 +38,15 @@ export default defineConfig(({ mode }) => {
           categories: ['business', 'productivity'],
           shortcuts: [
             {
+              name: 'Entrar',
+              short_name: 'Login',
+              url: '/login',
+              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+            },
+            {
               name: 'Como instalar o app',
               short_name: 'Instalar',
               url: '/instalar',
-              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
-            },
-            {
-              name: 'Painel de Avaliações',
-              short_name: 'Avaliar',
-              url: '/app/painel-avaliacao',
-              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
-            },
-            {
-              name: 'Dashboard Gerencial',
-              short_name: 'Gerencial',
-              url: '/app/gerencial',
-              icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
-            },
-            {
-              name: 'Meu Perfil',
-              short_name: 'Perfil',
-              url: '/app/perfil',
               icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
             },
           ],
@@ -84,7 +72,8 @@ export default defineConfig(({ mode }) => {
         workbox: {
           navigateFallback: '/index.html',
           navigateFallbackDenylist: [/^\/api/, /supabase\.co/],
-          globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,webmanifest,woff2}'],
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,woff2}'],
           runtimeCaching: [
             {
               urlPattern: ({ url }) => url.hostname.includes('supabase.co'),

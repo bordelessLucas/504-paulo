@@ -161,7 +161,7 @@ export function FormularioColaboradorForm({ onCreated }: FormularioColaboradorFo
             id="colab-senha"
             label="Senha temporária (opcional)"
             type="password"
-            placeholder="Padrão: senha123"
+            placeholder="Deixe em branco para gerar no servidor"
             value={form.senha_temporaria ?? ''}
             error={errors.senha_temporaria}
             onChange={(value) => updateField('senha_temporaria', value)}

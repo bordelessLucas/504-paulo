@@ -10,10 +10,8 @@ export function RegisterPage() {
   const { beginRegistration, pendingRegistration } = useAuth();
   const [name, setName] = useState(pendingRegistration?.name ?? '');
   const [email, setEmail] = useState(pendingRegistration?.email ?? '');
-  const [password, setPassword] = useState(pendingRegistration?.password ?? '');
-  const [confirmPassword, setConfirmPassword] = useState(
-    pendingRegistration?.confirmPassword ?? '',
-  );
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   function handleSubmit(event: React.FormEvent) {

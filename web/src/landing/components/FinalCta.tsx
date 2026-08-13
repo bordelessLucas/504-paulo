@@ -15,11 +15,11 @@ export default function FinalCta() {
           <RevealText as="h2">Pronto para elevar a operação e a governança?</RevealText>
         </div>
         <div className="final-cta__actions motion-rise" data-reveal>
-          <ProductCta productId="avalia" className="button button--accent">
+          <ProductCta productId="avalia" href="/login" className="button button--accent">
             Entrar no Avalia
           </ProductCta>
           <ProductCta productId="ops" className="button button--light">
-            Abrir Ops
+            Ver site do Ops
           </ProductCta>
         </div>
       </div>

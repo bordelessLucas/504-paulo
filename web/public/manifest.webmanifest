@@ -2,7 +2,7 @@
   "name": "Vertek Avalia",
   "short_name": "Vertek Avalia",
   "description": "Avaliação de desempenho e gestão de pessoas — Vertek Avalia",
-  "start_url": "/",
+  "start_url": "/login",
   "scope": "/",
   "id": "/",
   "display": "standalone",

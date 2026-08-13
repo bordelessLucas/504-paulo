@@ -10,14 +10,14 @@ export function mapAuthError(error: SupabaseAuthError): AuthError {
   }
 
   if (message.includes('user already registered')) {
-    return { field: 'email', message: 'Este e-mail já está cadastrado.' };
+    return {
+      field: 'general',
+      message: 'Se o e-mail for válido, enviaremos os próximos passos.',
+    };
   }
 
   if (message.includes('email not confirmed')) {
-    return {
-      field: 'general',
-      message: 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
-    };
+    return { field: 'general', message: 'E-mail ou senha incorretos.' };
   }
 
   if (message.includes('password') && message.includes('least')) {
@@ -32,5 +32,5 @@ export function mapAuthError(error: SupabaseAuthError): AuthError {
     return { field: 'general', message: 'Sem conexão com o servidor. Verifique sua internet.' };
   }
 
-  return { field: 'general', message: error.message };
+  return { field: 'general', message: 'Não foi possível entrar. Tente novamente.' };
 }

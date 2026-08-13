@@ -1,5 +1,6 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+import { getPasswordStrengthError } from '@/features/auth/validation';
 import {
   normalizeNivelIrata,
   normalizeProfileStatus,
@@ -136,11 +137,11 @@ export function validateCreateColaborador(
     };
   }
 
-  if (input.senha_temporaria?.trim() && input.senha_temporaria.trim().length < 6) {
-    return {
-      field: 'senha_temporaria',
-      message: 'A senha temporária deve ter pelo menos 6 caracteres.',
-    };
+  if (input.senha_temporaria?.trim()) {
+    const passwordError = getPasswordStrengthError(input.senha_temporaria.trim());
+    if (passwordError) {
+      return { field: 'senha_temporaria', message: passwordError };
+    }
   }
 
   const counterError = validateNonNegativeCounter(

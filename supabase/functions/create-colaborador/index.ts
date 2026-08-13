@@ -1,9 +1,26 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+function buildCorsHeaders(req: Request): Record<string, string> {
+  const requestOrigin = req.headers.get('Origin') ?? '';
+  const allowOrigin =
+    ALLOWED_ORIGINS.length === 0
+      ? 'null'
+      : ALLOWED_ORIGINS.includes(requestOrigin)
+        ? requestOrigin
+        : ALLOWED_ORIGINS[0];
+
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    Vary: 'Origin',
+  };
+}
 
 const VALID_ROLES = new Set([
   'colaborador',
@@ -114,11 +131,16 @@ function normalizeStatus(value?: string): string {
   return PROFILE_STATUS_VALUES.has(normalized) ? normalized : 'ativo';
 }
 
-function jsonResponse(body: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+function makeJsonResponse(corsHeaders: Record<string, string>) {
+  return (body: Record<string, unknown>, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+}
+
+function isStrongTemporaryPassword(password: string): boolean {
+  return password.length >= 8 && /[A-Za-z]/.test(password) && /[0-9]/.test(password);
 }
 
 async function findUserIdByEmailViaRpc(
@@ -192,6 +214,9 @@ async function findUserIdByEmail(
 }
 
 Deno.serve(async (request) => {
+  const corsHeaders = buildCorsHeaders(request);
+  const jsonResponse = makeJsonResponse(corsHeaders);
+
   if (request.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -262,8 +287,11 @@ Deno.serve(async (request) => {
     const nivelIrata = normalizeNivelIrata(body.nivel_irata);
     const password = body.senha_temporaria?.trim() || DEFAULT_PASSWORD;
 
-    if (password.length < 6) {
-      return jsonResponse({ error: 'A senha deve ter pelo menos 6 caracteres.' }, 400);
+    if (!isStrongTemporaryPassword(password)) {
+      return jsonResponse(
+        { error: 'A senha temporária deve ter pelo menos 8 caracteres, com letras e números.' },
+        400,
+      );
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);

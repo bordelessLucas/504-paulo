@@ -98,7 +98,7 @@ export function UploadPlanilhaForm({ onImported }: UploadPlanilhaFormProps) {
     <div className={admin.uploadBox}>
       <p className={admin.hint}>
         CSV com ficha completa: email, nome, classificacao, nivel_irata, datas, telefone,
-        certificacoes, status e role. Contas novas recebem senha padrão senha123.
+        certificacoes, status e role. Contas novas recebem senha temporária de primeiro acesso.
       </p>
 
       <input

@@ -1,4 +1,4 @@
-import { AVALIA_LOGIN_PATH, OPS_SITE_URL } from '../links';
+import { OPS_SITE_URL } from '../links';
 
 export type ProductId = 'ops' | 'avalia';
 
@@ -28,7 +28,7 @@ export const products: Product[] = [
       'Documentação técnica, checklists e databook',
     ],
     note: 'Web + mobile · offline-first no campo',
-    cta: 'Acessar Vertek Ops',
+    cta: 'Conhecer Vertek Ops',
     href: OPS_SITE_URL,
     image: '/images/ops-field.jpg',
   },
@@ -45,8 +45,8 @@ export const products: Product[] = [
       'Rankings, reajustes, painéis e PDFs exportáveis',
     ],
     note: 'Governança de pessoas · histórico consolidado',
-    cta: 'Abrir Vertek Avalia',
-    href: AVALIA_LOGIN_PATH,
+    cta: 'Conhecer Vertek Avalia',
+    href: '/#avalia',
     image: '/images/avalia-governance.jpg',
   },
 ];
